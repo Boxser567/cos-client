@@ -1,0 +1,95 @@
+
+.bucket-opt {
+  background: $otherBackgrund;
+  ul {
+    margin: 0 auto;
+    text-align: center;
+  }
+  li {
+    display: inline-block;
+    i {
+      margin-right: 5px;
+      color: $activebg2;
+    }
+    a {
+      color: $fontColor;
+      display: block;
+      padding: 6px 4px;
+      font-size: 14px;
+    }
+    a:hover {
+      color: #fff;
+    }
+  }
+}
+
+.bucket-item {
+  margin: 11px 0;
+  .item {
+    border-left: 3px solid $leftSidebarBgColor;
+    position: relative;
+    color: $fontColor;
+    margin-bottom: 5px;
+    a {
+      padding: 8px 20px;
+      display: block;
+      font-size: 14px;
+      i {
+        position: absolute;
+        top: 6px;
+        right: 12px;
+        font-size: 12px;
+        padding: 5px;
+        display: none;
+      }
+    }
+    &.active {
+      background: $activebg;
+      border-left: 3px solid $activebg2;
+      color: #fff;
+      i {
+        display: inline-block;
+      }
+    }
+    &:hover {
+      background: $activebg;
+      i {
+        display: inline-block;
+      }
+    }
+  }
+  .loading {
+    text-align: center;
+    font-size: 24px;
+    color: #fff;
+    padding-top: 20px;
+  }
+}
+
+.dilog-addbucket {
+  width: 600px;
+  .el-form-item__label {
+    padding-right: 20px;
+    width: 140px;
+  }
+  .el-form-item__content {
+    margin-left: 140px;
+    input {
+      width: 240px;
+    }
+  }
+}
+
+.dilog-propertybucket {
+  width: 540px;
+  .el-row {
+    height: 36px;
+    .el-col-8 {
+      padding-right: 45px;
+      text-align: right;
+    }
+  }
+  .el-button--danger{
+    float: left;
+  }
+}
