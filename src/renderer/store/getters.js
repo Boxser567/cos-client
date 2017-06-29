@@ -4,5 +4,4 @@ const _config = {
   SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
 }
 
-export const mainCounter = state => state.counters.main
 export const userConfig = state => new (require('cos-util'))(_config)

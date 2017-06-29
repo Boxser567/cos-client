@@ -22,10 +22,6 @@ export default new Router({
           component: require('@/components/modules/file')
         }
       ]
-    },
-    {
-      path: '*',
-      redirect: '/'
     }
   ]
 })

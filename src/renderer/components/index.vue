@@ -34,9 +34,7 @@
                 <li v-for="i in bucketMenu.list" @click="i.func"> {{i.name}}</li>
             </ul>
 
-
         </div>
-
 
         <div>
             <router-view></router-view>
@@ -102,140 +100,141 @@
 </template>
 
 <script>
-  //  import { mutations, mapState } from 'vuex'
-  import { mapState } from 'vuex'
-  export default {
-    name: 'index-page',
-    data () {
-      return {
-        bloading: true,
-        bucketMenu: {
-          viewMenu: false,
-          top: '0px',
-          left: '0px',
-          list: [
-            {name: '属性管理', func: this.getProperty},
-            {name: '回调设置', func: this.getCallbackSet},
-            {name: '碎片管理', func: this.getPieceManage},
-            {name: 'Bucket下载', func: this.getTotalBucket}
-          ]
+    import {mutations, mapState} from 'vuex'
+    export default {
+        name: 'index-page',
+        data(){
+            return {
+                bloading: true,
+                bucketMenu: {
+                    viewMenu: false,
+                    top: '0px',
+                    left: '0px',
+                    list: [
+                        {name: '属性管理', func: this.getProperty},
+                        {name: '回调设置', func: this.getCallbackSet},
+                        {name: '碎片管理', func: this.getPieceManage},
+                        {name: 'Bucket下载', func: this.getTotalBucket}
+                    ]
+                },
+                dialogAddVisible: false,
+                dialogManageVisible: false,
+                myform: {
+                    bucketName: '',
+                    limit: 'public-read',
+                    areaList: [
+                        {
+                            value: "cn-south",
+                            label: '华南'
+                        }, {
+                            value: "cn-north",
+                            label: '华北'
+                        }, {
+                            value: "cn-east",
+                            label: '华东'
+                        }, {
+                            value: "cn-southwest",
+                            label: '西南'
+                        }],
+                    areaDef: 'cn-south',
+                    cdnSpeed: 'close'
+                },
+                rightChooseBucket: null
+            }
         },
-        dialogAddVisible: false,
-        dialogManageVisible: false,
-        myform: {
-          bucketName: '',
-          limit: 'public-read',
-          areaList: [
-            {
-              value: 'cn-south',
-              label: '华南'
-            }, {
-              value: 'cn-north',
-              label: '华北'
-            }, {
-              value: 'cn-east',
-              label: '华东'
-            }, {
-              value: 'cn-southwest',
-              label: '西南'
-            }],
-          areaDef: 'cn-south',
-          cdnSpeed: 'close'
+        computed: mapState('bucket', {
+            bucketList: 'bucketList',
+            currentBucket: 'currentBucket',
+
+        }),
+
+        created(){
+            this.fetchData();
         },
-        rightChooseBucket: null
-      }
-    },
-    computed: mapState('bucket', {
-      bucketList: 'bucketList',
-      currentBucket: 'currentBucket'
-    }),
+        methods: {
+            fetchData(){
+                this.bloading = true;
+                this.$store.dispatch('bucket/getService').then(() => this.bloading = false)
+            },
+            selectBucket: function (index, b) {
+                this.$store.commit('bucket/bucketActive', index)
+                this.$router.push({
+                    name: 'filepage',
+                    params: {
+                        bucket: b.Name,
+                        region: b.Location,
+                        folders: []
+                    }
+                })
+            },
+            submitForm: function () {       //新建bucket
+                if (this.myform.bucketName.length > 40) {
+                    this.$message.error('bucket不能超过40字符!');
+                    return;
+                }
+                if (!(/^[a-z\d]+$/.test(this.myform.bucketName))) {
+                    this.$message.error('bucket格式有误!');
+                    return;
+                }
+                let params = {
+                    Bucket: this.myform.bucketName,
+                    Region: this.myform.areaDef,
+                    ACL: this.myform.limit
+                }
+                this.$store.dispatch('bucket/putBucket', {pms: params}).then(() => {
+                    this.fetchData();
+                    this.dialogAddVisible = false;
+                })
+            },
+            setMenu: function (top, left) {
+                let largestHeight = window.innerHeight - this.$refs.right.offsetHeight - 25;
+                let largestWidth = window.innerWidth - this.$refs.right.offsetWidth - 25;
+                if (top > largestHeight) top = largestHeight;
+                if (left > largestWidth) left = largestWidth;
+                this.bucketMenu.top = top + 'px';
+                this.bucketMenu.left = left + 'px';
+            },
+            closeMenu: function () {
+                this.bucketMenu.viewMenu = false;
+            },
+            openMenu: function (e) {
+                let doms = e.target.parentNode;
+                if (e.target.tagName === 'I') {
+                    doms = doms.parentNode;
+                }
+                this.rightChooseBucket = {
+                    Bucket: doms.getAttribute('bucketName'),
+                    Region: doms.getAttribute('bucketRegion')
+                }
+                this.bucketMenu.viewMenu = true;
+                this.$nextTick(() => {
+                    this.$refs.right.focus();
+                    this.setMenu(e.y, e.x)
+                });
+                e.preventDefault();
+            },
 
-    created () {
-      this.fetchData()
-    },
-    methods: {
-      fetchData () {
-        this.bloading = true
-        this.$store.dispatch('bucket/getService').then(() => (this.bloading = false))
-      },
-      selectBucket: function (index, b) {
-        this.$store.commit('bucket/bucketActive', index)
-        this.$router.push({
-          name: 'filepage',
-          params: {
-            bucket: b.Name,
-            region: b.Location,
-            folders: []
-          }
-        })
-      },
-      submitForm: function () {       // 新建bucket
-        if (this.myform.bucketName.length > 40) {
-          this.$message.error('bucket不能超过40字符!')
-          return
+            deleteBucket: function () {
+                this.$store.dispatch('bucket/deleteBucket', {pms: this.rightChooseBucket}).then(() => {
+                    this.fetchData();
+                    this.dialogManageVisible = false;
+                })
+            },
+            getProperty: function () {
+                this.bucketMenu.viewMenu = false;
+                this.dialogManageVisible = true;
+            },
+            getCallbackSet: function () {
+            },
+            getPieceManage: function () {
+            },
+            getTotalBucket: function () {
+            },
         }
-        if (!(/^[a-z\d]+$/.test(this.myform.bucketName))) {
-          this.$message.error('bucket格式有误!')
-          return
-        }
-        let params = {
-          Bucket: this.myform.bucketName,
-          Region: this.myform.areaDef,
-          ACL: this.myform.limit
-        }
-        this.$store.dispatch('bucket/putBucket', {pms: params}).then(() => {
-          this.fetchData()
-          this.dialogAddVisible = false
-        })
-      },
-      setMenu: function (top, left) {
-        let largestHeight = window.innerHeight - this.$refs.right.offsetHeight - 25
-        let largestWidth = window.innerWidth - this.$refs.right.offsetWidth - 25
-        if (top > largestHeight) top = largestHeight
-        if (left > largestWidth) left = largestWidth
-        this.bucketMenu.top = top + 'px'
-        this.bucketMenu.left = left + 'px'
-      },
-      closeMenu: function () {
-        this.bucketMenu.viewMenu = false
-      },
-      openMenu: function (e) {
-        let doms = e.target.parentNode
-        if (e.target.tagName === 'I') {
-          doms = doms.parentNode
-        }
-        this.rightChooseBucket = {
-          Bucket: doms.getAttribute('bucketName'),
-          Region: doms.getAttribute('bucketRegion')
-        }
-        this.bucketMenu.viewMenu = true
-        this.$nextTick(() => {
-          this.$refs.right.focus()
-          this.setMenu(e.y, e.x)
-        })
-        e.preventDefault()
-      },
-
-      deleteBucket: function () {
-        this.$store.dispatch('bucket/deleteBucket', {pms: this.rightChooseBucket}).then(() => {
-          this.fetchData()
-          this.dialogManageVisible = false
-        })
-      },
-      getProperty: function () {
-        this.bucketMenu.viewMenu = false
-        this.dialogManageVisible = true
-      },
-      getCallbackSet: function () {
-      },
-      getPieceManage: function () {
-      },
-      getTotalBucket: function () {
-      }
     }
-  }
 </script>
 
 <style lang="scss">
     @import "../assets/style/globals.scss";
 </style>
+

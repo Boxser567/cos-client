@@ -4,8 +4,10 @@
 
 const state = {
   filelist: null,
-
-  choosedFile: null,
+  fileloading: true,
+  selectFile: {
+    select: false
+  },
 
   fileRightList: [
     {
@@ -61,67 +63,132 @@ const state = {
       name: '下载当前目录',
       index: 9,
       isActive: false
-    }
-  ]
+    },
+  ],
 }
 
 const mutations = {
-  choosedFile (state, val) {
+  fileloading(state, val){
+    state.fileloading = val.loading;
+  },
+  selectFile(state, val){
     state.filelist.forEach(function (file) {
-      file.active = false
+      file.active = false;
       if (file.Name === val.fileName) {
-        file.active = true
-        state.choosedFile = file
+        file.active = true;
+        state.selectFile = file;
+        if (file.dir) {
+          state.selectFile.select = false;
+        } else {
+          state.selectFile.select = true;
+        }
       }
     })
   },
-  getFileList (state, data) {
-        // console.log('当前文件列表', data
-    let index = null
+  unSelectFile(state){
+    state.filelist.forEach(function (file) {
+      file.active = false;
+    })
+    state.selectFile = {
+      select: false
+    };
+  },
+  getFileList(state, data){
+    // console.log('当前文件列表', data)
+    let index = null;
     if (data.objects.length) {
       data.objects.forEach(function (item, idx) {
-        if (item.Name === '') index = idx
-        item.active = false
+        if (item.Name == "") index = idx;
+        item.active = false;
       })
     }
     if (data.dirs.length) {
       data.dirs.forEach(function (d) {
-        d.active = false
-        d.dir = true
+        d.active = false;
+        d.dir = true;
       })
     }
-    if (index !== null) data.objects.splice(index, 1)
-    state.filelist = data.objects.concat(data.dirs)
+    if (index != null) data.objects.splice(index, 1)
+    state.filelist = data.objects.concat(data.dirs);
+  },
+  searchFileList(state, data){
+    let index = null;
+    if (data.objects.length) {
+      data.objects.forEach(function (item, idx) {
+        if (item.Name == "") index = idx;
+        item.active = false;
+      })
+    }
+    if (data.dirs.length) {
+      data.dirs.forEach(function (d) {
+        d.active = false;
+        d.dir = true;
+      })
+    }
+    if (index != null) data.objects.splice(index, 1);
+    let Arr = data.objects.concat(data.dirs);
+    let serchlist = Arr.filter((n) => {
+      if (n.Name.indexOf(data.keywords) > -1) {
+        return n
+      }
+    })
+    state.filelist = serchlist;
   }
 }
 
 const actions = {
-  getFileList ({commit, rootGetters}, params) {
+  getFileList({commit, rootGetters}, params){
     return new Promise((resolve, reject) => {
       rootGetters.userConfig.listObject(params.pms).then(function (resp) {
-        console.log('file-list', resp)
-        commit('getFileList', resp)
+        if (params.pms.Page) {
+          resp.keywords = params.pms.Keywords;
+          commit('searchFileList', resp)
+        } else {
+          commit('getFileList', resp)
+        }
         resolve()
       })
     })
   },
-  itemSelect ({commit}) {
+  sliceUploadFile({commit, rootGetters}, params){
+    // return new Promise((resolve, reject) => {
+    rootGetters.userConfig.sliceUploadFile(params.params, params.file, params.option).then(function (resp) {
 
+    });
+    // })
   },
-
-  showList ({commit}, val) {
+  deleteFile({commit, rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.userConfig.cos.deleteObject(params.pms, function (err, data) {
+        if (!err) {
+          resolve(data);
+        } else {
+          reject(err)
+        }
+      })
+    })
+  },
+  showList({commit}, val)
+  {
     commit('showList', val)
-  },
-  choosedFile ({commit}, val) {
-    commit('choosedFile', val.amount)
-  },
-
-  uploadFile (context) {
-    console.log(context.state.choosedFile)
-  },
-  newFolder (context) {
-  },
-  downloadFile (context) {
+  }
+  ,
+  selectFile({commit}, val)
+  {
+    commit('selectFile', val.amount)
+  }
+  ,
+  uploadFile(context)
+  {
+    console.log(context.state.selectFile)
+  }
+  ,
+  newFolder(context)
+  {
+  }
+  ,
+  downloadFile(context)
+  {
   }
 }
 

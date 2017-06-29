@@ -25,6 +25,7 @@
 
 .bucket-item {
   margin: 11px 0;
+  position: relative;
   .item {
     border-left: 3px solid $leftSidebarBgColor;
     position: relative;
@@ -63,6 +64,13 @@
     font-size: 24px;
     color: #fff;
     padding-top: 20px;
+    z-index: 9999;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom:0;
+    background: rgba(255,255,255,.2);
   }
 }
 

@@ -209,6 +209,7 @@
     height: calc(100% - 270px - 30px);
     overflow-x: overlay;
     background: #fff;
+    position: relative;
     &.list-none {
       height: calc(100% - 40px);
     }
@@ -254,8 +255,16 @@
     .loading {
       text-align: center;
       font-size: 28px;
-      color: #909090;
+      color: #797979;
       padding-top: 15px;
+      position: absolute;
+      z-index: 999;
+      text-align: center;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,.8);
     }
     .file-none {
       padding-top: 40px;
