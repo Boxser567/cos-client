@@ -12,7 +12,7 @@ export default function () {
     SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
     SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
   })
-  let uploads = new Tasks(5)
+  let uploads = new Tasks(3)
 
   ipcMain.on('GetBucket', (event, arg) => {
     cos.getService((err, data) => {
@@ -116,7 +116,17 @@ export default function () {
 
   ipcMain.on('GetUploadTasks', (event, arg) => {
     setInterval(() => {
-      event.sender.send('GetUploadTasks-data', uploads.tasks)
+      event.sender.send('GetUploadTasks-data', uploads.tasks.map(t => {
+        return {
+          id: t.id,
+          Key: t.params.Key,
+          FileName: t.file.fileName,
+          status: t.status,
+          size: 0,
+          loaded: 0,
+          speed: 0
+        }
+      }))
     }, 2000)
   })
 }
@@ -208,7 +218,6 @@ Tasks.prototype.next = function () {
  * @param  {string}   params.UploadId 仅续传任务需要
  *
  * @param  {object}   option
- * @param  {function} option.onProgress
  * @param  {int}      option.sliceSize
  * @param  {int}      option.asyncLim
  */
@@ -216,7 +225,6 @@ function UploadTask (cos, name, params, option = {}) {
   this.cos = cos
   this.params = params
   this.file = {}
-  this.onProgress = option.onProgress
   this.asyncLim = option.asyncLim || 2
   this.cancel = false
 
@@ -243,20 +251,15 @@ function UploadTask (cos, name, params, option = {}) {
 
       this.file.iterator = getSliceIterator(this.file)
 
-      if (typeof this.onProgress !== 'function') {
-        this.progress.On = () => null
-      } else {
-        this.progress.On = () => {
+      this.progress.On = () => {
+        setImmediate(() => {
           let loaded = 0
-          let total = this.progress.total
           this.progress.list.forEach(piece => (loaded += piece.loaded || 0))
-          this.onProgress({
-            loaded,
-            total,
-            percent: loaded / total
-          })
-        }
+          this.progress.loaded = loaded
+          this.progress.percent = loaded / this.progress.total
+        })
       }
+
       resolve(this)
     })
   })
@@ -437,12 +440,30 @@ function * getSliceIterator (file) {
 
 function DownloadTask () {}
 
+DownloadTask.prototype.start = function () {
+
+}
+
+DownloadTask.prototype.stop = function () {
+
+}
+
 function MockTask (arg) {
-  return Promise.resolve(arg)
+  this.params = {
+    Bucket: arg.Bucket,
+    Region: arg.Region,
+    Key: arg.Key
+  }
+  this.file = {
+    fileName: arg.FileName
+  }
+  this.asyncLim = 2
+  this.cancel = false
+  return Promise.resolve(this)
 }
 
 MockTask.prototype.start = function () {
   return new Promise((resolve, reject) => {
-    setTimeout(resolve(), 1000)
+    setTimeout(resolve, 5000)
   })
 }
