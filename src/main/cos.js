@@ -122,12 +122,12 @@ export default function () {
           Key: t.params.Key,
           FileName: t.file.fileName,
           status: t.status,
-          size: 0,
-          loaded: 0,
+          size: t.progress.total,
+          loaded: t.progress.loaded,
           speed: 0
         }
       }))
-    }, 2000)
+    }, 1500)
   })
 }
 
@@ -256,7 +256,6 @@ function UploadTask (cos, name, params, option = {}) {
           let loaded = 0
           this.progress.list.forEach(piece => (loaded += piece.loaded || 0))
           this.progress.loaded = loaded
-          this.progress.percent = loaded / this.progress.total
         })
       }
 
@@ -459,11 +458,22 @@ function MockTask (arg) {
   }
   this.asyncLim = 2
   this.cancel = false
+  this.progress = {}
+  this.progress.total = 1 << 20
+  this.progress.loaded = 0
   return Promise.resolve(this)
 }
 
 MockTask.prototype.start = function () {
   return new Promise((resolve, reject) => {
-    setTimeout(resolve, 5000)
+    let p = setInterval(() => {
+      this.progress.loaded += 20900
+    }, 100)
+
+    setTimeout(() => {
+      clearInterval(p)
+      this.progress.loaded = this.progress.total
+      resolve()
+    }, 5000)
   })
 }
