@@ -258,27 +258,14 @@
         console.log(filelist)
         let path = filelist.file.path
         let fileName = filelist.file.name  //path.replace(/\\/g, '/').replace(/.*\//, '');
-        let pms = {
-          params: {
+        let
+          params= {
             Bucket: this.options.bucket,
             Region: this.options.region,
             Key: fileName,
             fileName: path
-          },
-          file: {
-
-            fileSize: filelist.file.size
-          },
-          option: {
-            onProgress: function () {
-              console.log('this-progress', arguments)
-            },
-            cancel: function () {
-              console.log('this-cancel', arguments)
-            }
-          }
         }
-        this.$store.dispatch('menulist/sliceUploadFile', pms)
+        this.$store.dispatch('menulist/sliceUploadFile', params)
       },
       menuObj() {
         let _self = this

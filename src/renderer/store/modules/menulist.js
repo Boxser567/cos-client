@@ -2,7 +2,8 @@
  * Created by gokuai on 17/6/7.
  */
 
-const headOpt = ['', '', '', '', '', '', '']
+import  { ipcRenderer } from  'electron'
+
 const state = {
   filelist: null,
 
@@ -237,9 +238,15 @@ const actions = {
   },
   sliceUploadFile({commit, rootGetters}, params){
     // return new Promise((resolve, reject) => {
-    rootGetters.userConfig.sliceUploadFile(params.params, params.file, params.option).then(function (resp) {
+    ipcRenderer.send('NewUploadTask', params)
 
+    ipcRenderer.on('GetUploadTasks-data', (event, data) => {
+      console.log(data)
     })
+
+    //rootGetters.userConfig.sliceUploadFile(params.params, params.file, params.option).then(function (resp) {
+
+    // })
     // })
   },
   deleteFile({commit, rootGetters}, params){
