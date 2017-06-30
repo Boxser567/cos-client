@@ -181,7 +181,7 @@
         <!--文件右键列表信息-->
         <ul id="bucket-menu-list" tabindex="-1" v-show="isShowList" ref="fileRight"
             :style="{top:menu.top,left:menu.left}">
-            <li v-for="f in menu.list"> {{ f.name }}</li>
+            <li v-for="f in menu.list" @click="rightClickFn(f)"> {{ f.name }}</li>
         </ul>
 
     </div>
@@ -189,7 +189,7 @@
 
 <script>
   import { mutations, mapState, actions } from 'vuex'
-  import { remote } from 'electron'
+  import { remote, dialog } from 'electron'
   export default {
     name: 'filelist-page',
     props: ['options', 'newfo'],
@@ -229,6 +229,10 @@
       },
       selectFile(){
         return this.$store.state.menulist.selectFile
+      },
+      fileProgress(){
+        console.log('this-fileProgress', this.$store.state.menulist.fileProgress)
+        return this.$store.state.menulist.fileProgress
       }
     },
     created(){
@@ -309,18 +313,6 @@
         })
       },
       openFileMenu(e){
-
-//                const {Menu, MenuItem} = remote;
-//                const menu = new Menu()
-//                menu.append(new MenuItem({label: 'MenuItem1', click() { console.log('item 1 clicked') }}))
-//                menu.append(new MenuItem({type: 'separator'}))
-//                menu.append(new MenuItem({label: 'MenuItem2', type: 'checkbox', checked: true}))
-//
-//                document.getElementById('menuinfo').addEventListener('contextmenu', (e) => {
-//                    e.preventDefault()
-//                    menu.popup(remote.getCurrentWindow())
-//                }, false)
-
         let currentDom = e.target
         if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
           this.$store.commit('menulist/unSelectFile')
@@ -360,7 +352,6 @@
 
         let _self = this
         this.$nextTick(function () {
-//                    _self.$refs.fileRight.focus();
           let top = e.y - 90, left = e.x - 225
           let largestHeight = window.innerHeight - _self.$refs.fileRight.offsetHeight - 25
           let largestWidth = window.innerWidth - _self.$refs.fileRight.offsetWidth - 225
@@ -376,7 +367,44 @@
       closeFileMenu() {
         this.isShowList = false
         document.removeEventListener('click', this.closeFileMenu)
-      }
+      },
+      rightClickFn(item){
+        switch (item.key) {
+          case 'upload_file' :      //上传文件
+            remote.dialog.showOpenDialog({
+              filters: [{name: 'All Files', extensions: ['*']}],
+              properties: ['openFile', 'multiSelections']
+            }, function () {
+              console.log(arguments)
+            })
+            break
+          case 'new_folder':    //新建文件夹
+            break
+          case 'download_file':
+            remote.dialog.showSaveDialog({
+              filters: [{name: 'All Files', extensions: ['*']}],
+              properties: ['openFile', 'multiSelections']
+            }, function () {
+              console.log(arguments)
+            })
+            break
+          case 'copy_file':
+            break
+          case 'delete_file':
+            break
+          case 'get_address':
+            break
+          case 'set_http':
+            break
+          case 'paste_file':
+            break
+          case 'download_list':
+            break
+          default:
+            this.$message('请重启客户端后重试！')
+            break
+        }
+      },
     }
   }
 </script>

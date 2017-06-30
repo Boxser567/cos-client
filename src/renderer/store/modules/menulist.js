@@ -8,6 +8,7 @@ const state = {
   filelist: null,
 
   fileloading: true,
+  fileProgress: null,
 
   selectFile: {
     select: false
@@ -127,6 +128,9 @@ const mutations = {
   fileloading(state, val){
     state.fileloading = val.loading
   },
+  updataProgress(state, data){
+    state.fileProgress = data
+  },
   selectFile(state, val){
     state.filelist.forEach(function (file) {
       file.active = false
@@ -236,17 +240,15 @@ const actions = {
       })
     })
   },
-  sliceUploadFile({commit, rootGetters}, params){
+  sliceUploadFile({commit, state}, params){
     // return new Promise((resolve, reject) => {
     ipcRenderer.send('NewUploadTask', params)
-
-    ipcRenderer.on('GetUploadTasks-data', (event, data) => {
-      console.log(data)
-    })
-
-    //rootGetters.userConfig.sliceUploadFile(params.params, params.file, params.option).then(function (resp) {
-
-    // })
+    if (!state.fileProgress) {
+      ipcRenderer.on('GetUploadTasks-data', (event, data) => {
+        console.log(data)
+        commit('updataProgress', data)
+      })
+    }
     // })
   },
   deleteFile({commit, rootGetters}, params){
