@@ -15,7 +15,7 @@ export default function () {
   let uploads = new Tasks(5)
 
   ipcMain.on('GetBucket', (event, arg) => {
-    cos.cos.getService((err, data) => {
+    cos.getService((err, data) => {
       if (err) {
         event.sender.send('GetBucket-error', err)
       }
@@ -43,7 +43,7 @@ export default function () {
    *     @return  {string}    data.Location  操作地址
    */
   ipcMain.on('PutBucket', (event, arg) => {
-    cos.cos.putBucket(arg, (err, data) => {
+    cos.putBucket(arg, (err, data) => {
       if (err) {
         event.sender.send('PutBucket-error', err)
       }
@@ -62,7 +62,7 @@ export default function () {
    *     @return  {string}    data.Location  操作地址
    */
   ipcMain.on('DeleteBucket', (event, arg) => {
-    cos.cos.putBucket(arg, (err, data) => {
+    cos.putBucket(arg, (err, data) => {
       if (err) {
         event.sender.send('DeleteBucket-error', err)
       }
@@ -71,7 +71,7 @@ export default function () {
   })
 
   ipcMain.on('GetObject', (event, arg) => {
-    cos.cos.putBucket(arg, (err, data) => {
+    cos.putBucket(arg, (err, data) => {
       if (err) {
         event.sender.send('GetObject-error', err)
       }
@@ -83,8 +83,9 @@ export default function () {
     arg.forEach((item) => {
 
     })
+    // todo
     cos.sliceUploadFile(arg)
-    cos.cos.putBucket(arg, (err, data) => {
+    cos.putBucket(arg, (err, data) => {
       if (err) {
         event.sender.send('PutObject-error', err)
       }
@@ -93,7 +94,7 @@ export default function () {
   })
 
   ipcMain.on('DeleteObject', (event, arg) => {
-    cos.cos.putBucket(arg, (err, data) => {
+    cos.putBucket(arg, (err, data) => {
       if (err) {
         event.sender.send('DeleteBucket-error', err)
       }
@@ -102,33 +103,35 @@ export default function () {
   })
 
   ipcMain.on('NewUploadTask', (event, arg) => {
-    let task = uploads.findTaskByFileName(arg.FileName)
-    if (task) {
-      return
-    }
+    // let task = uploads.findTaskByFileName(arg.FileName)
+    // if (task) {
+    //   return
+    // }
     // todo
-    new UploadTask().then(task => {
+    new MockTask(arg).then(task => {
       uploads.newTask(task)
-      if (uploads.add()) {
-        task.status = 'run'
-        task.start().then(() => {
-          // todo
-          uploads.done()
-
-          uploads.next().then()
-
-        })
-      }
+      uploads.next()
     })
+  })
+
+  ipcMain.on('GetUploadTasks', (event, arg) => {
+    setInterval(() => {
+      event.sender.send('GetUploadTasks-data', uploads.tasks)
+    }, 500)
   })
 }
 
-// todo 状态查询，最大任务数
+const TaskWait = 'wait'
+const TaskRun = 'run'
+const TaskComplete = 'complete'
+const TaskError = 'error'
+
 function Tasks (max) {
   let nextId = 0
   let maxActivity = max
   let activity = 0
   this.tasks = []
+  this.needSend = false
   this.getId = () => nextId++
   this.add = () => {
     if (activity <= maxActivity) {
@@ -150,8 +153,10 @@ function Tasks (max) {
 Tasks.prototype.newTask = function (task) {
   let id = this.getId()
   task.id = id
-  task.status = 'new'
+  task.status = TaskWait
   this.tasks[id] = task
+  this.needSend = true
+  return task
 }
 
 Tasks.prototype.findTask = function (id) {
@@ -166,15 +171,29 @@ Tasks.prototype.findTaskByFileName = function (name) {
 Tasks.prototype.deleteTask = function (id) {
   let t = this.tasks[id]
   delete this.tasks[id]
+  this.needSend = true
   return t
 }
 
 Tasks.prototype.next = function () {
-  let task = this.tasks.find(t => t.status === 'new')
+  let task = this.tasks.find(t => t.status === TaskWait)
   if (!task) {
     return Promise.resolve()
   }
-  return task.start()
+  task.status = TaskRun
+  this.add()
+  return task.start().then(result => {
+    task.status = TaskComplete
+    this.done()
+    // todo
+    return this.next()
+  }, err => {
+    task.status = TaskError
+    this.done()
+    // todo
+    console.log(err)
+    return this.next()
+  })
 }
 
 /**
@@ -244,11 +263,12 @@ function UploadTask (cos, name, params, option = {}) {
 }
 
 UploadTask.prototype.start = function () {
-  if (this.params.UploadId) {
-    return this.getMultipartListPart().then(this.uploadSlice.bind(this))
-  }
-
-  return this.multipartInit().then(this.uploadSlice.bind(this))
+  return (this.params.UploadId ? this.getMultipartListPart() : this.multipartInit())
+    .then(this.uploadSlice.bind(this))
+    .then(this.multipartComplete.bind(this), err => {
+      err.params = this.params
+      throw err
+    })
 }
 
 UploadTask.prototype.multipartInit = function () {
@@ -297,10 +317,6 @@ UploadTask.prototype.getMultipartListPart = function () {
  */
 UploadTask.prototype.uploadSlice = function () {
   return Promise.all(new Array(this.asyncLim).fill(0).map(() => this.upload()))
-    .then(this.multipartComplete.bind(this), (err) => {
-      err.params = this.params
-      throw err
-    })
 }
 
 UploadTask.prototype.upload = function () {
@@ -420,3 +436,13 @@ function * getSliceIterator (file) {
 }
 
 function DownloadTask () {}
+
+function MockTask (arg) {
+  return Promise.resolve(arg)
+}
+
+MockTask.prototype.start = function () {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve(), 1000)
+  })
+}
