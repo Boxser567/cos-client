@@ -25,6 +25,7 @@
     left: 225px;
     bottom: 0;
     right: 0;
+    overflow: hidden;
   }
 
   //右键菜单
@@ -59,14 +60,14 @@
 .head {
   background: $rightSidebarBgColor;
   .top-row {
-    height: 48px;
-    line-height: 48px;
+    height: 49px;
     border-bottom: 1px solid #bfcbd9;
+    position: relative;
     .history {
       padding-left: 20px;
       width: 50px;
       display: inline-block;
-      vertical-align: sub;
+      margin-top: 15px;
       i {
         background: #20a0ff;
         color: #fff;
@@ -79,21 +80,21 @@
       }
     }
     .nav-bar {
-      display: inline-block;
-      width: calc(100% - 100px);
-      border: 1px solid #bfcbd9;
-      height: 30px;
-      line-height: 30px;
-      position: relative;
-      border-radius: 20px;
-      padding-left: 15px;
+      position: absolute;
       top: 8px;
+      left: 70px;
+      right: 20px;
+      bottom: 8px;
+      border: 1px solid #bfcbd9;
+      border-radius: 20px;
+      padding-left: 5px;
       .nav {
         display: inline-block;
         max-width: 60%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        margin-top: 2px;
         ul {
           li {
             display: inline-block;
@@ -118,25 +119,42 @@
             }
           }
         }
+        .search-inbar {
+          display: inline-block;
+          background: $activebg2;
+          color: #fff;
+          font-size: 13px;
+          border-radius: 15px;
+          padding: 0 15px;
+          height: 25px;
+          line-height: 24px;
+          span {
+            text-decoration: underline;
+            display: inline-block;
+            padding: 0 4px;
+          }
+        }
       }
       input {
-        height: 26px;
+        height: 24px;
         display: inline-block;
         min-width: 220px;
         border: none;
+        vertical-align: super;
         background: none;
         outline: none;
         font-size: 14px;
         padding-left: 15px;
-        position: relative;
-        top: -12px;
       }
-      .el-icon-search {
+      .el-icon-search, .el-icon-close {
         float: right;
         padding: 7px;
         display: inline-block;
         color: #bfcbd9;
         cursor: pointer;
+      }
+      .el-icon-close {
+        font-size: 13px;
       }
     }
   }
@@ -264,7 +282,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(255,255,255,.8);
+      background: rgba(255, 255, 255, .8);
     }
     .file-none {
       padding-top: 40px;

@@ -1,8 +1,7 @@
 /**
  * Created by gokuai on 17/6/26.
  */
-
-import { ipcRenderer } from 'electron'
+import  { ipcRenderer } from  'electron'
 
 const state = {
   bucketList: [],
@@ -11,8 +10,9 @@ const state = {
     viewMenu: false,
     top: '0px',
     left: '0px',
-
   },
+
+
 }
 
 const mutations = {
@@ -27,20 +27,35 @@ const mutations = {
         state.currentBucket = a
       }
     })
+  },
+  currentBucket(state, val){
+    state.currentBucket = val
   }
 }
 
 const actions = {
   getService({commit}){
-    console.log(11133333)
-    ipcRenderer.send('GetBucket')
-    ipcRenderer.on('GetBucket-error', function (event, err) {
-      console.log(err)
-    })
-    ipcRenderer.on('GetBucket-data', function (event, data) {
+    return new Promise((resolve, reject) => {
 
-      // commit('getMuService', data.Buckets)
-      console.log('22222222',data)
+      ipcRenderer.send('GetBucket')
+
+      ipcRenderer.once('GetBucket-data', function (event, data) {
+        let list = []
+        if (data.length) {
+          list = data.map(function (b) {
+            b.active = false
+            return b
+          })
+        }
+        commit('getMuService', list)
+        resolve()
+      })
+
+      ipcRenderer.once('GetBucket-error', function (event, err) {
+        console.log(err)
+        reject(err)
+      })
+
     })
     // return new Promise((resolve, reject) => {
     //   rootGetters.userConfig.cos.getService(function (err, data) {
@@ -83,12 +98,11 @@ const actions = {
       })
     })
   },
-  deleteBucket({commit, rootGetters}, params){
+  deleteBucket({state, rootGetters}){
     return new Promise((resolve, reject) => {
-      console.log(params)
-      rootGetters.userConfig.cos.deleteBucket(params.pms, function (err, data) {
+      rootGetters.userConfig.cos.deleteBucket(state.currentBucket, function (err, data) {
         if (!err) {
-          resolve()
+          resolve(data)
         } else {
           reject(err)
         }

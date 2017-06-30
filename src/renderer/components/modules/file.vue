@@ -8,12 +8,17 @@
                 </div>
                 <div class="nav-bar">
                     <div class="nav">
-                        <ul>
+                        <ul v-show="!inputFocus">
                             <li v-for="(n,index) in navOptions" @click="goFilePath(index)">{{ n.name }}</li>
                         </ul>
+                        <div class="search-inbar" v-show="inputFocus">
+                            在<span>{{currentFolder}}</span>中搜索
+                        </div>
                     </div>
-                    <input type="text" v-model="options.keyWord" @keyup.enter="searchFn">
-                    <i class="el-icon-search" @click="searchFn"></i>
+                    <input type="text" v-model="options.keyWord" @focus="focusSearch" @blur="blurSearch"
+                           @keyup.enter="searchFn">
+                    <i class="el-icon-close" v-show="options.keyWord" @click="searchCancelFn"></i>
+                    <i class="el-icon-search" v-show="!options.keyWord" @click="searchFn"></i>
                 </div>
             </div>
             <div class="bottom-row">
@@ -45,13 +50,13 @@
                     </div>
 
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true"
+                        <el-button size="small" :plain="true" @click="menuObj().getFileUrl()"
                                    :disabled="selectFile ? selectFile.select ? false : true : false">获取地址
                         </el-button>
                     </div>
 
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true"
+                        <el-button size="small" :plain="true" @click="menuObj().dialogSetHttpFn()"
                                    :disabled="selectFile ? selectFile.select ? false : true : false">设置HTTP头
                         </el-button>
                     </div>
@@ -62,6 +67,78 @@
         </div>
 
         <file-list :options="options" :newfo="newFolder"></file-list>
+
+        <el-dialog title="获取Object地址"
+                   custom-class="dialog-http"
+                   :visible.sync="dialogGetHttp.isShow"
+                   :close-on-click-modal="false"
+                   :close-on-press-escape="false"
+                   :show-close="false"
+                   size="small">
+            <el-row>
+                <el-col :span="8">文件名:</el-col>
+                <el-col :span="16">{{dialogGetHttp.bucket}}</el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="8">地址:</el-col>
+                <el-col :span="16">
+                    <p id="myEle">{{dialogGetHttp.url}}</p>
+                    <el-button type="primary" size="small" @click="menuObj().selectText()">复制</el-button>
+                </el-col>
+            </el-row>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="menuObj().dialogHttpHideFn()">确 定</el-button>
+            </div>
+        </el-dialog>
+
+
+        <!--设置Http头-->
+        <el-dialog
+                title="设置header"
+                custom-class="dialog-header"
+                :visible.sync="fileHeaderInfo.isShow"
+                :close-on-click-modal="false"
+                :close-on-press-escape="false"
+                :show-close="false"
+                size="small">
+            <table class="my-el-table" cellpadding="0" cellspacing="0">
+                <thead>
+                <tr>
+                    <td>参数</td>
+                    <td>值</td>
+                    <td>操作</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(list,$index) in fileHeaderInfo.data">
+                    <td>
+                        <el-select v-model="list.date" @change="menuObj().selectHttpChange(list,$index)"
+                                   placeholder="选择项目" size="small">
+                            <el-option
+                                    v-for="item in list.date"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </td>
+                    <td>
+                        <el-input size="small"></el-input>
+                    </td>
+                    <td>
+                        <a class="text" @click="menuObj().deleteHttpDom($index)">删除</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+
+            <el-button type="text" @click="menuObj().addElemHeader()"><i class="el-icon-plus"></i>添加参数</el-button>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="menuObj().dialogSetHttpFn('cancel')">取 消</el-button>
+                <el-button type="primary" @click="menuObj().dialogSetHttpFn()">确 定</el-button>
+            </div>
+        </el-dialog>
 
     </div>
 </template>
@@ -82,7 +159,7 @@
       } else {
         this.options.folders = to.query.folders
         let navbar = to.query.folders
-        if (navbar) {
+        if (navbar && navbar.length) {
           navbar = navbar.split('/')
           navbar.splice(navbar.length - 1, 1)
           navbar.forEach((n) => this.navOptions.push({name: n}))
@@ -97,6 +174,21 @@
       },
       selectFile(){
         return this.$store.state.menulist.selectFile
+      },
+      dialogGetHttp: {
+        get(){
+          return this.$store.state.menulist.dialogGetHttp
+        },
+        data: {
+          select: {
+            set(value){
+              console.log('1231111111', value)
+            }
+          }
+        }
+      },
+      fileHeaderInfo(){
+        return this.$store.state.menulist.fileHeaderInfo
       }
     },
     data() {
@@ -108,7 +200,9 @@
           keyWord: null
         },
         navOptions: [],
-        newFolder: false
+        currentFolder: null,
+        newFolder: false,
+        inputFocus: false
       }
     },
     methods: {
@@ -134,7 +228,15 @@
           this.$router.push(topage)
         }
       },
-
+      blurSearch(){
+        this.inputFocus = false
+      },
+      focusSearch(){
+        if (this.navOptions && this.navOptions.length) {
+          this.currentFolder = ([].concat(this.navOptions.pop())).name
+          this.inputFocus = true
+        }
+      },
       searchFn(){
         if (!this.options.keyWord) return
         this.$store.commit('menulist/fileloading', {loading: true})
@@ -149,6 +251,9 @@
         }
         this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => this.$store.commit('menulist/fileloading', {loading: false}))
       },
+      searchCancelFn(){
+        this.options.keyWord = null
+      },
       onProgress(filelist) {
         console.log(filelist)
         let path = filelist.file.path
@@ -157,10 +262,11 @@
           params: {
             Bucket: this.options.bucket,
             Region: this.options.region,
-            Key: fileName
+            Key: fileName,
+            fileName: path
           },
           file: {
-            fileName: path,
+
             fileSize: filelist.file.size
           },
           option: {
@@ -181,6 +287,28 @@
           Region: this.options.region,
         }
         return {
+          getFileUrl(){  //获取文件url地址
+            _self.$store.commit('menulist/getFileHttp', parmsObj)
+          },
+          dialogHttpHideFn(){
+            _self.$store.commit('menulist/setFileHttpHidden')
+          },
+          selectText(e){
+            _self.$message('功能没做...')
+          },
+          dialogSetHttpFn(type){
+            _self.$store.commit('menulist/setHttp', type)
+          },
+          selectHttpChange(list, index){
+            console.log(list, index)
+//            _self.$store.commit('menulist/selectHttpChange', {list: list, index: index})
+          },
+          addElemHeader(){
+            _self.$store.commit('menulist/addHttpDom')
+          },
+          deleteHttpDom(index){
+            _self.$store.commit('menulist/deleteHttpDom', index)
+          },
           deleteObj(){
             _self.$confirm('确定要删除?', '提示', {
               confirmButtonText: '确定',
@@ -189,6 +317,7 @@
             }).then(() => {
               let parmas = Object.assign(parmsObj, {Key: _self.selectFile.dir ? _self.selectFile.Prefix : _self.selectFile.Key})
               _self.$store.dispatch('menulist/deleteFile', {pms: parmas}).then(function (resp) {
+                console.log('this-delete', arguments)
                 if (resp.DeleteObjectSuccess) {
                   _self.fetchFilelist()
                 } else {
@@ -216,7 +345,21 @@
         console.log(this.$router)
       },
       backForward(){
-//                this.$router.go(-1);
+//        this.$router.go(-1);
+      },
+      btnDisable(){
+        if (this.selectFile) {
+          if (this.selectFile.dir) {
+            return false
+          } else if (selectFile.select) {
+            return true
+          }
+          else {
+            return false
+          }
+        } else {
+          return false
+        }
       }
     }
   }

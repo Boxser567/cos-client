@@ -76,7 +76,7 @@
                    :visible.sync="dialogManageVisible">
             <el-row>
                 <el-col :span="8">Bucket名称:</el-col>
-                <el-col :span="16">{{currentBucket.Name}}</el-col>
+                <el-col :span="16">{{currentBucket.Bucket}}</el-col>
             </el-row>
             <el-row>
                 <el-col :span="8">所属地域:</el-col>
@@ -153,9 +153,8 @@
     },
     methods: {
       fetchData(){
-        this.bloading = true;
-        console.log(111111)
-        this.$store.dispatch('bucket/getService')
+        this.bloading = true
+        this.$store.dispatch('bucket/getService').then(() => this.bloading = false)
       },
       selectBucket: function (index, b) {
         this.$store.commit('bucket/bucketActive', index)
@@ -203,10 +202,10 @@
         if (e.target.tagName === 'I') {
           doms = doms.parentNode
         }
-        this.rightChooseBucket = {
+        this.$store.commit('bucket/currentBucket', {
           Bucket: doms.getAttribute('bucketName'),
           Region: doms.getAttribute('bucketRegion')
-        }
+        })
         this.bucketMenu.viewMenu = true
         this.$nextTick(() => {
           this.$refs.right.focus()
@@ -216,7 +215,7 @@
       },
 
       deleteBucket: function () {
-        this.$store.dispatch('bucket/deleteBucket', {pms: this.rightChooseBucket}).then(() => {
+        this.$store.dispatch('bucket/deleteBucket').then(() => {
           this.fetchData()
           this.dialogManageVisible = false
         })
@@ -230,6 +229,16 @@
       getPieceManage: function () {
       },
       getTotalBucket: function () {
+        this.$confirm('确定要下载整个Bucket吗?', '请确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.$message({
+            type: 'success',
+            message: '下载中，请稍后!'
+          })
+        }).catch(() => {})
       },
     }
   }

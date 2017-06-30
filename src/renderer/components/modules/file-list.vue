@@ -188,8 +188,8 @@
 </template>
 
 <script>
-  import {mutations, mapState, actions} from 'vuex'
-  import {remote} from 'electron'
+  import { mutations, mapState, actions } from 'vuex'
+  import { remote } from 'electron'
   export default {
     name: 'filelist-page',
     props: ['options', 'newfo'],
@@ -239,65 +239,69 @@
       $route: 'fetchData',
       'newfo': function (val, old) {
         if (val != old) {
-          this.newFolder = true;
+          this.newFolder = true
         }
       }
     },
 
     methods: {
       putBucketFn: function () {
-        let _self = this;
-        let bk = this.options.bucket;
-        let rg = this.options.region;
-        let folder = this.folderName + '/';
+        let _self = this
+        let bk = this.options.bucket
+        let rg = this.options.region
+        let folder = this.options.folders ? this.options.folders + this.folderName : this.folderName + '/'
         let parms = {
           Bucket: bk,
           Region: rg,
           Key: folder
         }
+        console.log(parms)
 //                this.$store.dispatch('bucket/headObject', {pms: parms}).then(function (hd) {
 //                    if (hd.BucketExist) {
 //                        _self.$message.error('文件名称重复，请重新输入!');
 //                    } else {
         _self.$store.dispatch('bucket/putObject', {pms: parms}).then(function (res) {
-          console.log('this-back', res);
-          _self.fetchData();
-          _self.newFolder = false;
-          _self.folderName = '新建文件夹';
+          console.log('this-back', res)
+          _self.fetchData()
+          _self.newFolder = false
+          _self.folderName = '新建文件夹'
         })
 //                    }
 //                })
 
       },
       fetchData() {
-        let bk = this.options.bucket, rg = this.options.region;
-        this.$store.commit('menulist/fileloading', {loading: true});
+        let bk = this.options.bucket, rg = this.options.region
+        this.$store.commit('menulist/fileloading', {loading: true})
         if (bk && rg) {
-          let params = {Bucket: bk, Region: rg};
+          let params = {Bucket: bk, Region: rg}
           if (this.options.folders && this.options.folders.length) {
-            params.Prefix = this.options.folders;
+            params.Prefix = this.options.folders
           }
-          this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => this.$store.commit('menulist/fileloading', {loading: false}));
+          this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => {
+            this.$store.commit('menulist/fileloading', {loading: false})
+            this.$store.commit('menulist/unSelectFile')
+          })
         }
       },
       itemSelect(Name) {
-        this.$store.commit('menulist/selectFile', {fileName: Name});
+        this.$store.commit('menulist/selectFile', {fileName: Name})
       },
       fileContentClick(e){
         if (e.target.classList.contains('list-info')) {
-          this.$store.commit('menulist/unSelectFile');
+          this.$store.commit('menulist/unSelectFile')
         }
       },
       tabFn(item){
         this.tabList.forEach(function (tab) {
-          tab.iscur = false;
+          tab.iscur = false
         })
-        item.iscur = true;
+        item.iscur = true
       },
       goFolder(e, file){
-        if (!file.dir) return;
-        this.options.folders = file.Prefix;
-        this.options.keyWord = null;
+        if (!file.dir) return
+        this.options.folders = file.Prefix
+        this.options.keyWord = null
         let pms = {bucket: this.options.bucket, region: this.options.region, folders: this.options.folders}
         this.$router.push({
           path: '/file/' + this.options.bucket,
@@ -317,60 +321,60 @@
 //                    menu.popup(remote.getCurrentWindow())
 //                }, false)
 
-//                let currentDom = e.target;
-//                if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
-//                    this.$store.commit('menulist/unSelectFile');
-//                    this.menu.list = this.fileRightList.filter((m) => {
-//                        if (this.menu.blanks.includes(m.key)) {
-//                            return m;
-//                        }
-//                    })
-//                } else {
-//                    for (let i = 0; i < 5; i++) {
-//                        if (currentDom.classList.contains('file-list-info')) {
-//                            let currentFileName = currentDom.getAttribute('currentFileName');
-//                            if (currentFileName) {
-//                                this.$store.commit('menulist/selectFile', {fileName: currentFileName});
-//                            }
-//                            break;
-//                        }
-//                        currentDom = currentDom.parentNode;
-//                    }
-//                    if (this.selectFile) {
-//                        if (this.selectFile.dir) {
-//                            this.menu.list = this.fileRightList.filter((m) => {
-//                                if (this.menu.folders.includes(m.key)) {
-//                                    return m;
-//                                }
-//                            })
-//                        } else {
-//                            this.menu.list = this.fileRightList.filter((m) => {
-//                                if (this.menu.files.includes(m.key)) {
-//                                    return m;
-//                                }
-//                            })
-//                        }
-//                    }
-//                }
-//
-//
-//                let _self = this;
-//                this.$nextTick(function () {
-////                    _self.$refs.fileRight.focus();
-//                    let top = e.y - 90, left = e.x - 225;
-//                    let largestHeight = window.innerHeight - _self.$refs.fileRight.offsetHeight - 25;
-//                    let largestWidth = window.innerWidth - _self.$refs.fileRight.offsetWidth - 225;
-//                    if (top > largestHeight) top = largestHeight;
-//                    if (left > largestWidth) left = largestWidth;
-//                    _self.menu.top = top + 'px';
-//                    _self.menu.left = left + 'px';
-//                    _self.isShowList = true;
-//                    document.addEventListener('click', _self.closeFileMenu)
-//                });
-//                e.preventDefault();
+        let currentDom = e.target
+        if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
+          this.$store.commit('menulist/unSelectFile')
+          this.menu.list = this.fileRightList.filter((m) => {
+            if (this.menu.blanks.includes(m.key)) {
+              return m
+            }
+          })
+          this.$store.commit('menulist/unSelectFile')
+        } else {
+          for (let i = 0; i < 5; i++) {
+            if (currentDom.classList.contains('file-list-info')) {
+              let currentFileName = currentDom.getAttribute('currentFileName')
+              if (currentFileName) {
+                this.$store.commit('menulist/selectFile', {fileName: currentFileName})
+              }
+              break
+            }
+            currentDom = currentDom.parentNode
+          }
+          if (this.selectFile) {
+            if (this.selectFile.dir) {
+              this.menu.list = this.fileRightList.filter((m) => {
+                if (this.menu.folders.includes(m.key)) {
+                  return m
+                }
+              })
+            } else {
+              this.menu.list = this.fileRightList.filter((m) => {
+                if (this.menu.files.includes(m.key)) {
+                  return m
+                }
+              })
+            }
+          }
+        }
+
+        let _self = this
+        this.$nextTick(function () {
+//                    _self.$refs.fileRight.focus();
+          let top = e.y - 90, left = e.x - 225
+          let largestHeight = window.innerHeight - _self.$refs.fileRight.offsetHeight - 25
+          let largestWidth = window.innerWidth - _self.$refs.fileRight.offsetWidth - 225
+          if (top > largestHeight) top = largestHeight
+          if (left > largestWidth) left = largestWidth
+          _self.menu.top = top + 'px'
+          _self.menu.left = left + 'px'
+          _self.isShowList = true
+          document.addEventListener('click', _self.closeFileMenu)
+        })
+        e.preventDefault()
       },
       closeFileMenu() {
-        this.isShowList = false;
+        this.isShowList = false
         document.removeEventListener('click', this.closeFileMenu)
       }
     }

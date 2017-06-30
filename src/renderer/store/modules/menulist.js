@@ -2,9 +2,12 @@
  * Created by gokuai on 17/6/7.
  */
 
+const headOpt = ['', '', '', '', '', '', '']
 const state = {
   filelist: null,
+
   fileloading: true,
+
   selectFile: {
     select: false
   },
@@ -65,74 +68,156 @@ const state = {
       isActive: false
     },
   ],
+
+  dialogGetHttp: {
+    isShow: false,
+    bucket: null,
+    url: null
+  },
+  fileHeaderInfo: {
+    isShow: false,
+    initialData: [{
+      value: '1',
+      label: 'Cache-Control'
+    }, {
+      value: '2',
+      label: 'Content-Type'
+    }, {
+      value: '3',
+      label: 'Content-Disposition'
+    }, {
+      value: '4',
+      label: 'Content-Language'
+    }, {
+      value: '5',
+      label: 'Content-Encoding'
+    }, {
+      value: '6',
+      label: 'x-cos-meta'
+    }],
+    data: [{
+      date: [{
+        value: '1',
+        label: 'Cache-Control'
+      }, {
+        value: '2',
+        label: 'Content-Type'
+      }, {
+        value: '3',
+        label: 'Content-Disposition'
+      }, {
+        value: '4',
+        label: 'Content-Language'
+      }, {
+        value: '5',
+        label: 'Content-Encoding'
+      }, {
+        value: '6',
+        label: 'x-cos-meta'
+      }],
+      cosMeta: '',
+      value: '',
+      select: ''
+    }]
+  }
 }
 
 const mutations = {
   fileloading(state, val){
-    state.fileloading = val.loading;
+    state.fileloading = val.loading
   },
   selectFile(state, val){
     state.filelist.forEach(function (file) {
-      file.active = false;
+      file.active = false
       if (file.Name === val.fileName) {
-        file.active = true;
-        state.selectFile = file;
-        if (file.dir) {
-          state.selectFile.select = false;
-        } else {
-          state.selectFile.select = true;
-        }
+        file.active = true
+        file.select = true
+        file.url = ''
+        state.selectFile = file
       }
     })
   },
   unSelectFile(state){
     state.filelist.forEach(function (file) {
-      file.active = false;
+      file.active = false
     })
     state.selectFile = {
       select: false
-    };
+    }
   },
   getFileList(state, data){
     // console.log('当前文件列表', data)
-    let index = null;
+    let index = null
     if (data.objects.length) {
       data.objects.forEach(function (item, idx) {
-        if (item.Name == "") index = idx;
-        item.active = false;
+        if (item.Name == '') index = idx
+        item.active = false
       })
     }
     if (data.dirs.length) {
       data.dirs.forEach(function (d) {
-        d.active = false;
-        d.dir = true;
+        d.active = false
+        d.dir = true
       })
     }
     if (index != null) data.objects.splice(index, 1)
-    state.filelist = data.objects.concat(data.dirs);
+    state.filelist = data.objects.concat(data.dirs)
   },
   searchFileList(state, data){
-    let index = null;
+    let index = null
     if (data.objects.length) {
       data.objects.forEach(function (item, idx) {
-        if (item.Name == "") index = idx;
-        item.active = false;
+        if (item.Name == '') index = idx
+        item.active = false
       })
     }
     if (data.dirs.length) {
       data.dirs.forEach(function (d) {
-        d.active = false;
-        d.dir = true;
+        d.active = false
+        d.dir = true
       })
     }
-    if (index != null) data.objects.splice(index, 1);
-    let Arr = data.objects.concat(data.dirs);
+    if (index != null) data.objects.splice(index, 1)
+    let Arr = data.objects.concat(data.dirs)
     let serchlist = Arr.filter((n) => {
       if (n.Name.indexOf(data.keywords) > -1) {
         return n
       }
     })
-    state.filelist = serchlist;
+    state.filelist = serchlist
+  },
+
+  getFileHttp(state, param){
+    console.log(state.selectFile)
+    if (state.selectFile)
+      state.dialogGetHttp = {
+        isShow: true,
+        bucket: param.Bucket,
+        url: 'http://' + param.Bucket + '-1253834952.' + param.Region + '.myqcloud.com/' + state.selectFile.Key
+      }
+  },
+  setFileHttpHidden(state){
+    state.dialogGetHttp.isShow = false
+  },
+  setHttp(state, val){
+    if (val === 'cancel')
+      state.fileHeaderInfo.isShow = false
+    else {
+      state.fileHeaderInfo.isShow = true
+    }
+  },
+  selectHttpChange(state, parms){
+    state.fileHeaderInfo.data.forEach(function (item, idx) {
+      if (idx === parms.index) {
+        item.select = parms.list.select
+      }
+    })
+  },
+  addHttpDom(state){
+    state.fileHeaderInfo.data.push({date: state.fileHeaderInfo.initialData, value: '', select: '', cosMeta: ''})
+  },
+  deleteHttpDom(state, index){
+    state.fileHeaderInfo.data.splice(index, 1)
   }
 }
 
@@ -141,7 +226,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       rootGetters.userConfig.listObject(params.pms).then(function (resp) {
         if (params.pms.Page) {
-          resp.keywords = params.pms.Keywords;
+          resp.keywords = params.pms.Keywords
           commit('searchFileList', resp)
         } else {
           commit('getFileList', resp)
@@ -154,14 +239,15 @@ const actions = {
     // return new Promise((resolve, reject) => {
     rootGetters.userConfig.sliceUploadFile(params.params, params.file, params.option).then(function (resp) {
 
-    });
+    })
     // })
   },
   deleteFile({commit, rootGetters}, params){
     return new Promise((resolve, reject) => {
       rootGetters.userConfig.cos.deleteObject(params.pms, function (err, data) {
+        console.log('this----', arguments)
         if (!err) {
-          resolve(data);
+          resolve(data)
         } else {
           reject(err)
         }

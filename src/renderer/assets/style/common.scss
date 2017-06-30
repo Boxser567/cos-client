@@ -33,5 +33,6 @@ a {
 }
 
 ::selection {
-  background: white; /* WebKit/Blink Browsers */
+  background: $activebg2;
+  color: #fff;
 }

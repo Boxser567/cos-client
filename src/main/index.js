@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcRenderer } from 'electron'
 import ipc from './cos'
 /**
  * Set `__static` path to static files in production
@@ -28,7 +28,10 @@ function createWindow () {
   })
 
   mainWindow.loadURL(winURL)
+  if (ipcRenderer) {
+    ipcRenderer.send('NewUploadTask')
 
+  }
   mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
     // item.setSavePath()
 
