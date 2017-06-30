@@ -3,6 +3,7 @@ import Resource from 'vue-resource'
 // import axios from 'axios'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-default/index.css'
+
 import  { ipcRenderer } from  'electron'
 
 import App from './App'
@@ -15,6 +16,8 @@ Vue.use(ElementUI)
 
 
 ipcRenderer.send('GetUploadTasks')
+
+
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 // Vue.http = Vue.prototype.$http = axios

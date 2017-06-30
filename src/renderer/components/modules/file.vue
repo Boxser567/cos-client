@@ -258,12 +258,11 @@
         console.log(filelist)
         let path = filelist.file.path
         let fileName = filelist.file.name  //path.replace(/\\/g, '/').replace(/.*\//, '');
-        let
-          params= {
+        let params= {
             Bucket: this.options.bucket,
             Region: this.options.region,
             Key: fileName,
-            fileName: path
+            FileName: path
         }
         this.$store.dispatch('menulist/sliceUploadFile', params)
       },
