@@ -4,7 +4,7 @@
 'use strict'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
-import { TaskStatus, Tasks, MockDownloadTask, MockUploadTask } from './task'
+import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
 
 export default function () {
   let cos = new Cos({
@@ -133,7 +133,7 @@ export default function () {
      * @param  {string}   arg.FileName
      */
     // todo 同源不同目标
-    if (uploads.tasks.find(t => t.file.fileName === arg.FileName)) return
+    if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
     new MockUploadTask(cos, arg.FileName, {
       Bucket: arg.Bucket,
@@ -147,8 +147,8 @@ export default function () {
 
   ipcMain.on('PauseUploadTasks', (event, arg) => {
     /**
-     * @param {object} arg
-     * @param {int[]} arg.tasks
+     * @param {object}  arg
+     * @param {int[]}   arg.tasks
      * @param {boolean} arg.wait
      */
     arg.tasks.forEach(id => {
@@ -161,10 +161,26 @@ export default function () {
     })
   })
 
+  ipcMain.on('ResumeUploadTask', (event, arg) => {
+    /**
+     * @param {object}  arg
+     * @param {int[]}   arg.tasks
+     * @param {boolean} arg.wait
+     */
+    arg.tasks.forEach(id => {
+      let task = uploads.findTask(id)
+      if (!task) return
+      if (task.status === TaskStatus.PAUSE) {
+        task.status = TaskStatus.WAIT
+      }
+      uploads.next()
+    })
+  })
+
   ipcMain.on('DeleteUploadTasks', (event, arg) => {
     /**
      * @param {object} arg
-     * @param {int[]} arg.tasks
+     * @param {int[]}  arg.tasks
      */
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
@@ -205,7 +221,7 @@ export default function () {
      * @param  {string}   arg.FileName
      */
     // todo 同源不同目标
-    if (uploads.tasks.find(t => t.file.fileName === arg.FileName)) return
+    if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
     new MockDownloadTask(cos, arg.FileName, {
       Bucket: arg.Bucket,
@@ -219,8 +235,8 @@ export default function () {
 
   ipcMain.on('PauseDownloadTasks', (event, arg) => {
     /**
-     * @param {object} arg
-     * @param {int[]} arg.tasks
+     * @param {object}  arg
+     * @param {int[]}   arg.tasks
      * @param {boolean} arg.wait
      */
     arg.tasks.forEach(id => {
@@ -230,6 +246,22 @@ export default function () {
         task.stop()
       }
       task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+    })
+  })
+
+  ipcMain.on('ResumeDownloadTask', (event, arg) => {
+    /**
+     * @param {object}  arg
+     * @param {int[]}   arg.tasks
+     * @param {boolean} arg.wait
+     */
+    arg.tasks.forEach(id => {
+      let task = uploads.findTask(id)
+      if (!task) return
+      if (task.status === TaskStatus.PAUSE) {
+        task.status = TaskStatus.WAIT
+      }
+      uploads.next()
     })
   })
 

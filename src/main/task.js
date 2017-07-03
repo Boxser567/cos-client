@@ -37,7 +37,7 @@ function Tasks (max) {
     }
     throw new Error('broken task status')
   }
-  this.getActivity = () => activity
+  this.full = () => activity >= max
 }
 
 Tasks.prototype.newTask = function (task) {
@@ -61,10 +61,11 @@ Tasks.prototype.deleteTask = function (id) {
 }
 
 Tasks.prototype.next = function () {
-  let task = this.tasks.find(t => t.status === TaskStatus.WAIT)
-  if (!task) {
-    return Promise.resolve()
-  }
+  if (this.full()) return
+
+  let task = this.tasks.find(t => t && t.status === TaskStatus.WAIT)
+  if (!task) return
+
   task.status = TaskStatus.RUN
   this.add()
   return task.start().then(result => {
