@@ -12,7 +12,6 @@ export default function () {
     SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
     SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
   })
-  let uploads = new Tasks(3)
 
   ipcMain.on('GetBucket', (event, arg) => {
     cos.getService((err, data) => {
@@ -42,14 +41,14 @@ export default function () {
    * @return  {object}    data  返回的数据
    *     @return  {string}    data.Location  操作地址
    */
-  ipcMain.on('PutBucket', (event, arg) => {
-    cos.putBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('PutBucket-error', err)
-      }
-      event.sender.send('PutBucket-data', data.Location)
-    })
-  })
+  // ipcMain.on('PutBucket', (event, arg) => {
+  //   cos.putBucket(arg, (err, data) => {
+  //     if (err) {
+  //       event.sender.send('PutBucket-error', err)
+  //     }
+  //     event.sender.send('PutBucket-data', data.Location)
+  //   })
+  // })
 
   /**
    * 删除 Bucket
@@ -61,58 +60,25 @@ export default function () {
    * @return  {object}    data  返回的数据
    *     @return  {string}    data.Location  操作地址
    */
-  ipcMain.on('DeleteBucket', (event, arg) => {
-    cos.putBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('DeleteBucket-error', err)
-      }
-      event.sender.send('DeleteBucket-data', data.Location)
-    })
-  })
+  // ipcMain.on('DeleteBucket', (event, arg) => {
+  //   cos.putBucket(arg, (err, data) => {
+  //     if (err) {
+  //       event.sender.send('DeleteBucket-error', err)
+  //     }
+  //     event.sender.send('DeleteBucket-data', data.Location)
+  //   })
+  // })
 
-  ipcMain.on('GetObject', (event, arg) => {
-    cos.putBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('GetObject-error', err)
-      }
-      event.sender.send('GetObject-data', data.Location)
-    })
-  })
+  // ipcMain.on('DeleteObject', (event, arg) => {
+  //   cos.putBucket(arg, (err, data) => {
+  //     if (err) {
+  //       event.sender.send('DeleteBucket-error', err)
+  //     }
+  //     event.sender.send('DeleteBucket-data', data.Location)
+  //   })
+  // })
 
-  ipcMain.on('PutObject', (event, arg) => {
-    arg.forEach((item) => {
-
-    })
-    // todo
-    cos.sliceUploadFile(arg)
-    cos.putBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('PutObject-error', err)
-      }
-      event.sender.send('PutObject-data', data.Location)
-    })
-  })
-
-  ipcMain.on('DeleteObject', (event, arg) => {
-    cos.putBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('DeleteBucket-error', err)
-      }
-      event.sender.send('DeleteBucket-data', data.Location)
-    })
-  })
-
-  ipcMain.on('NewUploadTask', (event, arg) => {
-    // let task = uploads.findTaskByFileName(arg.FileName)
-    // if (task) {
-    //   return
-    // }
-    // todo
-    new MockTask(arg).then(task => {
-      uploads.newTask(task)
-      uploads.next()
-    })
-  })
+  let uploads = new Tasks(3)
 
   ipcMain.on('GetUploadTasks', (event, arg) => {
     setInterval(() => {
@@ -129,10 +95,97 @@ export default function () {
       }))
     }, 1500)
   })
+
+  ipcMain.on('NewUploadTask', (event, arg) => {
+    // let task = uploads.findTaskByFileName(arg.FileName)
+    // if (task) {
+    //   return
+    // }
+    // todo
+    new MockUploadTask(arg).then(task => {
+      uploads.newTask(task)
+      uploads.next()
+    })
+  })
+
+  ipcMain.on('PauseUploadTasks', (event, arg) => {
+    arg.tasks.forEach(id => {
+      let task = uploads.findTask(id)
+      if (!task) return
+      if (task.status === TaskRun) {
+        task.stop()
+      }
+      task.status = arg.wait ? TaskWait : TaskPause
+    })
+  })
+
+  ipcMain.on('DeleteUploadTasks', (event, arg) => {
+    arg.tasks.forEach(id => {
+      let task = uploads.findTask(id)
+      if (!task) return
+      if (task.status === TaskRun) {
+        task.stop()
+      }
+      uploads.deleteTask(id)
+    })
+  })
+
+  let downloads = new Tasks(3)
+
+  ipcMain.on('GetDownloadTasks', (event, arg) => {
+    setInterval(() => {
+      event.sender.send('GetDownloadTasks-data', downloads.tasks.map(t => {
+        return {
+          id: t.id,
+          Key: t.params.Key,
+          FileName: t.file.fileName,
+          status: t.status,
+          size: t.progress.total,
+          loaded: t.progress.loaded,
+          speed: 0
+        }
+      }))
+    }, 1500)
+  })
+
+  ipcMain.on('NewDownloadTask', (event, arg) => {
+    // let task = uploads.findTaskByFileName(arg.FileName)
+    // if (task) {
+    //   return
+    // }
+    // todo
+    new MockDownloadTask(arg).then(task => {
+      uploads.newTask(task)
+      uploads.next()
+    })
+  })
+
+  ipcMain.on('PauseDownloadTasks', (event, arg) => {
+    arg.tasks.forEach(id => {
+      let task = downloads.findTask(id)
+      if (!task) return
+      if (task.status === TaskRun) {
+        task.stop()
+      }
+      task.status = arg.wait ? TaskWait : TaskPause
+    })
+  })
+
+  ipcMain.on('DeleteDownloadTasks', (event, arg) => {
+    arg.tasks.forEach(id => {
+      let task = downloads.findTask(id)
+      if (!task) return
+      if (task.status === TaskRun) {
+        task.stop()
+      }
+      downloads.deleteTask(id)
+    })
+  })
 }
 
 const TaskWait = 'wait'
 const TaskRun = 'run'
+const TaskPause = 'pause'
 const TaskComplete = 'complete'
 const TaskError = 'error'
 
@@ -225,6 +278,7 @@ function UploadTask (cos, name, params, option = {}) {
   this.cos = cos
   this.params = params
   this.file = {}
+  this.progress = {list: [], loaded: 0, total: 0}
   this.asyncLim = option.asyncLim || 2
   this.cancel = false
 
@@ -242,7 +296,7 @@ function UploadTask (cos, name, params, option = {}) {
       }
 
       let n = this.file.fileSize
-      this.progress = {list: [], total: this.file.fileSize}
+      this.progress.total = this.file.fileSize
       while (n > this.file.sliceSize) {
         this.progress.list.push({total: this.file.sliceSize})
         n -= this.file.sliceSize
@@ -437,17 +491,48 @@ function * getSliceIterator (file) {
   yield getSliceMD5(file.fileName, index, start, file.fileSize - 1)
 }
 
-function DownloadTask () {}
+function DownloadTask (cos, name, params, option = {}) {
+  this.cos = cos
+  this.params = params
+  this.file = {
+    fileName: name
+  }
+  this.progress = {loaded: 0, total: 0}
+  this.cancel = false
+  return new Promise((resolve, reject) => {
+    this.cos.headObject(params, (err, result) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      this.file.fileSize = parseInt(result['content-length'])
+      resolve(this)
+    })
+  })
+}
 
 DownloadTask.prototype.start = function () {
+  this.params.Output = fs.createWriteStream(this.name)
 
+  this.params.Output.on('drain', () => {
+
+  })
+  return new Promise((resolve, reject) => {
+    this.cos.getObject(this.params, (err, result) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve(result)
+    })
+  })
 }
 
 DownloadTask.prototype.stop = function () {
-
+  this.cancel = true
 }
 
-function MockTask (arg) {
+function MockUploadTask (arg) {
   this.params = {
     Bucket: arg.Bucket,
     Region: arg.Region,
@@ -464,7 +549,38 @@ function MockTask (arg) {
   return Promise.resolve(this)
 }
 
-MockTask.prototype.start = function () {
+MockUploadTask.prototype.start = function () {
+  return new Promise((resolve, reject) => {
+    let p = setInterval(() => {
+      this.progress.loaded += 20900
+    }, 100)
+
+    setTimeout(() => {
+      clearInterval(p)
+      this.progress.loaded = this.progress.total
+      resolve()
+    }, 5000)
+  })
+}
+
+function MockDownloadTask (arg) {
+  this.params = {
+    Bucket: arg.Bucket,
+    Region: arg.Region,
+    Key: arg.Key
+  }
+  this.file = {
+    fileName: arg.FileName
+  }
+  this.asyncLim = 2
+  this.cancel = false
+  this.progress = {}
+  this.progress.total = 1 << 20
+  this.progress.loaded = 0
+  return Promise.resolve(this)
+}
+
+MockDownloadTask.prototype.start = function () {
   return new Promise((resolve, reject) => {
     let p = setInterval(() => {
       this.progress.loaded += 20900
