@@ -36,3 +36,17 @@ a {
   background: $activebg2;
   color: #fff;
 }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cfd2d7;
+  border-radius: 10px;
+}

@@ -229,6 +229,7 @@
     background: #fff;
     position: relative;
     &.list-none {
+      //animation: slideUpDown 1s ease-in 0;
       height: calc(100% - 40px);
     }
     .name {
@@ -372,6 +373,26 @@
       border-bottom: 1px solid $borderColor;
     }
     .progress-file {
+      overflow: auto;
+      max-height: 180px;
+      .progress-bar {
+        &:hover {
+          background: $fileBgColor;
+        }
+        &.active {
+          background: $activebg2;
+          .el-col {
+            color: #fff;
+          }
+          .el-progress-bar__inner {
+            background: #fff;
+          }
+          .el-progress__text {
+            color: #fff;
+          }
+        }
+      }
+
     }
     .progress-bar {
       position: relative;

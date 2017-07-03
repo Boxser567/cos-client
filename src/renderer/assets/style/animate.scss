@@ -1,0 +1,8 @@
+@keyframes slideUpDown {
+  from {
+    height: calc(100% - 270px - 30px);;
+  }
+  to {
+    height: calc(100% - 40px);
+  }
+}

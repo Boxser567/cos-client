@@ -48,44 +48,6 @@
         </div>
 
         <div class="list-progress" :class="{ 'list-none':listNone }">
-            <div>
-                <!--<el-tabs v-model="activeName2" type="card">-->
-                <!--<el-tab-pane label="上传队列" name="first">-->
-                <!--<div class="title-bar">-->
-                <!--<div class="el-button-group">-->
-                <!--<el-button size="small" :plain="true">暂停</el-button>-->
-                <!--<el-button size="small" :plain="true">取消</el-button>-->
-                <!--</div>-->
-                <!--<div class="el-button-group">-->
-                <!--<el-button size="small" :plain="true">全部开始</el-button>-->
-                <!--<el-button size="small" :plain="true">全部暂停</el-button>-->
-                <!--<el-button size="small" :plain="true">全部取消</el-button>-->
-                <!--<el-button size="small" :plain="true">清空已完成</el-button>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</el-tab-pane>-->
-                <!--<el-tab-pane label="下载队列" name="second">-->
-                <!--<div class="title-bar">-->
-                <!--<div class="el-button-group">-->
-                <!--<el-button size="small" :plain="true">暂停</el-button>-->
-                <!--<el-button size="small" :plain="true">取消</el-button>-->
-                <!--</div>-->
-                <!--<div class="el-button-group">-->
-                <!--<el-button size="small" :plain="true">全部开始</el-button>-->
-                <!--<el-button size="small" :plain="true">全部暂停</el-button>-->
-                <!--<el-button size="small" :plain="true">全部取消</el-button>-->
-                <!--<el-button size="small" :plain="true">清空已完成</el-button>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</el-tab-pane>-->
-                <!--<el-tab-pane label="错误日志" name="third">-->
-                <!--<div class="title-bar">-->
-                <!--<el-button size="small" :plain="true">打开日志文件夹</el-button>-->
-                <!--</div>-->
-                <!--</el-tab-pane>-->
-                <!--</el-tabs>-->
-            </div>
-
             <div class="el-side-tab">
                 <div class="el-side-head clearfix">
                     <ul>
@@ -101,31 +63,43 @@
                     <div class="first" v-show=" tabList[0].iscur ">
                         <div class="title-bar">
                             <div class="el-button-group">
-                                <el-button size="small" :plain="true">暂停</el-button>
-                                <el-button size="small" :plain="true">取消</el-button>
+                                <el-button size="small" :plain="true" @click="uploadFileCtrl('purse')">暂停</el-button>
+                                <el-button size="small" :plain="true" @click="uploadFileCtrl('cancel')">取消</el-button>
                             </div>
                             <div class="el-button-group">
-                                <el-button size="small" :plain="true">全部开始</el-button>
-                                <el-button size="small" :plain="true">全部暂停</el-button>
-                                <el-button size="small" :plain="true">全部取消</el-button>
-                                <el-button size="small" :plain="true">清空已完成</el-button>
+                                <el-button size="small" :plain="true" @click="uploadFileCtrl('allBegin')">全部开始
+                                </el-button>
+                                <el-button size="small" :plain="true" @click="uploadFileCtrl('allPurse')">全部暂停
+                                </el-button>
+                                <el-button size="small" :plain="true" @click="uploadFileCtrl('allCancel')">全部取消
+                                </el-button>
+                                <el-button size="small" :plain="true" @click="uploadFileCtrl('clear')">清空已完成</el-button>
                             </div>
                         </div>
                         <div class="progress-file">
-                            <div class="progress-bar">
-                                <img src="../../../../static/images/file-icon/folder32x32.png" alt="">
+                            <div class="progress-bar" :class="{active:file.id === selectLoadFileID}"
+                                 v-for="file in fileUploadProgress"
+                                 @click="selectLoadFile(file.id)">
+                                <img :src="file.Key | getFileImg" alt="">
                                 <el-row>
                                     <el-col :span="12">
-                                        <p class="tl">曹操传.pdf</p>
-                                        <el-progress :percentage="43"></el-progress>
+                                        <p class="tl">{{file.Key}}</p>
+                                        <el-progress
+                                                :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>
                                     </el-col>
                                     <el-col :span="4">
-                                        18.25MB
+                                        {{file.size | bitSize}}
                                     </el-col>
                                     <el-col :span="4">
-                                        00:00:08
+                                        <span v-if="file.status=='wait'" @click="uploadFileCtrl(file.id)">等待中</span>
+                                        <span v-if="file.status=='pause'" @click="uploadFileCtrl(file.id)">暂停</span>
+                                        <span v-if="file.status=='complete'" @click="uploadFileCtrl(file.id)">完成</span>
+                                        <span v-if="file.status=='run'" @click="uploadFileCtrl(file.id)">{{file.speed}} /s</span>
+                                        <span v-if="file.status=='error'" @click="uploadFileCtrl(file.id)">出错</span>
                                     </el-col>
                                     <el-col :span="4">
+                                        <i v-if="file.status=='pause'" class="el-icon-caret-right"></i>
+                                        <i v-if="file.status == 'run'"> | | </i>
                                         <i class="el-icon-close"></i>
                                     </el-col>
                                 </el-row>
@@ -201,6 +175,7 @@
         upSpeed: '-',
         loadSpeed: '-',
         folderName: '新建文件夹',
+        selectLoadFileID: null,
         menu: {
           list: null,
           top: 0,
@@ -230,9 +205,9 @@
       selectFile(){
         return this.$store.state.menulist.selectFile
       },
-      fileProgress(){
-        console.log('this-fileProgress', this.$store.state.menulist.fileProgress)
-        return this.$store.state.menulist.fileProgress
+      fileUploadProgress(){
+//        console.log('this-fileProgress', this.$store.state.menulist.fileUploadProgress)
+        return this.$store.state.menulist.fileUploadProgress
       }
     },
     created(){
@@ -259,19 +234,12 @@
           Region: rg,
           Key: folder
         }
-        console.log(parms)
-//                this.$store.dispatch('bucket/headObject', {pms: parms}).then(function (hd) {
-//                    if (hd.BucketExist) {
-//                        _self.$message.error('文件名称重复，请重新输入!');
-//                    } else {
         _self.$store.dispatch('bucket/putObject', {pms: parms}).then(function (res) {
           console.log('this-back', res)
           _self.fetchData()
           _self.newFolder = false
           _self.folderName = '新建文件夹'
         })
-//                    }
-//                })
 
       },
       fetchData() {
@@ -290,6 +258,10 @@
       },
       itemSelect(Name) {
         this.$store.commit('menulist/selectFile', {fileName: Name})
+      },
+      selectLoadFile(id){
+        this.selectLoadFileID = id
+//        this.$store.commit('menulist/selectLoadFile', id)
       },
       fileContentClick(e){
         if (e.target.classList.contains('list-info')) {
@@ -367,6 +339,9 @@
       closeFileMenu() {
         this.isShowList = false
         document.removeEventListener('click', this.closeFileMenu)
+      },
+      uploadFileCtrl(types){
+        this.$store.dispatch('menulist/uploadFileCtrl', types)
       },
       rightClickFn(item){
         switch (item.key) {

@@ -2,13 +2,13 @@
  * Created by gokuai on 17/6/7.
  */
 
-import  { ipcRenderer } from  'electron'
+import  { remote, ipcRenderer } from  'electron'
 
 const state = {
   filelist: null,
 
   fileloading: true,
-  fileProgress: null,
+  fileUploadProgress: null,
 
   selectFile: {
     select: false
@@ -129,7 +129,7 @@ const mutations = {
     state.fileloading = val.loading
   },
   updataProgress(state, data){
-    state.fileProgress = data
+    state.fileUploadProgress = data
   },
   selectFile(state, val){
     state.filelist.forEach(function (file) {
@@ -223,6 +223,18 @@ const mutations = {
   },
   deleteHttpDom(state, index){
     state.fileHeaderInfo.data.splice(index, 1)
+  },
+
+  selectLoadFile(state, id){
+    if (state.fileUploadProgress && state.fileUploadProgress.length) {
+      state.fileUploadProgress.map(function (file) {
+        if (file.active) file.active = false
+        if (file.id === id) {
+          file.active = true
+        }
+      })
+    }
+    console.log('checkMyfile', state.fileUploadProgress)
   }
 }
 
@@ -240,16 +252,8 @@ const actions = {
       })
     })
   },
-  sliceUploadFile({commit, state}, params){
-    // return new Promise((resolve, reject) => {
+  sliceUploadFile({}, params){
     ipcRenderer.send('NewUploadTask', params)
-    if (!state.fileProgress) {
-      ipcRenderer.on('GetUploadTasks-data', (event, data) => {
-        console.log(data)
-        commit('updataProgress', data)
-      })
-    }
-    // })
   },
   deleteFile({commit, rootGetters}, params){
     return new Promise((resolve, reject) => {
@@ -263,27 +267,109 @@ const actions = {
       })
     })
   },
-  showList({commit}, val)
-  {
+  showList({commit}, val){
     commit('showList', val)
-  }
-  ,
-  selectFile({commit}, val)
-  {
+  },
+  selectFile({commit}, val){
     commit('selectFile', val.amount)
-  }
-  ,
-  uploadFile(context)
+  },
+  uploadFile({commit}, pms)
   {
-    console.log(context.state.selectFile)
-  }
-  ,
-  newFolder(context)
-  {
-  }
-  ,
-  downloadFile(context)
-  {
+    console.log(pms)
+    remote.dialog.showOpenDialog({
+      filters: [{name: 'All Files', extensions: ['*']}],
+      properties: ['openFile', 'multiSelections']
+    }, function (fileArray) {
+      if (!fileArray) return
+      fileArray.forEach(function (file) {
+        let path = file
+        let fileName = path.replace(/\\/g, '/').replace(/.*\//, '')
+        let params = Object.assign({
+          Key: fileName,
+          FileName: path
+        }, pms)
+        console.log(params)
+        ipcRenderer.send('NewUploadTask', params)
+      })
+
+    })
+  },
+
+  uploadFileCtrl({commit, state}, val){
+    if (!val)return
+    if (!state.fileUploadProgress) return
+    console.log('this-state.fileUploadProgress', state.fileUploadProgress)
+    switch (val) {
+      case 'purse':
+        state.fileUploadProgress.forEach(function (file) {
+          if (file.active) {
+            ipcRenderer.send('PauseUploadTasks', {tasks: [file.id]})
+          }
+        })
+        break
+      case 'cancel':      //取消
+        state.fileUploadProgress.forEach(function (file) {
+          if (file.active) {
+            // ipcRenderer.send('PauseUploadTasks', {tasks: [file.id]})
+            ipcRenderer.send('DeleteUploadTasks', {tasks: [file.id]})
+          }
+        })
+        break
+      case 'allBegin':    //全部开始
+        break
+      case 'allPurse':    //全部暂停
+        let parmsAllPurse = {tasks: []}
+        state.fileUploadProgress.forEach(function (file) {
+          if (file.status === 'run') {
+            parmsAllPurse.tasks.push(file.id)
+          }
+        })
+        if (parmsAllPurse.tasks.length) {
+          ipcRenderer.send('PauseUploadTasks', parmsAllPurse)
+        }
+        break
+      case 'allCancel':   //全部取消
+        let parmsAllCancel = {
+          tasks: []
+        }
+        state.fileUploadProgress.forEach(function (file) {
+          if (['wait', 'run'].indexOf(file.status) > -1) {
+            parmsAllCancel.tasks.push(file.id)
+          }
+        })
+        if (parmsAllCancel.tasks.length) {
+          // ipcRenderer.send('PauseUploadTasks', parmsAllCancel)
+          ipcRenderer.send('DeleteUploadTasks', parmsAllCancel)
+        }
+        break
+      case 'clear':
+        let parms = {tasks: []}
+        state.fileUploadProgress.forEach(function (file) {
+          if (file.status === 'complete') {
+            parms.tasks.push(file.id)
+          }
+        })
+        if (parms.tasks.length) {
+          ipcRenderer.send('DeleteUploadTasks', parms)
+        }
+        break
+      default:
+        break
+    }
+  },
+  newFolder(context){},
+  downloadFile(context){
+  },
+
+  rightClick(){
+    return {
+      uploadFile(){
+
+      },
+      newFolder(){
+
+      }
+    }
   }
 }
 

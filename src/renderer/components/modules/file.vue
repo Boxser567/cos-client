@@ -24,15 +24,15 @@
             <div class="bottom-row">
                 <div class="file-opts">
                     <div class="el-button-group">
-                        <el-upload
-                                class="small-upload"
-                                action="http://11231231-1253834952.cn-north.myqcloud.com"
-                                :show-file-list="false"
-                                :multiple="true"
-                                :http-request="onProgress"
-                        >
-                            <el-button size="small" type="primary">点击上传</el-button>
-                        </el-upload>
+                        <!--<el-upload-->
+                        <!--class="small-upload"-->
+                        <!--action="http://11231231-1253834952.cn-north.myqcloud.com"-->
+                        <!--:show-file-list="false"-->
+                        <!--:multiple="true"-->
+                        <!--:http-request="onProgress"-->
+                        <!--&gt;-->
+                        <!--</el-upload>-->
+                        <el-button size="small" @click="uploadFile">点击上传</el-button>
 
                         <el-button size="small" @click="newFolder = !newFolder">新建文件夹</el-button>
                     </div>
@@ -178,13 +178,6 @@
       dialogGetHttp: {
         get(){
           return this.$store.state.menulist.dialogGetHttp
-        },
-        data: {
-          select: {
-            set(value){
-              console.log('1231111111', value)
-            }
-          }
         }
       },
       fileHeaderInfo(){
@@ -258,11 +251,11 @@
         console.log(filelist)
         let path = filelist.file.path
         let fileName = filelist.file.name  //path.replace(/\\/g, '/').replace(/.*\//, '');
-        let params= {
-            Bucket: this.options.bucket,
-            Region: this.options.region,
-            Key: fileName,
-            FileName: path
+        let params = {
+          Bucket: this.options.bucket,
+          Region: this.options.region,
+          Key: fileName,
+          FileName: path
         }
         this.$store.dispatch('menulist/sliceUploadFile', params)
       },
@@ -314,6 +307,13 @@
             })
           }
         }
+      },
+      uploadFile(){
+        let pms = {
+          Bucket: this.options.bucket,
+          Region: this.options.region
+        }
+        this.$store.dispatch('menulist/uploadFile', pms)
       },
       fetchFilelist(){        //刷新文件列表，重走路由
         let qey = {

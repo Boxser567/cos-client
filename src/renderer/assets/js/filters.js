@@ -45,6 +45,11 @@ function bitSize (num, decimal) {
   }
 }
 
+function getInteger (num) {
+  if (!Number(num)) return 0
+  return Math.floor(num)
+}
+
 const FILE_SORTS = {
   'SORT_SPEC': ['doc', 'docx', 'xls', 'xlsx', 'xlsm', 'ppt', 'pptx', 'pdf', 'ai', 'cdr', 'psd', 'dmg', 'iso', 'md', 'ipa', 'apk', 'gknote', 'lkt'],
   'SORT_MOVIE': ['mp4', 'mkv', 'rm', 'rmvb', 'avi', '3gp', 'flv', 'wmv', 'asf', 'mpeg', 'mpg', 'mov', 'ts', 'm4v'],
@@ -122,5 +127,6 @@ export default {
   bitSize: bitSize,
   getFileImg: getFileImg,
   getDirName: getDirName,
-  getArea: getArea
+  getArea: getArea,
+  getInteger: getInteger,
 }

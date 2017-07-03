@@ -100,6 +100,7 @@
 </template>
 
 <script>
+  import  { ipcRenderer } from  'electron'
   import { mutations, mapState } from 'vuex'
   export default {
     name: 'index-page',
@@ -155,6 +156,10 @@
       fetchData(){
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => this.bloading = false)
+        ipcRenderer.send('GetUploadTasks')
+        ipcRenderer.on('GetUploadTasks-data', (event, data) => {
+          this.$store.commit('menulist/updataProgress', data)
+        })
       },
       selectBucket: function (index, b) {
         this.$store.commit('bucket/bucketActive', index)
