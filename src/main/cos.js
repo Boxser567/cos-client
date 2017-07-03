@@ -4,7 +4,7 @@
 'use strict'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
-import { MockDownloadTask, MockUploadTask, Tasks } from './task'
+import { TaskStatus, Tasks, MockDownloadTask, MockUploadTask } from './task'
 
 export default function () {
   let cos = new Cos({
@@ -27,15 +27,28 @@ export default function () {
     })
   })
 
+  ipcMain.on('ListBucket', (event) => {
+    cos.getService((err, data) => {
+      if (err) {
+        event.sender.send('ListBucket-error', err)
+      }
+      let returnValue = []
+      data.Buckets.forEach((v) => {
+        v.Name = v.Name.split('-')[0]
+        returnValue.push(v)
+      })
+      event.sender.send('ListBucket-data', returnValue)
+    })
+  })
+
   ipcMain.on('ListObject', (event, arg) => {
     /**
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
      * @param  {string}   arg.Region
-     * @param  {string}   arg.Key
-     * @param  {string}   [arg.Delimiter='/']
+     * @param  {string}   [arg.Prefix]
      */
-    listObject(cos, arg).then(data => {
+    listDir(cos, arg).then(data => {
       event.sender.send('ListObject-data', data)
     })
   })
@@ -236,10 +249,10 @@ export default function () {
   })
 }
 
-function listObject (cos, params) {
+function listDir (cos, params) {
   let dirs = []
   let objects = []
-  params.Delimiter = params.Delimiter || '/'
+  params.Delimiter = '/'
   let p = () => new Promise((resolve, reject) => {
     cos.getBucket(params, (err, result) => {
       if (err) {
