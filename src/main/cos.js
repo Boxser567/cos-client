@@ -104,12 +104,12 @@ export default function () {
   //   })
   // })
 
-  let sender
+  let uploadsRefresh
 
   let uploads = new Tasks(3)
 
   ipcMain.on('GetUploadTasks', (event) => {
-    setInterval(() => {
+    let send = () => {
       event.sender.send('GetUploadTasks-data', uploads.tasks.map(t => {
         return {
           id: t.id,
@@ -121,7 +121,15 @@ export default function () {
           speed: 0
         }
       }))
-    }, 1500)
+    }
+    let obj
+    uploadsRefresh = () => {
+      send()
+      clearInterval(obj)
+      if (!uploads.empty()) {
+        obj = setInterval(send, 1000)
+      }
+    }
   })
 
   ipcMain.on('NewUploadTask', (event, arg) => {
@@ -142,6 +150,7 @@ export default function () {
     }).then(task => {
       uploads.newTask(task)
       uploads.next()
+      uploadsRefresh()
     })
   })
 
@@ -159,6 +168,7 @@ export default function () {
       }
       task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
+    uploadsRefresh()
   })
 
   ipcMain.on('ResumeUploadTask', (event, arg) => {
@@ -175,6 +185,7 @@ export default function () {
       }
       uploads.next()
     })
+    uploadsRefresh()
   })
 
   ipcMain.on('DeleteUploadTasks', (event, arg) => {
@@ -190,12 +201,12 @@ export default function () {
       }
       uploads.deleteTask(id)
     })
+    uploadsRefresh()
   })
 
   let downloads = new Tasks(3)
 
-  ipcMain.on('GetDownloadTasks', (event, arg) => {
-    sender = event.sender
+  ipcMain.on('GetDownloadTasks', (event) => {
     setInterval(() => {
       event.sender.send('GetDownloadTasks-data', downloads.tasks.map(t => {
         return {
