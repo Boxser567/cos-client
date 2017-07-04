@@ -79,15 +79,15 @@ Tasks.prototype.next = function () {
     task.resolve(result)
     return this.next()
   }, err => {
-    task.status = TaskStatus.ERROR
     this.done()
-    task.reject(err)
+    if (err.cancel) {
+      task.status = TaskStatus.PAUSE
+    } else {
+      task.status = TaskStatus.ERROR
+      task.reject(err)
+    }
     return this.next()
   })
-}
-
-Tasks.prototype.stop = function () {
-  // todo
 }
 
 /**
@@ -248,7 +248,9 @@ UploadTask.prototype.upload = function () {
           console.warn('upload: 分片ETag不一致', result.index, result.hash, data)
         }
         if (this.cancel) {
-          reject(new Error('upload cancel'))
+          let err = new Error('upload cancel')
+          err.cancel = true
+          reject(err)
           return
         }
         this.params.Parts[result.index - 1] = {
@@ -359,7 +361,9 @@ MockUploadTask.prototype.start = function () {
     let p = setInterval(() => {
       if (this.cancel) {
         clearInterval(p)
-        resolve()
+        let err = new Error('upload cancel')
+        err.cancel = true
+        reject(err)
         return
       }
       this.progress.loaded += 20900

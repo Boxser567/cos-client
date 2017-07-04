@@ -127,7 +127,7 @@ export default function () {
       send()
       clearInterval(obj)
       if (!uploads.empty()) {
-        obj = setInterval(send, 1000)
+        obj = setInterval(send, 200)
       }
     }
   })
