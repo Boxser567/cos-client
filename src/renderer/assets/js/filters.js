@@ -45,6 +45,42 @@ function bitSize (num, decimal) {
   }
 }
 
+
+function bitSpeed (num,decimal) {
+  if (!num) {
+    return '-'
+  }
+  if (typeof (num) !== 'number') {
+    num = Number(num)
+  }
+  if (typeof (decimal) !== 'number') {
+    decimal = 2
+  }
+  if (num < 0) {
+    return ''
+  }
+  if (num === 0) {
+    return '-'
+  }
+  let type = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+  let j = 0
+  while (num >= 1024) {
+    if (j >= 5) { return num + type[j] }
+    num = num / 1024
+    j++
+  }
+  if (num === 0) {
+    return num + 'B'
+  } else {
+    let dec = 1
+    for (let i = 0; i < decimal; i++) {
+      dec = dec * 10
+    }
+    return Math.round(num * dec) / dec + type[j] +' /s'
+  }
+}
+
+
 function getInteger (num) {
   if (!Number(num)) return 0
   return Math.floor(num)
@@ -125,6 +161,7 @@ function getArea (i) {
 export default {
   getDate: getDate,
   bitSize: bitSize,
+  bitSpeed:bitSpeed,
   getFileImg: getFileImg,
   getDirName: getDirName,
   getArea: getArea,
