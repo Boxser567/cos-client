@@ -131,11 +131,19 @@ export default function () {
     // todo 同源不同目标
     if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
-    traverseDir(arg.FileName, arg.Prefix).forEach(v => {
-      new MockUploadTask(cos, v.name, {
+    let iterator = traverseDir(arg.FileName, arg.Prefix)
+
+    let c = 10
+    let fn = () => {
+      let item = iterator.next()
+      if (item.done) {
+        uploadsRefresh()
+        return
+      }
+      new MockUploadTask(cos, item.value.name, {
         Bucket: arg.Bucket,
         Region: arg.Region,
-        Key: v.key
+        Key: item.value.key
       }).then(task => {
         uploads.newTask(task)
           .then(
@@ -147,9 +155,15 @@ export default function () {
             }
           )
         uploads.next()
-        uploadsRefresh()
+        c--
+        if (c <= 0) {
+          c = 10
+          uploadsRefresh()
+        }
+        fn()
       })
-    })
+    }
+    fn()
   })
 
   ipcMain.on('PauseUploadTasks', (event, arg) => {
@@ -344,17 +358,17 @@ function listDir (cos, params) {
   return p()
 }
 
-function traverseDir (name, prefix) {
+function* traverseDir (name, prefix) {
   let src = []
-  let dst = []
   name = path.normalize(name)
   prefix = prefix.substr(-1) === '/' ? prefix.substr(0, prefix.length - 1) : prefix
 
   if (!fs.statSync(name).isDirectory()) {
-    return [{
+    yield {
       name,
       key: prefix + '/' + path.basename(name)
-    }]
+    }
+    return
   }
 
   let dirLen = path.dirname(name).length + 1
@@ -362,13 +376,16 @@ function traverseDir (name, prefix) {
 
   while (src.length) {
     let dir = src.shift()
-    fs.readdirSync(dir).forEach(name => {
+    for (let name of fs.readdirSync(dir)) {
       name = path.join(dir, name)
-      fs.statSync(name).isDirectory() ? src.push(name) : dst.push({
+      if (fs.statSync(name).isDirectory()) {
+        src.push(name)
+        continue
+      }
+      yield {
         name,
         key: prefix + '/' + name.substr(dirLen).replace('\\', '/')
-      })
-    })
+      }
+    }
   }
-  return dst
 }
