@@ -1,6 +1,7 @@
 /**
  * Created by michael on 2017/7/3.
  */
+'use strict'
 import fs from 'fs'
 
 /**
@@ -37,7 +38,8 @@ function Tasks (max) {
     }
     throw new Error('broken task status')
   }
-  this.getActivity = () => activity
+  this.full = () => activity >= max
+  this.empty = () => activity === 0
 }
 
 Tasks.prototype.newTask = function (task) {
@@ -46,7 +48,10 @@ Tasks.prototype.newTask = function (task) {
   task.status = TaskStatus.WAIT
   this.tasks[id] = task
   this.needSend = true
-  return task
+  return new Promise((resolve, reject) => {
+    task.resolve = resolve
+    task.reject = reject
+  })
 }
 
 Tasks.prototype.findTask = function (id) {
@@ -61,22 +66,22 @@ Tasks.prototype.deleteTask = function (id) {
 }
 
 Tasks.prototype.next = function () {
-  let task = this.tasks.find(t => t.status === TaskStatus.WAIT)
-  if (!task) {
-    return Promise.resolve()
-  }
+  if (this.full()) return
+
+  let task = this.tasks.find(t => t && t.status === TaskStatus.WAIT)
+  if (!task) return
+
   task.status = TaskStatus.RUN
   this.add()
   return task.start().then(result => {
     task.status = TaskStatus.COMPLETE
     this.done()
-    // todo
+    task.resolve(result)
     return this.next()
   }, err => {
     task.status = TaskStatus.ERROR
     this.done()
-    // todo
-    console.log(err)
+    task.reject(err)
     return this.next()
   })
 }
@@ -99,6 +104,7 @@ Tasks.prototype.stop = function () {
  * @param  {object}   [option]
  * @param  {int}      option.sliceSize
  * @param  {int}      option.asyncLim
+ * @param  {function} option.refresh
  */
 function UploadTask (cos, name, params, option = {}) {
   this.cos = cos
@@ -136,6 +142,7 @@ function UploadTask (cos, name, params, option = {}) {
           let loaded = 0
           this.progress.list.forEach(piece => (loaded += piece.loaded || 0))
           this.progress.loaded = loaded
+          if (option.refresh) option.refresh()
         })
       }
 
@@ -195,9 +202,7 @@ UploadTask.prototype.getMultipartListPart = function () {
   return p()
 }
 
-/**
- * @private
- */
+/** @private */
 UploadTask.prototype.uploadSlice = function () {
   return Promise.all(new Array(this.asyncLim).fill(0).map(() => this.upload()))
 }
@@ -332,6 +337,7 @@ function * getSliceIterator (file) {
  * @param  {object}   [option]
  * @param  {int}      option.sliceSize
  * @param  {int}      option.asyncLim
+ * @param  {function} option.refresh
  */
 function MockUploadTask (cos, name, params, option = {}) {
   this.params = params
@@ -343,6 +349,7 @@ function MockUploadTask (cos, name, params, option = {}) {
   this.progress = {}
   this.progress.total = 1 << 20
   this.progress.loaded = 0
+  this.refresh = option.refresh || (() => null)
   return Promise.resolve(this)
 }
 
@@ -352,6 +359,7 @@ MockUploadTask.prototype.start = function () {
     let p = setInterval(() => {
       if (this.cancel) {
         clearInterval(p)
+        resolve()
         return
       }
       this.progress.loaded += 20900
@@ -360,6 +368,7 @@ MockUploadTask.prototype.start = function () {
         clearInterval(p)
         resolve()
       }
+      this.refresh()
     }, 100)
   })
 }
