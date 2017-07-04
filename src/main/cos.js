@@ -5,26 +5,14 @@
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
+import fs from 'fs'
+import path from 'path'
 
 export default function () {
   let cos = new Cos({
     AppId: '1253834952',
     SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
     SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
-  })
-
-  ipcMain.on('GetBucket', (event) => {
-    cos.getService((err, data) => {
-      if (err) {
-        event.sender.send('GetBucket-error', err)
-      }
-      let returnValue = []
-      data.Buckets.forEach((v) => {
-        v.Name = v.Name.split('-')[0]
-        returnValue.push(v)
-      })
-      event.sender.send('GetBucket-data', returnValue)
-    })
   })
 
   ipcMain.on('ListBucket', (event) => {
@@ -137,28 +125,30 @@ export default function () {
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
      * @param  {string}   arg.Region
-     * @param  {string}   arg.Key
+     * @param  {string}   arg.Prefix
      * @param  {string}   arg.FileName
      */
     // todo 同源不同目标
     if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
-    new MockUploadTask(cos, arg.FileName, {
-      Bucket: arg.Bucket,
-      Region: arg.Region,
-      Key: arg.Key
-    }).then(task => {
-      uploads.newTask(task)
-        .then(
-          result => (console.log(result)),
-          err => {
-            if (err.message !== 'cancel') {
-              console.log(err)
+    traverseDir(arg.FileName, arg.Prefix).forEach(v => {
+      new MockUploadTask(cos, v.name, {
+        Bucket: arg.Bucket,
+        Region: arg.Region,
+        Key: v.key
+      }).then(task => {
+        uploads.newTask(task)
+          .then(
+            result => (console.log(result)),
+            err => {
+              if (err.message !== 'cancel') {
+                console.log(err)
+              }
             }
-          }
-        )
-      uploads.next()
-      uploadsRefresh()
+          )
+        uploads.next()
+        uploadsRefresh()
+      })
     })
   })
 
@@ -245,9 +235,9 @@ export default function () {
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
      * @param  {string}   arg.Region
-     * @param  {string}   arg.Key
-     * @param  {string}   arg.Key
-     * @param  {string}   arg.FileName
+     * @param  {string}   arg.Path     下载路径
+     * @param  {string}   [arg.Key]    单文件下载
+     * @param  {string}   [arg.Prefix] 文件夹下载
      */
     // todo 同源不同目标
     if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
@@ -352,4 +342,33 @@ function listDir (cos, params) {
     })
   })
   return p()
+}
+
+function traverseDir (name, prefix) {
+  let src = []
+  let dst = []
+  name = path.normalize(name)
+  prefix = prefix.substr(-1) === '/' ? prefix.substr(0, prefix.length - 1) : prefix
+
+  if (!fs.statSync(name).isDirectory()) {
+    return [{
+      name,
+      key: prefix + '/' + path.basename(name)
+    }]
+  }
+
+  let dirLen = path.dirname(name).length + 1
+  src.push(name)
+
+  while (src.length) {
+    let dir = src.shift()
+    fs.readdirSync(dir).forEach(name => {
+      name = path.join(dir, name)
+      fs.statSync(name).isDirectory() ? src.push(name) : dst.push({
+        name,
+        key: prefix + '/' + name.substr(dirLen).replace('\\', '/')
+      })
+    })
+  }
+  return dst
 }
