@@ -12,7 +12,6 @@ const state = {
     left: '0px',
   },
 
-
 }
 
 const mutations = {
@@ -37,9 +36,9 @@ const actions = {
   getService({commit}){
     return new Promise((resolve, reject) => {
 
-      ipcRenderer.send('GetBucket')
+      ipcRenderer.send('ListBucket')
 
-      ipcRenderer.once('GetBucket-data', function (event, data) {
+      ipcRenderer.once('ListBucket-data', function (event, data) {
         let list = []
         if (data.length) {
           list = data.map(function (b) {
@@ -51,7 +50,7 @@ const actions = {
         resolve()
       })
 
-      ipcRenderer.once('GetBucket-error', function (event, err) {
+      ipcRenderer.once('ListBucket-error', function (event, err) {
         console.log(err)
         reject(err)
       })

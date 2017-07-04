@@ -54,8 +54,8 @@
                         <li :class="{'active' : t.iscur}" @click="tabFn(t)" v-for="t in tabList">{{t.name}}</li>
                     </ul>
                     <div class="el-speed">
-                        上传速度: <span>{{upSpeed}}</span>
-                        下载速度: <span>{{loadSpeed}}</span>
+                        上传速度: <span>{{uploadSpeed | bitSpeed}} </span>
+                        下载速度: <span>{{downloadSpeed | bitSpeed}} </span>
                         <i class="el-icon-d-arrow-right" @click="listNone = !listNone"></i>
                     </div>
                 </div>
@@ -63,6 +63,7 @@
                     <div class="first" v-show=" tabList[0].iscur ">
                         <div class="title-bar">
                             <div class="el-button-group">
+                                <el-button size="small" :plain="true" @click="uploadFileCtrl('begin')">开始</el-button>
                                 <el-button size="small" :plain="true" @click="uploadFileCtrl('purse')">暂停</el-button>
                                 <el-button size="small" :plain="true" @click="uploadFileCtrl('cancel')">取消</el-button>
                             </div>
@@ -77,9 +78,9 @@
                             </div>
                         </div>
                         <div class="progress-file">
-                            <div class="progress-bar" :class="{active:file.id === selectUploadFileID}"
-                                 v-for="file in fileUploadProgress"
-                                 @click="selectLoadFile('upload',file.id)">
+                            <div class="progress-bar" :class="{active:file.active}"
+                                 v-for="(file,index) in fileUploadProgress"
+                                 @click="selectLoadFile($event,'upload',file.id)">
                                 <img :src="file.Key | getFileImg" alt="">
                                 <el-row>
                                     <el-col :span="12">
@@ -91,16 +92,20 @@
                                         {{file.size | bitSize}}
                                     </el-col>
                                     <el-col :span="4">
-                                        <span v-if="file.status=='wait'" @click="uploadFileCtrl(file.id)">等待中</span>
-                                        <span v-if="file.status=='pause'" @click="uploadFileCtrl(file.id)">暂停</span>
-                                        <span v-if="file.status=='complete'" @click="uploadFileCtrl(file.id)">完成</span>
-                                        <span v-if="file.status=='run'" @click="uploadFileCtrl(file.id)">{{file.speed}} /s</span>
-                                        <span v-if="file.status=='error'" @click="uploadFileCtrl(file.id)">出错</span>
+                                        <span v-if="file.status=='wait'">等待中</span>
+                                        <span v-if="file.status=='pause'">暂停</span>
+                                        <span v-if="file.status=='complete'">完成</span>
+                                        <span v-if="file.status=='run'"> {{file.speed | bitSpeed}} </span>
+                                        <span v-if="file.status=='error'">出错</span>
                                     </el-col>
                                     <el-col :span="4">
-                                        <i v-if="file.status=='pause'" class="el-icon-caret-right"></i>
-                                        <i v-if="file.status == 'run'"> | | </i>
-                                        <i class="el-icon-close"></i>
+                                        <i v-if="file.status=='pause'" class="el-icon-caret-right"
+                                           @click="uploadFileCtrl('begin',file.id)"></i>
+                                        <i v-if="file.status == 'run'" @click="uploadFileCtrl('pause',file.id)"> |
+                                            | </i>
+                                        <i v-if="file.status=='error'" class="el-icon-warning"
+                                           @click="uploadFileCtrl('begin',file.id)"></i>
+                                        <i class="el-icon-close" @click="uploadFileCtrl('cancel',file.id)"></i>
                                     </el-col>
                                 </el-row>
                             </div>
@@ -123,22 +128,23 @@
                         <div class="progress-file">
                             <div class="progress-bar" :class="{active:file.id === selectDownloadFileID}"
                                  v-for="file in fileDownloadProgress"
-                                 @click="selectLoadFile('download',file.id)">
+                                 @click="selectLoadFile($event,'download',file.id)">
                                 <img :src="file.Key | getFileImg" alt="">
                                 <el-row>
                                     <el-col :span="12">
                                         <p class="tl">{{file.Key}}</p>
-                                        <el-progress :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>
+                                        <el-progress
+                                                :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>
                                     </el-col>
                                     <el-col :span="4">
                                         {{file.size | bitSize}}
                                     </el-col>
                                     <el-col :span="4">
-                                        <span v-if="file.status=='wait'" @click="uploadFileCtrl(file.id)">等待中</span>
-                                        <span v-if="file.status=='pause'" @click="uploadFileCtrl(file.id)">暂停</span>
-                                        <span v-if="file.status=='complete'" @click="uploadFileCtrl(file.id)">完成</span>
-                                        <span v-if="file.status=='run'" @click="uploadFileCtrl(file.id)">{{file.speed}} /s</span>
-                                        <span v-if="file.status=='error'" @click="uploadFileCtrl(file.id)">出错</span>
+                                        <span v-if="file.status=='wait'">等待中</span>
+                                        <span v-if="file.status=='pause'">暂停</span>
+                                        <span v-if="file.status=='complete'">完成</span>
+                                        <span v-if="file.status=='run'">{{file.speed}} /s</span>
+                                        <span v-if="file.status=='error'">出错</span>
                                     </el-col>
                                     <el-col :span="4">
                                         <i v-if="file.status=='pause'" class="el-icon-caret-right"></i>
@@ -180,8 +186,6 @@
         newFolder: false,
         listNone: false,
         isShowList: false,
-        upSpeed: '-',
-        loadSpeed: '-',
         folderName: '新建文件夹',
         selectUploadFileID: null,
         selectDownloadFileID: null,
@@ -202,26 +206,7 @@
     },
 
     computed: {
-      fileRightList(){
-        return this.$store.state.menulist.fileRightList
-      },
-      filelist(){
-        return this.$store.state.menulist.filelist
-      },
-      fileloading(){
-        return this.$store.state.menulist.fileloading
-      },
-      selectFile(){
-        return this.$store.state.menulist.selectFile
-      },
-      fileDownloadProgress(){
-        console.log('this-fileDownloadProgress', this.$store.state.menulist.fileDownloadProgress)
-        return this.$store.state.menulist.fileDownloadProgress
-      },
-      fileUploadProgress(){
-        //console.log('this-fileProgress', this.$store.state.menulist.fileUploadProgress)
-        return this.$store.state.menulist.fileUploadProgress
-      }
+      ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'fileDownloadProgress', 'fileUploadProgress', 'fileUploadSelectID', 'uploadSpeed', 'downloadSpeed']),
     },
     created(){
       this.fetchData()
@@ -272,12 +257,18 @@
       itemSelect(Name) {
         this.$store.commit('menulist/selectFile', {fileName: Name})
       },
-      selectLoadFile(types, id){
+      selectLoadFile(e, types, index){
+        let Arr = {
+          index: index,
+          key: false
+        }
+        if (e.shiftKey) {
+          Arr.key = true
+        }
         if (types === 'upload')
-          this.selectUploadFileID = id
+          this.$store.dispatch('menulist/selectLoadFile', Arr)
         if (types === 'download')
-          this.selectDownloadFileID = id
-//        this.$store.commit('menulist/selectLoadFile', id)
+          this.selectDownloadFileID = Arr
       },
       fileContentClick(e){
         if (e.target.classList.contains('list-info')) {
@@ -356,8 +347,12 @@
         this.isShowList = false
         document.removeEventListener('click', this.closeFileMenu)
       },
-      uploadFileCtrl(types){
-        this.$store.dispatch('menulist/uploadFileCtrl', types)
+      uploadFileCtrl(types, id){
+        if (id) {
+          this.$store.dispatch('menulist/uploadFileCtrl', {types: types, id: id})
+        } else {
+          this.$store.dispatch('menulist/uploadFileCtrl', types)
+        }
       },
       rightClickFn(item){
         switch (item.key) {

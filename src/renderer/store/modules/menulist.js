@@ -9,8 +9,10 @@ const state = {
 
   fileloading: true,
   fileUploadProgress: null,
+  fileUploadSelectID: null,
   fileDownloadProgress: null,
-
+  uploadSpeed: null,
+  downloadSpeed: null,
   selectFile: {
     select: false
   },
@@ -126,16 +128,29 @@ const state = {
 }
 
 const mutations = {
-  fileloading(state, val){
+  fileloading(state, val){    //文件加载
     state.fileloading = val.loading
   },
-  updataProgress(state, data){
+  updataProgress(state, data){    //初始化上传文件列表
+    console.log(333, data)
+    let dd = 0
+    if (state.fileUploadSelectID) {
+      data.forEach(function (d) {
+        if (state.fileUploadSelectID.indexOf(d.id) > -1) {
+          d.active = true
+        }
+        if (d.status === 'cpmplete') {
+          dd += d.speed
+        }
+      })
+    }
+    state.uploadSpeed = dd
     state.fileUploadProgress = data
   },
-  downloadProgress(state, data){
+  downloadProgress(state, data){   //初始化下载文件列表
     state.fileDownloadProgress = data
   },
-  selectFile(state, val){
+  selectFile(state, val){       //选择文件
     state.filelist.forEach(function (file) {
       file.active = false
       if (file.Name === val.fileName) {
@@ -146,7 +161,7 @@ const mutations = {
       }
     })
   },
-  unSelectFile(state){
+  unSelectFile(state){      //取消选中文件
     state.filelist.forEach(function (file) {
       file.active = false
     })
@@ -154,7 +169,7 @@ const mutations = {
       select: false
     }
   },
-  getFileList(state, data){
+  getFileList(state, data){       //获取当前文件列表
     // console.log('当前文件列表', data)
     let index = null
     if (data.objects.length) {
@@ -172,7 +187,7 @@ const mutations = {
     if (index != null) data.objects.splice(index, 1)
     state.filelist = data.objects.concat(data.dirs)
   },
-  searchFileList(state, data){
+  searchFileList(state, data){    //搜索文件
     let index = null
     if (data.objects.length) {
       data.objects.forEach(function (item, idx) {
@@ -196,7 +211,7 @@ const mutations = {
     state.filelist = serchlist
   },
 
-  getFileHttp(state, param){
+  getFileHttp(state, param){      //获取文件 地址
     console.log(state.selectFile)
     if (state.selectFile)
       state.dialogGetHttp = {
@@ -205,10 +220,10 @@ const mutations = {
         url: 'http://' + param.Bucket + '-1253834952.' + param.Region + '.myqcloud.com/' + state.selectFile.Key
       }
   },
-  setFileHttpHidden(state){
+  setFileHttpHidden(state){     //文件地址 模态窗口显示隐藏
     state.dialogGetHttp.isShow = false
   },
-  setHttp(state, val){
+  setHttp(state, val){          //Http 模态窗显示隐藏
     if (val === 'cancel')
       state.fileHeaderInfo.isShow = false
     else {
@@ -229,16 +244,28 @@ const mutations = {
     state.fileHeaderInfo.data.splice(index, 1)
   },
 
-  selectLoadFile(state, id){
-    if (state.fileUploadProgress && state.fileUploadProgress.length) {
-      state.fileUploadProgress.map(function (file) {
-        if (file.active) file.active = false
-        if (file.id === id) {
-          file.active = true
+  selectLoadFile(state, arr){    //选中上传文件列表de文件
+    if (!arr) return
+    if (!state.fileUploadProgress.length) return
+    if (arr.key) {
+      if (!state.fileUploadSelectID.length) return
+      state.fileUploadSelectID.push(arr.index)
+      let Array = []
+      if (state.fileUploadSelectID[0] > arr.index)
+        state.fileUploadSelectID.reverse()
+      state.fileUploadProgress.forEach(function (file) {
+        if (state.fileUploadSelectID[0] <= file.id <= state.fileUploadSelectID[1]) {
+          Array.push(file.id)
         }
       })
+      state.fileUploadSelectID = Array
+
+    } else {
+      state.fileUploadSelectID = [arr.index]
     }
-    console.log('checkMyfile', state.fileUploadProgress)
+    console.log('state.fileUploadSelectID', state.fileUploadSelectID)
+
+    // console.log('checkMyfile', state.fileUploadProgress)
   }
 }
 
@@ -277,18 +304,20 @@ const actions = {
   selectFile({commit}, val){
     commit('selectFile', val.amount)
   },
+  selectLoadFile({commit}, val){
+    if (!val) return
+    commit('selectLoadFile', val)
+  },
   uploadFile({commit}, pms){
     remote.dialog.showOpenDialog({
       filters: [{name: 'All Files', extensions: ['*']}],
-      properties: ['openFile', 'multiSelections']
+      properties: ['openFile', 'openDirectory', 'multiSelections']
     }, function (fileArray) {
       if (!fileArray) return
       fileArray.forEach(function (file) {
         let path = file
-        let fileName = path.replace(/\\/g, '/').replace(/.*\//, '')
         let params = Object.assign({
-          Key: fileName,
-          FileName: path
+          FileName: file
         }, pms)
         console.log(params)
         ipcRenderer.send('NewUploadTask', params)
@@ -301,10 +330,12 @@ const actions = {
     // remote.dialog.showSaveDialog({}, function (saveArray) {
     //   console.log('saveArray', saveArray)
     // })
-    remote.dialog.showSaveDialog({
-      filters: [],
-      defaultPath: '~/foo.xml'
-    }, function (result) {
+    remote.dialog.showOpenDialog({
+      filters: [{name: 'All Files', extensions: ['*']}],
+      properties: ['openFile', 'multiSelections']
+    }, function (fileArray) {
+      if (!fileArray) return
+
     })
 
     // state.filelist.forEach(function (file) {
@@ -322,21 +353,54 @@ const actions = {
     if (!val)return
     if (!state.fileUploadProgress) return
     console.log('this-state.fileUploadProgress', state.fileUploadProgress)
-    switch (val) {
+    let cs = val
+    if (val.id) cs = val.types
+
+    switch (cs) {
+      case 'begin':
+        let parmsBegin = {tasks: []}
+        if (val.id) {
+          parmsBegin.tasks.push(val.id)
+        } else {
+          state.fileUploadProgress.forEach(function (file) {
+            if (state.fileUploadSelectID.indexOf(file.id) > -1) {
+              parmsBegin.tasks.push(file.id)
+            }
+          })
+        }
+        if (parmsBegin.tasks.length) {
+          ipcRenderer.send('ResumeUploadTask', parmsBegin)
+        }
+        break
       case 'purse':
-        state.fileUploadProgress.forEach(function (file) {
-          if (file.active) {
-            ipcRenderer.send('PauseUploadTasks', {tasks: [file.id]})
-          }
-        })
+        let parmsPurse = {tasks: []}
+        if (val.id) {
+          parmsPurse.tasks.push(val.id)
+        } else {
+          state.fileUploadProgress.forEach(function (file) {
+            if (state.fileUploadSelectID.indexOf(file.id) > -1) {
+              parmsPurse.tasks.push(file.id)
+            }
+          })
+        }
+        if (parmsPurse.tasks.length) {
+          ipcRenderer.send('PauseUploadTasks', parmsPurse)
+        }
         break
       case 'cancel':      //取消
-        state.fileUploadProgress.forEach(function (file) {
-          if (file.active) {
-            // ipcRenderer.send('PauseUploadTasks', {tasks: [file.id]})
-            ipcRenderer.send('DeleteUploadTasks', {tasks: [file.id]})
-          }
-        })
+        let parmsCancel = {tasks: []}
+        if (val.id) {
+          parmsCancel.tasks.push(val.id)
+        } else {
+          state.fileUploadProgress.forEach(function (file) {
+            if (state.fileUploadSelectID.indexOf(file.id) > -1) {
+              parmsCancel.tasks.push(file.id)
+            }
+          })
+        }
+        if (parmsCancel.tasks.length) {
+          ipcRenderer.send('DeleteUploadTasks', parmsCancel)
+        }
         break
       case 'allBegin':    //全部开始
         let parmsAllBegin = {tasks: []}
@@ -365,7 +429,7 @@ const actions = {
           tasks: []
         }
         state.fileUploadProgress.forEach(function (file) {
-          if (['wait', 'run','pause','error'].indexOf(file.status) > -1) {
+          if (['wait', 'run', 'pause', 'error'].indexOf(file.status) > -1) {
             parmsAllCancel.tasks.push(file.id)
           }
         })
@@ -389,7 +453,6 @@ const actions = {
         break
     }
   },
-  newFolder(context){}
 }
 
 export default {

@@ -314,8 +314,9 @@
           Region: this.options.region
         }
         if (types === 'upload')
-          this.$store.dispatch('menulist/uploadFile', pms)
-        if(types === 'download')
+          pms.Prefix = this.options.folders || ''
+        this.$store.dispatch('menulist/uploadFile', pms)
+        if (types === 'download')
           this.$store.dispatch('menulist/downloadFile', pms)
       },
       fetchFilelist(){        //刷新文件列表，重走路由
