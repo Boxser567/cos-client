@@ -118,7 +118,7 @@ export default function () {
           status: t.status,
           size: t.progress.total,
           loaded: t.progress.loaded,
-          speed: 0
+          speed: t.progress.speed
         }
       }))
     }
@@ -149,6 +149,14 @@ export default function () {
       Key: arg.Key
     }).then(task => {
       uploads.newTask(task)
+        .then(
+          result => (console.log(result)),
+          err => {
+            if (err.message !== 'cancel') {
+              console.log(err)
+            }
+          }
+        )
       uploads.next()
       uploadsRefresh()
     })
@@ -204,10 +212,12 @@ export default function () {
     uploadsRefresh()
   })
 
+  let downloadsRefresh
+
   let downloads = new Tasks(3)
 
   ipcMain.on('GetDownloadTasks', (event) => {
-    setInterval(() => {
+    let send = () => {
       event.sender.send('GetDownloadTasks-data', downloads.tasks.map(t => {
         return {
           id: t.id,
@@ -216,10 +226,18 @@ export default function () {
           status: t.status,
           size: t.progress.total,
           loaded: t.progress.loaded,
-          speed: 0
+          speed: t.progress.speed
         }
       }))
-    }, 1500)
+    }
+    let obj
+    downloadsRefresh = () => {
+      send()
+      clearInterval(obj)
+      if (!downloads.empty()) {
+        obj = setInterval(send, 200)
+      }
+    }
   })
 
   ipcMain.on('NewDownloadTask', (event, arg) => {
@@ -239,8 +257,17 @@ export default function () {
       Region: arg.Region,
       Key: arg.Key
     }).then(task => {
-      uploads.newTask(task)
-      uploads.next()
+      downloads.newTask(task)
+        .then(
+          result => (console.log(result)),
+          err => {
+            if (err.message !== 'cancel') {
+              console.log(err)
+            }
+          }
+        )
+      downloads.next()
+      downloadsRefresh()
     })
   })
 
@@ -258,6 +285,7 @@ export default function () {
       }
       task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
+    downloadsRefresh()
   })
 
   ipcMain.on('ResumeDownloadTask', (event, arg) => {
@@ -274,6 +302,7 @@ export default function () {
       }
       uploads.next()
     })
+    downloadsRefresh()
   })
 
   ipcMain.on('DeleteDownloadTasks', (event, arg) => {
@@ -289,6 +318,7 @@ export default function () {
       }
       downloads.deleteTask(id)
     })
+    downloadsRefresh()
   })
 }
 

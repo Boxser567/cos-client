@@ -22,7 +22,6 @@ function Tasks (max) {
   let maxActivity = max
   let activity = 0
   this.tasks = []
-  this.needSend = false
   this.getId = () => nextId++
   this.add = () => {
     if (activity <= maxActivity) {
@@ -47,7 +46,6 @@ Tasks.prototype.newTask = function (task) {
   task.id = id
   task.status = TaskStatus.WAIT
   this.tasks[id] = task
-  this.needSend = true
   return new Promise((resolve, reject) => {
     task.resolve = resolve
     task.reject = reject
@@ -61,7 +59,6 @@ Tasks.prototype.findTask = function (id) {
 Tasks.prototype.deleteTask = function (id) {
   let t = this.tasks[id]
   delete this.tasks[id]
-  this.needSend = true
   return t
 }
 
@@ -74,18 +71,14 @@ Tasks.prototype.next = function () {
   task.status = TaskStatus.RUN
   this.add()
   return task.start().then(result => {
-    task.status = TaskStatus.COMPLETE
     this.done()
+    task.status = TaskStatus.COMPLETE
     task.resolve(result)
     return this.next()
   }, err => {
     this.done()
-    if (err.cancel) {
-      task.status = TaskStatus.PAUSE
-    } else {
-      task.status = TaskStatus.ERROR
-      task.reject(err)
-    }
+    task.status = err.message === 'cancel' ? TaskStatus.PAUSE : TaskStatus.ERROR
+    task.reject(err)
     return this.next()
   })
 }
@@ -104,7 +97,6 @@ Tasks.prototype.next = function () {
  * @param  {object}   [option]
  * @param  {int}      option.sliceSize
  * @param  {int}      option.asyncLim
- * @param  {function} option.refresh
  */
 function UploadTask (cos, name, params, option = {}) {
   this.cos = cos
@@ -140,9 +132,13 @@ function UploadTask (cos, name, params, option = {}) {
       this.progress.On = () => {
         setImmediate(() => {
           let loaded = 0
-          this.progress.list.forEach(piece => (loaded += piece.loaded || 0))
+          let speed = 0
+          this.progress.list.forEach(piece => {
+            loaded += piece.loaded || 0
+            speed += piece.speed || 0
+          })
           this.progress.loaded = loaded
-          if (option.refresh) option.refresh()
+          this.progress.speed = speed
         })
       }
 
@@ -232,6 +228,7 @@ UploadTask.prototype.upload = function () {
         Body: result.body,
         onProgress: (data) => {
           pg.loaded = data.loaded
+          pg.speed = data.speed
           this.progress.On()
         }
         // todo 在sdk更新后换成 ContentMD5
@@ -248,9 +245,7 @@ UploadTask.prototype.upload = function () {
           console.warn('upload: 分片ETag不一致', result.index, result.hash, data)
         }
         if (this.cancel) {
-          let err = new Error('upload cancel')
-          err.cancel = true
-          reject(err)
+          reject(new Error('cancel'))
           return
         }
         this.params.Parts[result.index - 1] = {
@@ -339,7 +334,6 @@ function * getSliceIterator (file) {
  * @param  {object}   [option]
  * @param  {int}      option.sliceSize
  * @param  {int}      option.asyncLim
- * @param  {function} option.refresh
  */
 function MockUploadTask (cos, name, params, option = {}) {
   this.params = params
@@ -351,7 +345,6 @@ function MockUploadTask (cos, name, params, option = {}) {
   this.progress = {}
   this.progress.total = 1 << 20
   this.progress.loaded = 0
-  this.refresh = option.refresh || (() => null)
   return Promise.resolve(this)
 }
 
@@ -360,19 +353,19 @@ MockUploadTask.prototype.start = function () {
     this.cancel = false
     let p = setInterval(() => {
       if (this.cancel) {
+        this.progress.speed = 0
         clearInterval(p)
-        let err = new Error('upload cancel')
-        err.cancel = true
-        reject(err)
+        reject(new Error('cancel'))
         return
       }
       this.progress.loaded += 20900
+      this.progress.speed = 2090000
       if (this.progress.loaded >= this.progress.total) {
         this.progress.loaded = this.progress.total
+        this.progress.speed = 0
         clearInterval(p)
         resolve()
       }
-      this.refresh()
     }, 100)
   })
 }
@@ -423,23 +416,15 @@ DownloadTask.prototype.start = function () {
 
   this.params.Output.on('drain', () => {
     this.progress.loaded = this.params.Output.bytesWritten
-    console.log(this.cancel)
     if (this.cancel) {
       this.params.Output.close()
-      let err = new Error('cancel')
-      err.cancel = true
-      this.params.Output.emit('error', err)
-      console.log(11)
+      this.params.Output.emit('error', new Error('cancel'))
     }
   })
 
   return new Promise((resolve, reject) => {
     this.cos.getObject(this.params, (err, result) => {
-      if (err) {
-        reject(err)
-        return
-      }
-      resolve(result)
+      err ? reject(err) : resolve(result)
     })
   })
 }
@@ -479,12 +464,16 @@ MockDownloadTask.prototype.start = function () {
     this.cancel = false
     let p = setInterval(() => {
       if (this.cancel) {
+        this.progress.speed = 0
         clearInterval(p)
+        reject(new Error('cancel'))
         return
       }
       this.progress.loaded += 20900
+      this.progress.speed = 2090000
       if (this.progress.loaded >= this.progress.total) {
         this.progress.loaded = this.progress.total
+        this.progress.speed = 0
         clearInterval(p)
         resolve()
       }
