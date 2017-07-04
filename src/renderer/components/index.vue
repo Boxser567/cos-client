@@ -160,6 +160,12 @@
         ipcRenderer.on('GetUploadTasks-data', (event, data) => {
           this.$store.commit('menulist/updataProgress', data)
         })
+        ipcRenderer.send('GetDownloadTasks')
+        ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
+          this.$store.commit('menulist/downloadProgress', data)
+        })
+
+
       },
       selectBucket: function (index, b) {
         this.$store.commit('bucket/bucketActive', index)

@@ -77,9 +77,9 @@
                             </div>
                         </div>
                         <div class="progress-file">
-                            <div class="progress-bar" :class="{active:file.id === selectLoadFileID}"
+                            <div class="progress-bar" :class="{active:file.id === selectUploadFileID}"
                                  v-for="file in fileUploadProgress"
-                                 @click="selectLoadFile(file.id)">
+                                 @click="selectLoadFile('upload',file.id)">
                                 <img :src="file.Key | getFileImg" alt="">
                                 <el-row>
                                     <el-col :span="12">
@@ -121,20 +121,28 @@
                         </div>
 
                         <div class="progress-file">
-                            <div class="progress-bar">
-                                <img src="../../../../static/images/file-icon/folder32x32.png" alt="">
+                            <div class="progress-bar" :class="{active:file.id === selectDownloadFileID}"
+                                 v-for="file in fileDownloadProgress"
+                                 @click="selectLoadFile('download',file.id)">
+                                <img :src="file.Key | getFileImg" alt="">
                                 <el-row>
                                     <el-col :span="12">
-                                        <p class="tl">曹操传.pdf</p>
-                                        <el-progress :percentage="43"></el-progress>
+                                        <p class="tl">{{file.Key}}</p>
+                                        <el-progress :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>
                                     </el-col>
                                     <el-col :span="4">
-                                        18.25MB
+                                        {{file.size | bitSize}}
                                     </el-col>
                                     <el-col :span="4">
-                                        00:00:08
+                                        <span v-if="file.status=='wait'" @click="uploadFileCtrl(file.id)">等待中</span>
+                                        <span v-if="file.status=='pause'" @click="uploadFileCtrl(file.id)">暂停</span>
+                                        <span v-if="file.status=='complete'" @click="uploadFileCtrl(file.id)">完成</span>
+                                        <span v-if="file.status=='run'" @click="uploadFileCtrl(file.id)">{{file.speed}} /s</span>
+                                        <span v-if="file.status=='error'" @click="uploadFileCtrl(file.id)">出错</span>
                                     </el-col>
                                     <el-col :span="4">
+                                        <i v-if="file.status=='pause'" class="el-icon-caret-right"></i>
+                                        <i v-if="file.status == 'run'"> | | </i>
                                         <i class="el-icon-close"></i>
                                     </el-col>
                                 </el-row>
@@ -175,7 +183,8 @@
         upSpeed: '-',
         loadSpeed: '-',
         folderName: '新建文件夹',
-        selectLoadFileID: null,
+        selectUploadFileID: null,
+        selectDownloadFileID: null,
         menu: {
           list: null,
           top: 0,
@@ -205,8 +214,12 @@
       selectFile(){
         return this.$store.state.menulist.selectFile
       },
+      fileDownloadProgress(){
+        console.log('this-fileDownloadProgress', this.$store.state.menulist.fileDownloadProgress)
+        return this.$store.state.menulist.fileDownloadProgress
+      },
       fileUploadProgress(){
-//        console.log('this-fileProgress', this.$store.state.menulist.fileUploadProgress)
+        //console.log('this-fileProgress', this.$store.state.menulist.fileUploadProgress)
         return this.$store.state.menulist.fileUploadProgress
       }
     },
@@ -259,8 +272,11 @@
       itemSelect(Name) {
         this.$store.commit('menulist/selectFile', {fileName: Name})
       },
-      selectLoadFile(id){
-        this.selectLoadFileID = id
+      selectLoadFile(types, id){
+        if (types === 'upload')
+          this.selectUploadFileID = id
+        if (types === 'download')
+          this.selectDownloadFileID = id
 //        this.$store.commit('menulist/selectLoadFile', id)
       },
       fileContentClick(e){

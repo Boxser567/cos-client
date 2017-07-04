@@ -9,6 +9,7 @@ const state = {
 
   fileloading: true,
   fileUploadProgress: null,
+  fileDownloadProgress: null,
 
   selectFile: {
     select: false
@@ -130,6 +131,9 @@ const mutations = {
   },
   updataProgress(state, data){
     state.fileUploadProgress = data
+  },
+  downloadProgress(state, data){
+    state.fileDownloadProgress = data
   },
   selectFile(state, val){
     state.filelist.forEach(function (file) {
@@ -273,9 +277,7 @@ const actions = {
   selectFile({commit}, val){
     commit('selectFile', val.amount)
   },
-  uploadFile({commit}, pms)
-  {
-    console.log(pms)
+  uploadFile({commit}, pms){
     remote.dialog.showOpenDialog({
       filters: [{name: 'All Files', extensions: ['*']}],
       properties: ['openFile', 'multiSelections']
@@ -291,10 +293,31 @@ const actions = {
         console.log(params)
         ipcRenderer.send('NewUploadTask', params)
       })
-
     })
   },
+  downloadFile({commit, state}, pms){
+    if (!state.filelist.length) return
 
+    // remote.dialog.showSaveDialog({}, function (saveArray) {
+    //   console.log('saveArray', saveArray)
+    // })
+    remote.dialog.showSaveDialog({
+      filters: [],
+      defaultPath: '~/foo.xml'
+    }, function (result) {
+    })
+
+    // state.filelist.forEach(function (file) {
+    //   if (file.active) {
+    //     console.log(file)
+    //     let list = Object.assign(pms, {
+    //       FileName: file.Key || file.Prefix,
+    //       Key: file.Name
+    //     })
+    //     ipcRenderer.send('NewDownloadTask', list)
+    //   }
+    // })
+  },
   uploadFileCtrl({commit, state}, val){
     if (!val)return
     if (!state.fileUploadProgress) return
@@ -316,11 +339,20 @@ const actions = {
         })
         break
       case 'allBegin':    //全部开始
+        let parmsAllBegin = {tasks: []}
+        state.fileUploadProgress.forEach(function (file) {
+          if (file.status === 'pause') {
+            parmsAllBegin.tasks.push(file.id)
+          }
+        })
+        if (parmsAllBegin.tasks.length) {
+          ipcRenderer.send('ResumeUploadTask', parmsAllBegin)
+        }
         break
       case 'allPurse':    //全部暂停
         let parmsAllPurse = {tasks: []}
         state.fileUploadProgress.forEach(function (file) {
-          if (file.status === 'run') {
+          if (['run', 'wait'].indexOf(file.status) > -1) {
             parmsAllPurse.tasks.push(file.id)
           }
         })
@@ -333,7 +365,7 @@ const actions = {
           tasks: []
         }
         state.fileUploadProgress.forEach(function (file) {
-          if (['wait', 'run'].indexOf(file.status) > -1) {
+          if (['wait', 'run','pause','error'].indexOf(file.status) > -1) {
             parmsAllCancel.tasks.push(file.id)
           }
         })
@@ -357,20 +389,7 @@ const actions = {
         break
     }
   },
-  newFolder(context){},
-  downloadFile(context){
-  },
-
-  rightClick(){
-    return {
-      uploadFile(){
-
-      },
-      newFolder(){
-
-      }
-    }
-  }
+  newFolder(context){}
 }
 
 export default {

@@ -32,13 +32,13 @@
                         <!--:http-request="onProgress"-->
                         <!--&gt;-->
                         <!--</el-upload>-->
-                        <el-button size="small" @click="uploadFile">点击上传</el-button>
+                        <el-button size="small" @click="fileEvents('upload')">点击上传</el-button>
 
                         <el-button size="small" @click="newFolder = !newFolder">新建文件夹</el-button>
                     </div>
 
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true"
+                        <el-button size="small" :plain="true" @click="fileEvents('download')"
                                    :disabled="selectFile ? selectFile.select ? false : true : false">下载
                         </el-button>
                         <el-button size="small" :plain="true"
@@ -308,12 +308,15 @@
           }
         }
       },
-      uploadFile(){
+      fileEvents(types){
         let pms = {
           Bucket: this.options.bucket,
           Region: this.options.region
         }
-        this.$store.dispatch('menulist/uploadFile', pms)
+        if (types === 'upload')
+          this.$store.dispatch('menulist/uploadFile', pms)
+        if(types === 'download')
+          this.$store.dispatch('menulist/downloadFile', pms)
       },
       fetchFilelist(){        //刷新文件列表，重走路由
         let qey = {
