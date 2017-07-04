@@ -97,7 +97,13 @@ export default function () {
   let uploads = new Tasks(3)
 
   ipcMain.on('GetUploadTasks', (event) => {
-    let send = () => {
+    let refresh = false
+    let obj
+
+    setInterval(() => {
+      if (!refresh) return
+      refresh = false
+
       event.sender.send('GetUploadTasks-data', uploads.tasks.map(t => {
         return {
           id: t.id,
@@ -109,14 +115,16 @@ export default function () {
           speed: t.progress.speed
         }
       }))
-    }
-    let obj
+    }, 150)
+
     uploadsRefresh = () => {
-      send()
-      clearInterval(obj)
-      if (!uploads.empty()) {
-        obj = setInterval(send, 200)
+      refresh = true
+      if (uploads.empty()) {
+        clearInterval(obj)
+        obj = null
+        return
       }
+      obj = obj || setInterval(() => { refresh = true }, 1000)
     }
   })
 
@@ -129,7 +137,7 @@ export default function () {
      * @param  {string}   arg.FileName
      */
     // todo 同源不同目标
-    if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
     let iterator = traverseDir(arg.FileName, arg.Prefix)
 
@@ -145,15 +153,11 @@ export default function () {
         Region: arg.Region,
         Key: item.value.key
       }).then(task => {
-        uploads.newTask(task)
-          .then(
-            result => (console.log(result)),
-            err => {
-              if (err.message !== 'cancel') {
-                console.log(err)
-              }
-            }
-          )
+        uploads.newTask(task).then(
+          result => { console.log(result) },
+          err => { if (err.message !== 'cancel') console.log(err) }
+        )
+
         uploads.next()
         c--
         if (c <= 0) {
@@ -221,7 +225,13 @@ export default function () {
   let downloads = new Tasks(3)
 
   ipcMain.on('GetDownloadTasks', (event) => {
-    let send = () => {
+    let refresh = false
+    let obj
+
+    setInterval(() => {
+      if (!refresh) return
+      refresh = false
+
       event.sender.send('GetDownloadTasks-data', downloads.tasks.map(t => {
         return {
           id: t.id,
@@ -233,14 +243,16 @@ export default function () {
           speed: t.progress.speed
         }
       }))
-    }
-    let obj
+    }, 150)
+
     downloadsRefresh = () => {
-      send()
-      clearInterval(obj)
-      if (!downloads.empty()) {
-        obj = setInterval(send, 200)
+      refresh = true
+      if (downloads.empty()) {
+        clearInterval(obj)
+        obj = null
+        return
       }
+      obj = obj || setInterval(() => { refresh = true }, 1000)
     }
   })
 
@@ -254,22 +266,18 @@ export default function () {
      * @param  {string}   [arg.Prefix] 文件夹下载
      */
     // todo 同源不同目标
-    if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
     new MockDownloadTask(cos, arg.FileName, {
       Bucket: arg.Bucket,
       Region: arg.Region,
       Key: arg.Key
     }).then(task => {
-      downloads.newTask(task)
-        .then(
-          result => (console.log(result)),
-          err => {
-            if (err.message !== 'cancel') {
-              console.log(err)
-            }
-          }
-        )
+      downloads.newTask(task).then(
+        result => (console.log(result)),
+        err => { if (err.message !== 'cancel') console.log(err) }
+      )
+
       downloads.next()
       downloadsRefresh()
     })
@@ -364,10 +372,7 @@ function* traverseDir (name, prefix) {
   prefix = prefix.substr(-1) === '/' ? prefix.substr(0, prefix.length - 1) : prefix
 
   if (!fs.statSync(name).isDirectory()) {
-    yield {
-      name,
-      key: prefix + '/' + path.basename(name)
-    }
+    yield { name, key: prefix + '/' + path.basename(name) }
     return
   }
 
@@ -382,10 +387,7 @@ function* traverseDir (name, prefix) {
         src.push(name)
         continue
       }
-      yield {
-        name,
-        key: prefix + '/' + name.substr(dirLen).replace('\\', '/')
-      }
+      yield { name, key: prefix + '/' + name.substr(dirLen).replace('\\', '/') }
     }
   }
 }

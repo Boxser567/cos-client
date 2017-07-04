@@ -305,7 +305,7 @@ function getSliceMD5 (fileName, index, start, end) {
  *     @param  {int}   file.fileSize
  *     @param  {int}   file.sliceSize
  */
-function * getSliceIterator (file) {
+function* getSliceIterator (file) {
   let start = 0
   let end = file.sliceSize - 1
   let index = 1
