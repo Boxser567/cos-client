@@ -111,9 +111,8 @@ export default function () {
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
-    let iterator = traverseDir(arg.FileName, arg.Prefix)
-
-    let fn = () => {
+    let iterator = traverseDir(arg.FileName, arg.Prefix);
+    (function fn () {
       let item = iterator.next()
       if (item.done) return
       new MockUploadTask(cos, item.value.name, {
@@ -132,8 +131,49 @@ export default function () {
         uploadsRefresh() // newTask, next 都有更新逻辑
         fn()
       })
+    })()
+  })
+
+  ipcMain.on('NewUploadTasks', async (event, arg) => {
+    /**
+     * @param  {object}   arg
+     * @param  {string}   arg.Bucket
+     * @param  {string}   arg.Region
+     * @param  {string}   arg.Prefix
+     * @param  {string[]} arg.FileNames
+     */
+    // todo 同源不同目标
+    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+
+    let count = 1000
+    for (let name of arg.FileNames) {
+      for (let item of traverseDir(name, arg.Prefix)) {
+        try {
+          let task = await new MockUploadTask(cos, item.name, {
+            Bucket: arg.Bucket,
+            Region: arg.Region,
+            Key: item.key
+          })
+
+          // newTask.then 在整个上传完成后调用
+          uploads.newTask(task).then(
+            result => {
+              console.log('task done')
+            },
+            err => { if (err.message !== 'cancel') console.log('task error', err) }
+          )
+        } catch (e) {
+          console.log(e)
+        }
+        uploads.next()
+        count--
+        if (count <= 0) {
+          count = 1000
+          uploadsRefresh() // newTask, next 都有更新逻辑
+        }
+      }
     }
-    fn()
+    uploadsRefresh()
   })
 
   ipcMain.on('PauseUploadTasks', (event, arg) => {
@@ -332,13 +372,13 @@ function* traverseDir (name, prefix) {
 
 function tasksRefresh (tasks, event, channel) {
   let refresh = false
-  let obj
+  let auto
   setInterval(() => {
     if (!refresh) return
     refresh = false
     if (tasks.empty()) {
-      clearInterval(obj)
-      obj = null
+      clearInterval(auto)
+      auto = null
     }
     event.sender.send(channel, tasks.tasks.map(t => {
       return {
@@ -351,15 +391,15 @@ function tasksRefresh (tasks, event, channel) {
         speed: t.progress.speed
       }
     }))
-  }, 150)
+  }, 200)
 
   return () => {
     refresh = true
     if (tasks.empty()) {
-      clearInterval(obj)
-      obj = null
+      clearInterval(auto)
+      auto = null
       return
     }
-    obj = obj || setInterval(() => { refresh = true }, 1000)
+    auto = auto || setInterval(() => { refresh = true }, 1000)
   }
 }

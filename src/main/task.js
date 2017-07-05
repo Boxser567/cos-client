@@ -62,25 +62,23 @@ Tasks.prototype.deleteTask = function (id) {
   return t
 }
 
-Tasks.prototype.next = function () {
-  if (this.full()) return
+Tasks.prototype.next = async function () {
+  for (let task of this.tasks) {
+    if (this.full()) return
+    if (!task || task.status !== TaskStatus.WAIT) continue
+    this.add()
 
-  let task = this.tasks.find(t => t && t.status === TaskStatus.WAIT)
-  if (!task) return
-
-  task.status = TaskStatus.RUN
-  this.add()
-  return task.start().then(result => {
+    task.status = TaskStatus.RUN
+    try {
+      let result = await task.start()
+      task.status = TaskStatus.COMPLETE
+      task.resolve(result)
+    } catch (err) {
+      task.status = err.message === 'cancel' ? TaskStatus.PAUSE : TaskStatus.ERROR
+      task.reject(err)
+    }
     this.done()
-    task.status = TaskStatus.COMPLETE
-    task.resolve(result)
-    return this.next()
-  }, err => {
-    this.done()
-    task.status = err.message === 'cancel' ? TaskStatus.PAUSE : TaskStatus.ERROR
-    task.reject(err)
-    return this.next()
-  })
+  }
 }
 
 /**
@@ -147,6 +145,7 @@ function UploadTask (cos, name, params, option = {}) {
   })
 }
 
+// todo 添加校验
 UploadTask.prototype.start = function () {
   this.cancel = false
   return (this.params.UploadId ? this.getMultipartListPart() : this.multipartInit())
