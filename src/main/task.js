@@ -359,7 +359,7 @@ MockUploadTask.prototype.start = function () {
         return
       }
       this.progress.loaded += 20900
-      this.progress.speed = 2090000
+      this.progress.speed = 209000
       if (this.progress.loaded >= this.progress.total) {
         this.progress.loaded = this.progress.total
         this.progress.speed = 0
@@ -470,7 +470,7 @@ MockDownloadTask.prototype.start = function () {
         return
       }
       this.progress.loaded += 20900
-      this.progress.speed = 2090000
+      this.progress.speed = 209000
       if (this.progress.loaded >= this.progress.total) {
         this.progress.loaded = this.progress.total
         this.progress.speed = 0

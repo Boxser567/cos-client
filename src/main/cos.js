@@ -97,35 +97,7 @@ export default function () {
   let uploads = new Tasks(3)
 
   ipcMain.on('GetUploadTasks', (event) => {
-    let refresh = false
-    let obj
-
-    setInterval(() => {
-      if (!refresh) return
-      refresh = false
-
-      event.sender.send('GetUploadTasks-data', uploads.tasks.map(t => {
-        return {
-          id: t.id,
-          Key: t.params.Key,
-          FileName: t.file.fileName,
-          status: t.status,
-          size: t.progress.total,
-          loaded: t.progress.loaded,
-          speed: t.progress.speed
-        }
-      }))
-    }, 150)
-
-    uploadsRefresh = () => {
-      refresh = true
-      if (uploads.empty()) {
-        clearInterval(obj)
-        obj = null
-        return
-      }
-      obj = obj || setInterval(() => { refresh = true }, 1000)
-    }
+    uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
   })
 
   ipcMain.on('NewUploadTask', (event, arg) => {
@@ -141,29 +113,23 @@ export default function () {
 
     let iterator = traverseDir(arg.FileName, arg.Prefix)
 
-    let c = 10
     let fn = () => {
       let item = iterator.next()
-      if (item.done) {
-        uploadsRefresh()
-        return
-      }
+      if (item.done) return
       new MockUploadTask(cos, item.value.name, {
         Bucket: arg.Bucket,
         Region: arg.Region,
         Key: item.value.key
       }).then(task => {
+        // newTask.then 在整个上传完成后调用
         uploads.newTask(task).then(
-          result => { console.log(result) },
-          err => { if (err.message !== 'cancel') console.log(err) }
+          result => {
+            console.log('task done')
+          },
+          err => { if (err.message !== 'cancel') console.log('task error', err) }
         )
-
         uploads.next()
-        c--
-        if (c <= 0) {
-          c = 10
-          uploadsRefresh()
-        }
+        uploadsRefresh() // newTask, next 都有更新逻辑
         fn()
       })
     }
@@ -225,35 +191,7 @@ export default function () {
   let downloads = new Tasks(3)
 
   ipcMain.on('GetDownloadTasks', (event) => {
-    let refresh = false
-    let obj
-
-    setInterval(() => {
-      if (!refresh) return
-      refresh = false
-
-      event.sender.send('GetDownloadTasks-data', downloads.tasks.map(t => {
-        return {
-          id: t.id,
-          Key: t.params.Key,
-          FileName: t.file.fileName,
-          status: t.status,
-          size: t.progress.total,
-          loaded: t.progress.loaded,
-          speed: t.progress.speed
-        }
-      }))
-    }, 150)
-
-    downloadsRefresh = () => {
-      refresh = true
-      if (downloads.empty()) {
-        clearInterval(obj)
-        obj = null
-        return
-      }
-      obj = obj || setInterval(() => { refresh = true }, 1000)
-    }
+    downloadsRefresh = tasksRefresh(downloads, event, 'GetDownloadTasks-data')
   })
 
   ipcMain.on('NewDownloadTask', (event, arg) => {
@@ -274,7 +212,7 @@ export default function () {
       Key: arg.Key
     }).then(task => {
       downloads.newTask(task).then(
-        result => (console.log(result)),
+        result => (console.log('task done')),
         err => { if (err.message !== 'cancel') console.log(err) }
       )
 
@@ -372,7 +310,7 @@ function* traverseDir (name, prefix) {
   prefix = prefix.substr(-1) === '/' ? prefix.substr(0, prefix.length - 1) : prefix
 
   if (!fs.statSync(name).isDirectory()) {
-    yield { name, key: prefix + '/' + path.basename(name) }
+    yield {name, key: prefix + '/' + path.basename(name)}
     return
   }
 
@@ -387,7 +325,41 @@ function* traverseDir (name, prefix) {
         src.push(name)
         continue
       }
-      yield { name, key: prefix + '/' + name.substr(dirLen).replace('\\', '/') }
+      yield {name, key: prefix + '/' + name.substr(dirLen).replace('\\', '/')}
     }
+  }
+}
+
+function tasksRefresh (tasks, event, channel) {
+  let refresh = false
+  let obj
+  setInterval(() => {
+    if (!refresh) return
+    refresh = false
+    if (tasks.empty()) {
+      clearInterval(obj)
+      obj = null
+    }
+    event.sender.send(channel, tasks.tasks.map(t => {
+      return {
+        id: t.id,
+        Key: t.params.Key,
+        FileName: t.file.fileName,
+        status: t.status,
+        size: t.progress.total,
+        loaded: t.progress.loaded,
+        speed: t.progress.speed
+      }
+    }))
+  }, 150)
+
+  return () => {
+    refresh = true
+    if (tasks.empty()) {
+      clearInterval(obj)
+      obj = null
+      return
+    }
+    obj = obj || setInterval(() => { refresh = true }, 1000)
   }
 }
