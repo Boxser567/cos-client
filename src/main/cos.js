@@ -100,7 +100,7 @@ export default function () {
     uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
   })
 
-  ipcMain.on('NewUploadTask', (event, arg) => {
+  ipcMain.on('NewUploadTask', async (event, arg) => {
     /**
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
@@ -111,27 +111,33 @@ export default function () {
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
-    let iterator = traverseDir(arg.FileName, arg.Prefix);
-    (function fn () {
-      let item = iterator.next()
-      if (item.done) return
-      new MockUploadTask(cos, item.value.name, {
-        Bucket: arg.Bucket,
-        Region: arg.Region,
-        Key: item.value.key
-      }).then(task => {
+    for (let item of uploadGenerator(arg.FileName, arg.Prefix)) {
+      try {
+        let task = await new MockUploadTask(cos, item.name, {
+          Bucket: arg.Bucket,
+          Region: arg.Region,
+          Key: item.key
+        })
+
         // newTask.then 在整个上传完成后调用
         uploads.newTask(task).then(
-          result => {
-            console.log('task done')
+          () => {
+            task.progress.loaded = task.progress.total
+            uploadsRefresh()
           },
-          err => { if (err.message !== 'cancel') console.log('task error', err) }
-        )
-        uploads.next()
-        uploadsRefresh() // newTask, next 都有更新逻辑
-        fn()
-      })
-    })()
+          err => {
+            if (err.message !== 'cancel') {
+              console.log('task error', err)
+            }
+            uploadsRefresh()
+          })
+      } catch (e) {
+        console.log(e)
+      }
+      uploads.next()
+      uploadsRefresh() // newTask, next 都有更新逻辑
+    }
+    uploadsRefresh(true)
   })
 
   ipcMain.on('NewUploadTasks', async (event, arg) => {
@@ -145,9 +151,8 @@ export default function () {
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
 
-    let count = 1000
     for (let name of arg.FileNames) {
-      for (let item of traverseDir(name, arg.Prefix)) {
+      for (let item of uploadGenerator(name, arg.Prefix)) {
         try {
           let task = await new MockUploadTask(cos, item.name, {
             Bucket: arg.Bucket,
@@ -157,23 +162,25 @@ export default function () {
 
           // newTask.then 在整个上传完成后调用
           uploads.newTask(task).then(
-            result => {
-              console.log('task done')
+            () => {
+              task.progress.loaded = task.progress.total
+              uploadsRefresh()
+              console.log('task done', task.id)
             },
-            err => { if (err.message !== 'cancel') console.log('task error', err) }
-          )
+            err => {
+              if (err.message !== 'cancel') {
+                console.log('task error', err)
+              }
+              uploadsRefresh()
+            })
         } catch (e) {
           console.log(e)
         }
         uploads.next()
-        count--
-        if (count <= 0) {
-          count = 1000
-          uploadsRefresh() // newTask, next 都有更新逻辑
-        }
+        uploadsRefresh() // newTask, next 都有更新逻辑
       }
     }
-    uploadsRefresh()
+    uploadsRefresh(true)
   })
 
   ipcMain.on('PauseUploadTasks', (event, arg) => {
@@ -190,7 +197,7 @@ export default function () {
       }
       task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
-    uploadsRefresh()
+    uploadsRefresh(true)
   })
 
   ipcMain.on('ResumeUploadTask', (event, arg) => {
@@ -207,7 +214,7 @@ export default function () {
       }
       uploads.next()
     })
-    uploadsRefresh()
+    uploadsRefresh(true)
   })
 
   ipcMain.on('DeleteUploadTasks', (event, arg) => {
@@ -223,7 +230,7 @@ export default function () {
       }
       uploads.deleteTask(id)
     })
-    uploadsRefresh()
+    uploadsRefresh(true)
   })
 
   let downloadsRefresh
@@ -239,9 +246,9 @@ export default function () {
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
      * @param  {string}   arg.Region
-     * @param  {string}   arg.Path     下载路径
-     * @param  {string}   [arg.Key]    单文件下载
-     * @param  {string}   [arg.Prefix] 文件夹下载
+     * @param  {string}   arg.Path       下载路径
+     * @param  {string}   [arg.Keys]     文件下载
+     * @param  {string}   [arg.Prefixes] 文件夹下载
      */
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
@@ -275,7 +282,7 @@ export default function () {
       }
       task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
-    downloadsRefresh()
+    downloadsRefresh(true)
   })
 
   ipcMain.on('ResumeDownloadTask', (event, arg) => {
@@ -292,7 +299,7 @@ export default function () {
       }
       uploads.next()
     })
-    downloadsRefresh()
+    downloadsRefresh(true)
   })
 
   ipcMain.on('DeleteDownloadTasks', (event, arg) => {
@@ -308,7 +315,7 @@ export default function () {
       }
       downloads.deleteTask(id)
     })
-    downloadsRefresh()
+    downloadsRefresh(true)
   })
 }
 
@@ -316,41 +323,44 @@ function listDir (cos, params) {
   let dirs = []
   let objects = []
   params.Delimiter = '/'
-  let p = () => new Promise((resolve, reject) => {
-    cos.getBucket(params, (err, result) => {
-      if (err) {
-        reject(err)
-        return
-      }
-      let pflen = params.Prefix ? params.Prefix.length : 0
-      result.CommonPrefixes.forEach(v => {
-        if (v.Prefix !== params.Prefix) {
-          dirs.push({
-            Name: v.Prefix.slice(pflen, -1),
-            Prefix: v.Prefix
-          })
+  return (function p () {
+    return new Promise((resolve, reject) => {
+      cos.getBucket(params, (err, result) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        let pflen = params.Prefix ? params.Prefix.length : 0
+        result.CommonPrefixes.forEach(v => {
+          if (v.Prefix !== params.Prefix) {
+            dirs.push({
+              Name: v.Prefix.slice(pflen, -1),
+              Prefix: v.Prefix
+            })
+          }
+        })
+        result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
+        if (result.IsTruncated === 'true') {
+          params.Marker = result.NextMarker
+          return p().then(resolve, reject)
+        } else {
+          // console.log(dirs, objects);
+          resolve({dirs, objects})
         }
       })
-      result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
-      if (result.IsTruncated === 'true') {
-        params.Marker = result.NextMarker
-        return p().then(resolve, reject)
-      } else {
-        // console.log(dirs, objects);
-        resolve({dirs, objects})
-      }
     })
-  })
-  return p()
+  })()
 }
 
-function* traverseDir (name, prefix) {
+function* uploadGenerator (name, prefix) {
   let src = []
   name = path.normalize(name)
-  prefix = prefix.substr(-1) === '/' ? prefix.substr(0, prefix.length - 1) : prefix
+  if (prefix !== '') {
+    prefix = prefix.substr(-1) === '/' ? prefix : prefix + '/'
+  }
 
   if (!fs.statSync(name).isDirectory()) {
-    yield {name, key: prefix + '/' + path.basename(name)}
+    yield {name, key: prefix + path.basename(name)}
     return
   }
 
@@ -365,17 +375,26 @@ function* traverseDir (name, prefix) {
         src.push(name)
         continue
       }
-      yield {name, key: prefix + '/' + name.substr(dirLen).replace('\\', '/')}
+      yield {name, key: prefix + name.substr(dirLen).replace('\\', '/')}
     }
   }
 }
 
+// function* downloadGenerator (cos, arg) {
+//
+// }
+
 function tasksRefresh (tasks, event, channel) {
   let refresh = false
+  let fast
   let auto
+  let count = 10
   setInterval(() => {
-    if (!refresh) return
+    count--
+    if (!refresh || (!fast && count > 0)) return
     refresh = false
+    fast = false
+    count = 10
     if (tasks.empty()) {
       clearInterval(auto)
       auto = null
@@ -393,7 +412,8 @@ function tasksRefresh (tasks, event, channel) {
     }))
   }, 200)
 
-  return () => {
+  return (isFast) => {
+    fast = isFast || fast
     refresh = true
     if (tasks.empty()) {
       clearInterval(auto)

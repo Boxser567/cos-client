@@ -3,6 +3,7 @@
  */
 'use strict'
 import fs from 'fs'
+import crypto from 'crypto'
 
 /**
  * Enum for task status.
@@ -259,8 +260,6 @@ UploadTask.prototype.upload = function () {
 
 UploadTask.prototype.multipartComplete = function () {
   return new Promise((resolve, reject) => {
-    // todo
-    console.log(this.params)
     this.cos.multipartComplete(this.params, (err, result) => {
       err ? reject(err) : resolve(result)
     })
