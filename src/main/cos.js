@@ -241,31 +241,54 @@ export default function () {
     downloadsRefresh = tasksRefresh(downloads, event, 'GetDownloadTasks-data')
   })
 
-  ipcMain.on('NewDownloadTask', (event, arg) => {
+  ipcMain.on('NewDownloadTasks', async (event, arg) => {
     /**
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
      * @param  {string}   arg.Region
-     * @param  {string}   arg.Path       下载路径
+     * @param  {string}   arg.Path       本地路径
+     * @param  {string}   arg.Prefix     远程路径
      * @param  {string}   [arg.Keys]     文件下载
-     * @param  {string}   [arg.Prefixes] 文件夹下载
+     * @param  {string}   [arg.Dirs] 文件夹下载
      */
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
-
-    new MockDownloadTask(cos, arg.FileName, {
+    let params = {
       Bucket: arg.Bucket,
-      Region: arg.Region,
-      Key: arg.Key
-    }).then(task => {
-      downloads.newTask(task).then(
-        result => (console.log('task done')),
-        err => { if (err.message !== 'cancel') console.log(err) }
-      )
+      Region: arg.Region
+    }
+    async function fn (contents) {
+      for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {
+        try {
+          let task = await new MockDownloadTask(cos, item.name, {
+            Bucket: arg.Bucket,
+            Region: arg.Region,
+            Key: item.key
+          })
+          downloads.newTask(task).then(
+            result => (console.log('task done')),
+            err => { if (err.message !== 'cancel') console.log(err) }
+          )
+          downloads.next()
+          downloadsRefresh()
+        } catch (err) {
+          console.log(err)
+        }
+      }
+    }
 
-      downloads.next()
-      downloadsRefresh()
-    })
+    await fn(arg.Keys.map(k => ({Key: k, Size: '1'})))
+
+    for (let dir of arg.Dirs) {
+      params.Prefix = dir
+      let result
+      do {
+        result = await getBucket(cos, params)
+        await fn(result.Contents)
+        params.Marker = result.NextMarker
+      } while (result.IsTruncated)
+    }
+    downloadsRefresh(true)
   })
 
   ipcMain.on('PauseDownloadTasks', (event, arg) => {
@@ -380,9 +403,19 @@ function* uploadGenerator (name, prefix) {
   }
 }
 
-// function* downloadGenerator (cos, arg) {
-//
-// }
+function* downloadGenerator (downloadPath, prefix, contents) {
+  if (prefix !== '') {
+    prefix = prefix.substr(-1) === '/' ? prefix : prefix + '/'
+  }
+  let pflen = prefix.length
+  for (let content of contents) {
+    if (content.Size === '0') continue
+    yield {
+      name: path.join(downloadPath, content.Key.substr(pflen)),
+      key: content.Key
+    }
+  }
+}
 
 function tasksRefresh (tasks, event, channel) {
   let refresh = false
@@ -399,17 +432,15 @@ function tasksRefresh (tasks, event, channel) {
       clearInterval(auto)
       auto = null
     }
-    event.sender.send(channel, tasks.tasks.map(t => {
-      return {
-        id: t.id,
-        Key: t.params.Key,
-        FileName: t.file.fileName,
-        status: t.status,
-        size: t.progress.total,
-        loaded: t.progress.loaded,
-        speed: t.progress.speed
-      }
-    }))
+    event.sender.send(channel, tasks.tasks.map(t => ({
+      id: t.id,
+      Key: t.params.Key,
+      FileName: t.file.fileName,
+      status: t.status,
+      size: t.progress.total,
+      loaded: t.progress.loaded,
+      speed: t.progress.speed
+    })))
   }, 200)
 
   return (isFast) => {
@@ -422,4 +453,12 @@ function tasksRefresh (tasks, event, channel) {
     }
     auto = auto || setInterval(() => { refresh = true }, 1000)
   }
+}
+
+function getBucket (cos, params) {
+  return new Promise((resolve, reject) => {
+    cos.getBucket(params, (err, data) => {
+      err ? reject(err) : resolve(data)
+    })
+  })
 }
