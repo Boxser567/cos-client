@@ -7,8 +7,16 @@ import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
 import fs from 'fs'
 import path from 'path'
+import { initData } from './db'
 
-export default function () {
+export default async function () {
+  let d = await initData
+  let config = d.config
+  let upload = d.upload
+  let download = d.download
+
+  console.log(d)
+
   let cos = new Cos({
     AppId: '1253834952',
     SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
@@ -243,13 +251,13 @@ export default function () {
 
   ipcMain.on('NewDownloadTasks', async (event, arg) => {
     /**
-     * @param  {object}   arg
-     * @param  {string}   arg.Bucket
-     * @param  {string}   arg.Region
-     * @param  {string}   arg.Path       本地路径
-     * @param  {string}   arg.Prefix     远程路径
-     * @param  {string}   [arg.Keys]     文件下载
-     * @param  {string}   [arg.Dirs] 文件夹下载
+     * @param  {object}    arg
+     * @param  {string}    arg.Bucket
+     * @param  {string}    arg.Region
+     * @param  {string}    arg.Path       本地路径
+     * @param  {string}    arg.Prefix     远程路径
+     * @param  {string[]}  [arg.Keys]     文件下载
+     * @param  {string[]}  [arg.Dirs] 文件夹下载
      */
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
@@ -339,6 +347,10 @@ export default function () {
       downloads.deleteTask(id)
     })
     downloadsRefresh(true)
+  })
+
+  ipcMain.on('debug', (event, arg) => {
+    event.sender.send('debug-data', arg)
   })
 }
 

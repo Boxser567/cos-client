@@ -28,41 +28,16 @@ function createWindow () {
   })
 
   mainWindow.loadURL(winURL)
-  mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
-    // item.setSavePath()
-
-    // item.on('updated', (event, state) => {
-    //   if (state === 'interrupted') {
-    //     console.log('Download is interrupted but can be resumed')
-    //   } else if (state === 'progressing') {
-    //     if (item.isPaused()) {
-    //       console.log('Download is paused')
-    //     } else {
-    //       console.log(`Received bytes: ${item.getReceivedBytes()}`)
-    //     }
-    //   }
-    // })
-    //
-    // item.once('done', (event, state) => {
-    //   if (state === 'completed') {
-    //     console.log('Download successfully')
-    //   } else {
-    //     console.log(`Download failed: ${state}`)
-    //   }
-    // })
-
-    // event.preventDefault()
-    // require('request')(item.getURL(), (data) => {
-    //   require('fs').writeFileSync('/somewhere', data)
-    // })
-  })
 
   mainWindow.on('closed', () => {
     mainWindow = null
   })
 }
 
-app.on('ready', createWindow)
+app.on('ready', async () => {
+  await ipc()
+  createWindow()
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -75,5 +50,3 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-ipc()
