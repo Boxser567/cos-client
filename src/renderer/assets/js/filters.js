@@ -112,7 +112,7 @@ function getFileImg (name) {
         if (key === 'SORT_IMAGE') suffix = 'image'
         if (key === 'SORT_DOCUMENT') suffix = 'document'
         if (key === 'SORT_ZIP') suffix = 'compress'
-        if (key === 'SORT_EXE') suffix = 'execute'
+        if (key === 'SORT_EXE') suffix = 'other'
         break
       }
     }

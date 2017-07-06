@@ -157,9 +157,14 @@
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => this.bloading = false)
         ipcRenderer.send('GetUploadTasks')
+
+
         ipcRenderer.on('GetUploadTasks-data', (event, data) => {
           this.$store.commit('menulist/updataProgress', data)
         })
+
+
+
         ipcRenderer.send('GetDownloadTasks')
         ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
           this.$store.commit('menulist/downloadProgress', data)
@@ -169,6 +174,7 @@
       },
       selectBucket: function (index, b) {
         this.$store.commit('bucket/bucketActive', index)
+        this.$store.commit('menulist/clearSelectFile')
         this.$router.push({
           path: '/file/' + b.Name,
           query: {

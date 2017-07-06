@@ -6,16 +6,13 @@ import  { remote, ipcRenderer } from  'electron'
 
 const state = {
   filelist: null,
-
   fileloading: true,
   fileUploadProgress: null,
   fileUploadSelectID: null,
   fileDownloadProgress: null,
   uploadSpeed: null,
   downloadSpeed: null,
-  selectFile: {
-    select: false
-  },
+  selectFile: null,
 
   fileRightList: [
     {
@@ -132,44 +129,66 @@ const mutations = {
     state.fileloading = val.loading
   },
   updataProgress(state, data){    //初始化上传文件列表
-    console.log(333, data)
     let dd = 0
-    if (state.fileUploadSelectID) {
-      data.forEach(function (d) {
-        if (state.fileUploadSelectID.indexOf(d.id) > -1) {
-          d.active = true
+
+    data.forEach(function (item) {
+      if (state.fileUploadSelectID && state.fileUploadSelectID.length) {
+        if (state.fileUploadSelectID.indexOf(item.id) > -1) {
+          item.active = true
         }
-        if (d.status === 'cpmplete') {
-          dd += d.speed
-        }
-      })
-    }
-    state.uploadSpeed = dd
-    state.fileUploadProgress = data
-  },
-  downloadProgress(state, data){   //初始化下载文件列表
-    state.fileDownloadProgress = data
-  },
-  selectFile(state, val){       //选择文件
-    state.filelist.forEach(function (file) {
-      file.active = false
-      if (file.Name === val.fileName) {
-        file.active = true
-        file.select = true
-        file.url = ''
-        state.selectFile = file
+      }
+      if (item.status === 'run') {
+        dd += item.speed
       }
     })
+
+    state.uploadSpeed = dd
+    state.fileUploadProgress = data
+
+    // console.log('总上传数量: ', data, '\n页面渲染列表: ')
+
   },
-  unSelectFile(state){      //取消选中文件
+  downloadProgress(state, data){   //初始化下载文件列表
+    console.log(data)
+    state.fileDownloadProgress = data
+  },
+  selectFile(state, val) {       //选择文件
+    if (!state.filelist) return
+    let flag = []
+    if (state.selectFile) {
+      let temper = state.filelist.findIndex(n => state.selectFile[0] === n.Name)
+      if (state.filelist[temper].active) {
+        state.filelist[temper].active = false
+      }
+    }
+    state.filelist[val.index].active = true
+    flag.push(state.filelist[val.index].Name)
+    state.selectFile = flag
+  },
+  clearSelectFile(state){
+    let arr = [].concat(state.selectFile)
+
+    function test () {
+      if (arr[0] && arr.length) {
+        let idx = state.filelist.findIndex(n => n.Name === arr[0])
+        state.filelist[idx].active = false
+        arr.splice(0, 1)
+        test()
+      }
+    }
+
+    test()
+    state.selectFile = null
+  },
+  unSelectFile(state)
+  {      //取消选中文件
     state.filelist.forEach(function (file) {
       file.active = false
     })
-    state.selectFile = {
-      select: false
-    }
-  },
-  getFileList(state, data){       //获取当前文件列表
+  }
+  ,
+  getFileList(state, data)
+  {       //获取当前文件列表
     // console.log('当前文件列表', data)
     let index = null
     if (data.objects.length) {
@@ -186,7 +205,8 @@ const mutations = {
     }
     if (index != null) data.objects.splice(index, 1)
     state.filelist = data.objects.concat(data.dirs)
-  },
+  }
+  ,
   searchFileList(state, data){    //搜索文件
     let index = null
     if (data.objects.length) {
@@ -212,7 +232,6 @@ const mutations = {
   },
 
   getFileHttp(state, param){      //获取文件 地址
-    console.log(state.selectFile)
     if (state.selectFile)
       state.dialogGetHttp = {
         isShow: true,
@@ -240,32 +259,35 @@ const mutations = {
   addHttpDom(state){
     state.fileHeaderInfo.data.push({date: state.fileHeaderInfo.initialData, value: '', select: '', cosMeta: ''})
   },
-  deleteHttpDom(state, index){
+  deleteHttpDom(state, index)
+  {
     state.fileHeaderInfo.data.splice(index, 1)
   },
 
-  selectLoadFile(state, arr){    //选中上传文件列表de文件
+  selectLoadFile(state, arr)
+  {    //选中上传文件列表de文件
     if (!arr) return
-    if (!state.fileUploadProgress.length) return
-    if (arr.key) {
-      if (!state.fileUploadSelectID.length) return
-      state.fileUploadSelectID.push(arr.index)
-      let Array = []
-      if (state.fileUploadSelectID[0] > arr.index)
-        state.fileUploadSelectID.reverse()
-      state.fileUploadProgress.forEach(function (file) {
-        if (state.fileUploadSelectID[0] <= file.id <= state.fileUploadSelectID[1]) {
-          Array.push(file.id)
-        }
-      })
-      state.fileUploadSelectID = Array
+    if (!state.fileUploadProgress && state.fileUploadProgress.length) return
+    // if (arr.key) {
+    //   if (!state.fileUploadSelectID.length) return
+    //   state.fileUploadSelectID.push(arr.index)
+    //   let Array = []
+    //   if (state.fileUploadSelectID[0] > arr.index)
+    //     state.fileUploadSelectID.reverse()
+    //   state.fileUploadProgress.forEach(function (file) {
+    //     if (state.fileUploadSelectID[0] <= file.id <= state.fileUploadSelectID[1]) {
+    //       Array.push(file.id)
+    //     }
+    //   })
+    //   state.fileUploadSelectID = Array
+    // } else {
+    //   state.fileUploadSelectID = [arr.index]
+    //   state.fileUploadProgress[arr.id].active=true
+    // }
 
-    } else {
-      state.fileUploadSelectID = [arr.index]
-    }
-    console.log('state.fileUploadSelectID', state.fileUploadSelectID)
-
-    // console.log('checkMyfile', state.fileUploadProgress)
+    // state.fileUploadProgress[state.fileUploadSelectID].active = false
+    // state.fileUploadProgress[arr.id].active = true
+    // state.fileUploadSelectID = arr.id
   }
 }
 
@@ -282,9 +304,6 @@ const actions = {
         resolve()
       })
     })
-  },
-  sliceUploadFile({}, params){
-    ipcRenderer.send('NewUploadTask', params)
   },
   deleteFile({commit, rootGetters}, params){
     return new Promise((resolve, reject) => {
@@ -304,15 +323,12 @@ const actions = {
   selectFile({commit}, val){
     commit('selectFile', val.amount)
   },
-  selectLoadFile({commit}, val){
-    if (!val) return
-    commit('selectLoadFile', val)
-  },
   uploadFile({commit}, pms){
     remote.dialog.showOpenDialog({
       filters: [{name: 'All Files', extensions: ['*']}],
       properties: ['openFile', 'openDirectory', 'multiSelections']
     }, function (fileArray) {
+      console.log(fileArray)
       if (!fileArray) return
       fileArray.forEach(function (file) {
         let path = file
@@ -322,32 +338,31 @@ const actions = {
         console.log(params)
         ipcRenderer.send('NewUploadTask', params)
       })
+      // pms.FileNames = fileArray
+      // console.log('this-pms', pms)
+      // ipcRenderer.send('NewUploadTasks', pms)
     })
   },
-  downloadFile({commit, state}, pms){
+  downloadFile({state}, pms){
     if (!state.filelist.length) return
-
-    // remote.dialog.showSaveDialog({}, function (saveArray) {
-    //   console.log('saveArray', saveArray)
-    // })
+    if (!state.selectFile) return
     remote.dialog.showOpenDialog({
+      buttonLabel: '选择',
       filters: [{name: 'All Files', extensions: ['*']}],
-      properties: ['openFile', 'multiSelections']
+      properties: ['openDirectory']
     }, function (fileArray) {
       if (!fileArray) return
+      pms.Path = fileArray[0]
 
+      let files = state.filelist.find(n => n.Name === state.selectFile[0])
+      if (files.dir) {
+        pms.Dirs = ['' + files.Name + '']
+      } else {
+        pms.Keys = ['' + files.Name + '']
+      }
+
+      ipcRenderer.send('NewDownloadTasks', pms)
     })
-
-    // state.filelist.forEach(function (file) {
-    //   if (file.active) {
-    //     console.log(file)
-    //     let list = Object.assign(pms, {
-    //       FileName: file.Key || file.Prefix,
-    //       Key: file.Name
-    //     })
-    //     ipcRenderer.send('NewDownloadTask', list)
-    //   }
-    // })
   },
   uploadFileCtrl({commit, state}, val){
     if (!val)return
