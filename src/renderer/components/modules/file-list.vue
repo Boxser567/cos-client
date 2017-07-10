@@ -31,10 +31,11 @@
             </div>
 
             <div class="list file-list-info" v-if="filelist.length" :class="{ active:f.active }"
-                 v-for="f in filelist"
-                 @click="itemSelect(f.Name)"
+                 v-for="(f,$index) in filelist"
+                 @click="itemSelect($event, $index)"
                  @dblclick="goFolder($event,f)"
-                 :currentFileName="f.Name"
+                 :index="$index"
+                 :key="f.Name"
             >
                 <div class="name">
                     <img :src="f.Name | getFileImg" alt="">
@@ -61,6 +62,7 @@
                 </div>
                 <div class="el-side-content">
                     <div class="first" v-show=" tabList[0].iscur ">
+
                         <div class="title-bar">
                             <div class="el-button-group">
                                 <el-button size="small" :plain="true" @click="uploadFileCtrl('begin')">开始</el-button>
@@ -77,10 +79,11 @@
                                 <el-button size="small" :plain="true" @click="uploadFileCtrl('clear')">清空已完成</el-button>
                             </div>
                         </div>
-                        <div class="progress-file">
-                            <div class="progress-bar" :class="{active:file.active}"
-                                 v-for="(file,index) in fileUploadProgress"
-                                 @click="selectLoadFile($event,'upload',file.id)">
+                        <!--<div class="progress-file">-->
+                        <virtualList :size="40" :remain="5">
+                            <div class="progress-bar" :class="{ active:file.active }"
+                                 v-for="(file, index) of fileUploadProgress"
+                                 @click="selectLoadFile($event,'upload',file.id)" :key="file.id">
                                 <img :src="file.Key | getFileImg" alt="">
                                 <el-row>
                                     <el-col :span="12">
@@ -109,7 +112,7 @@
                                     </el-col>
                                 </el-row>
                             </div>
-                        </div>
+                        </virtualList>
                     </div>
                     <div class="second" v-show=" tabList[1].iscur ">
                         <div class="title-bar">
@@ -177,7 +180,11 @@
 
 <script>
   import { mutations, mapState, actions } from 'vuex'
+
   import { remote, dialog } from 'electron'
+
+  //  import uploadItem from './upload-item.vue'
+  import virtualList from 'vue-virtual-scroll-list'
   export default {
     name: 'filelist-page',
     props: ['options', 'newfo'],
@@ -204,6 +211,7 @@
         ]
       }
     },
+    components: {virtualList},
 
     computed: {
       ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'fileDownloadProgress', 'fileUploadProgress', 'fileUploadSelectID', 'uploadSpeed', 'downloadSpeed']),
@@ -254,19 +262,26 @@
           })
         }
       },
-      itemSelect(Name) {
-        this.$store.commit('menulist/selectFile', {fileName: Name})
-      },
-      selectLoadFile(e, types, index){
-        let Arr = {
+      itemSelect(e, index) {
+        let array = {
           index: index,
+          key: false
+        }
+        if (e.shiftKey) {
+          array.key = true
+        }
+        this.$store.commit('menulist/selectFile', array)
+      },
+      selectLoadFile(e, types, id){
+        let Arr = {
+          id: id,
           key: false
         }
         if (e.shiftKey) {
           Arr.key = true
         }
         if (types === 'upload')
-          this.$store.dispatch('menulist/selectLoadFile', Arr)
+          this.$store.commit('menulist/selectLoadFile', Arr)
         if (types === 'download')
           this.selectDownloadFileID = Arr
       },
@@ -286,34 +301,38 @@
         this.options.folders = file.Prefix
         this.options.keyWord = null
         let pms = {bucket: this.options.bucket, region: this.options.region, folders: this.options.folders}
+        this.$store.commit('menulist/clearSelectFile')
         this.$router.push({
           path: '/file/' + this.options.bucket,
           query: pms
         })
       },
       openFileMenu(e){
+        this.$store.commit('menulist/clearSelectFile')
+
         let currentDom = e.target
         if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
-          this.$store.commit('menulist/unSelectFile')
+//          this.$store.commit('menulist/unSelectFile')
+//          this.$store.commit('menulist/clearSelectFile')
           this.menu.list = this.fileRightList.filter((m) => {
             if (this.menu.blanks.includes(m.key)) {
               return m
             }
           })
-          this.$store.commit('menulist/unSelectFile')
         } else {
           for (let i = 0; i < 5; i++) {
             if (currentDom.classList.contains('file-list-info')) {
-              let currentFileName = currentDom.getAttribute('currentFileName')
-              if (currentFileName) {
-                this.$store.commit('menulist/selectFile', {fileName: currentFileName})
+              let index = currentDom.getAttribute('index')
+              if (index != undefined) {
+                this.$store.commit('menulist/selectFile', {index: index})
               }
               break
             }
             currentDom = currentDom.parentNode
           }
           if (this.selectFile) {
-            if (this.selectFile.dir) {
+            let idx = this.filelist.findIndex(n => n.Name === this.selectFile[0])
+            if (this.filelist[idx].dir) {
               this.menu.list = this.fileRightList.filter((m) => {
                 if (this.menu.folders.includes(m.key)) {
                   return m

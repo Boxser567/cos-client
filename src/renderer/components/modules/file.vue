@@ -24,40 +24,31 @@
             <div class="bottom-row">
                 <div class="file-opts">
                     <div class="el-button-group">
-                        <!--<el-upload-->
-                        <!--class="small-upload"-->
-                        <!--action="http://11231231-1253834952.cn-north.myqcloud.com"-->
-                        <!--:show-file-list="false"-->
-                        <!--:multiple="true"-->
-                        <!--:http-request="onProgress"-->
-                        <!--&gt;-->
-                        <!--</el-upload>-->
                         <el-button size="small" @click="fileEvents('upload')">点击上传</el-button>
 
                         <el-button size="small" @click="newFolder = !newFolder">新建文件夹</el-button>
                     </div>
 
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true" @click="fileEvents('download')"
-                                   :disabled="selectFile ? selectFile.select ? false : true : false">下载
+                        <el-button size="small" :plain="true" @click="fileEvents('download')">下载
                         </el-button>
                         <el-button size="small" :plain="true"
-                                   :disabled="selectFile ? selectFile.select ? false : true : false">复制
+                                   :disabled="true">复制
                         </el-button>
                         <el-button size="small" :plain="true" @click="menuObj().deleteObj()"
-                                   :disabled="selectFile ? selectFile.select ? false : true : false">删除
+                                   :disabled="true">删除
                         </el-button>
                     </div>
 
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="menuObj().getFileUrl()"
-                                   :disabled="selectFile ? selectFile.select ? false : true : false">获取地址
+                                   :disabled="true">获取地址
                         </el-button>
                     </div>
 
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="menuObj().dialogSetHttpFn()"
-                                   :disabled="selectFile ? selectFile.select ? false : true : false">设置HTTP头
+                                   :disabled="true">设置HTTP头
                         </el-button>
                     </div>
 
@@ -311,11 +302,12 @@
       fileEvents(types){
         let pms = {
           Bucket: this.options.bucket,
-          Region: this.options.region
+          Region: this.options.region,
+          Prefix: (this.options.folders && this.options.folders.length > 0) ? this.options.folders : ''
         }
-        if (types === 'upload')
-          pms.Prefix = this.options.folders || ''
-        this.$store.dispatch('menulist/uploadFile', pms)
+        if (types === 'upload') {
+          this.$store.dispatch('menulist/uploadFile', pms)
+        }
         if (types === 'download')
           this.$store.dispatch('menulist/downloadFile', pms)
       },

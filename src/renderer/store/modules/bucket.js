@@ -1,7 +1,7 @@
 /**
  * Created by gokuai on 17/6/26.
  */
-import  { ipcRenderer } from  'electron'
+import { ipcRenderer } from 'electron'
 
 const state = {
   bucketList: [],
@@ -9,16 +9,16 @@ const state = {
   menu: {
     viewMenu: false,
     top: '0px',
-    left: '0px',
-  },
+    left: '0px'
+  }
 
 }
 
 const mutations = {
-  getMuService(state, data){
+  getMuService (state, data) {
     state.bucketList = data
   },
-  bucketActive(state, index){
+  bucketActive (state, index) {
     state.bucketList.forEach(function (a, i) {
       a.active = false
       if (i === index) {
@@ -27,15 +27,14 @@ const mutations = {
       }
     })
   },
-  currentBucket(state, val){
+  currentBucket (state, val) {
     state.currentBucket = val
   }
 }
 
 const actions = {
-  getService({commit}){
+  getService ({commit}) {
     return new Promise((resolve, reject) => {
-
       ipcRenderer.send('ListBucket')
 
       ipcRenderer.once('ListBucket-data', function (event, data) {
@@ -54,85 +53,60 @@ const actions = {
         console.log(err)
         reject(err)
       })
+    })
+  },
+  headBucket ({commit}, params) {
+    return new Promise((resolve, reject) => {
+      ipcRenderer.send('HeadBucket', params.pms)
 
-    })
-    // return new Promise((resolve, reject) => {
-    //   rootGetters.userConfig.cos.getService(function (err, data) {
-    //     if (!err) {
-    //       let reName = '-' + rootGetters.userConfig.cos.AppId
-    //       if (data.Buckets && data.Buckets.length) {
-    //         let list = data.Buckets.map(function (b) {
-    //           b.active = false
-    //           b.Name = b.Name.replace(reName, '')
-    //           return b
-    //         })
-    //       }
-    //       commit('getMuService', data.Buckets)
-    //       resolve()
-    //     } else {
-    //       reject()
-    //     }
-    //   })
-    // })
-  },
-  headBucket({commit, rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      rootGetters.userConfig.cos.headBucket(params.pms, function (err, data) {
-        if (!err) {
-          resolve(data)
-        } else {
-          reject(err)
-        }
+      ipcRenderer.once('HeadBucket-data', function (event, data) {
+        resolve(data)
       })
-    })
-  },
-  putBucket({commit, rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      rootGetters.userConfig.cos.putBucket(params.pms, function (err, data) {
-        if (!err) {
-          resolve(data)
-        } else {
-          reject(err)
-        }
-      })
-    })
-  },
-  deleteBucket({state, rootGetters}){
-    return new Promise((resolve, reject) => {
-      rootGetters.userConfig.cos.deleteBucket(state.currentBucket, function (err, data) {
-        if (!err) {
-          resolve(data)
-        } else {
-          reject(err)
-        }
-      })
-    })
-  },
-  headObject({commit, rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      rootGetters.userConfig.cos.headObject(params.pms, function (err, data) {
-        console.log('params.pms', arguments)
-        if (!err) {
-          resolve(data)
-        } else {
-          reject(err)
-        }
-      })
-    })
-  },
-  putObject({commit, rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      console.log(params.pms)
-      rootGetters.userConfig.cos.putObject(params.pms, function (err, data) {
-        if (!err) {
-          resolve()
-        } else {
-          reject()
-        }
-      })
-    })
-  },
 
+      ipcRenderer.once('HeadBucket-error', function (event, err) {
+        reject(err)
+      })
+    })
+  },
+  putBucket ({commit}, params) {
+    return new Promise((resolve, reject) => {
+      ipcRenderer.send('PutBucket', params.pms)
+
+      ipcRenderer.once('PutBucket-data', function (event, data) {
+        resolve(data)
+      })
+
+      ipcRenderer.once('PutBucket-error', function (event, err) {
+        reject(err)
+      })
+    })
+  },
+  deleteBucket ({state}) {
+    return new Promise((resolve, reject) => {
+      ipcRenderer.send('DeleteBucket', state.currentBucket)
+
+      ipcRenderer.once('DeleteBucket-data', function (event, data) {
+        resolve(data)
+      })
+
+      ipcRenderer.once('DeleteBucket-error', function (event, err) {
+        reject(err)
+      })
+    })
+  },
+  headObject ({commit}, params) {
+    return new Promise((resolve, reject) => {
+      ipcRenderer.send('HeadObject', params.pms)
+
+      ipcRenderer.once('HeadObject-data', function (event, data) {
+        resolve(data)
+      })
+
+      ipcRenderer.once('HeadObject-error', function (event, err) {
+        reject(err)
+      })
+    })
+  }
 }
 
 export default {
