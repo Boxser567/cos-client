@@ -29,18 +29,6 @@ export default function () {
     })
   })
 
-  ipcMain.on('ListObject', (event, arg) => {
-    /**
-     * @param  {object}   arg
-     * @param  {string}   arg.Bucket
-     * @param  {string}   arg.Region
-     * @param  {string}   [arg.Prefix]
-     */
-    listDir(cos, arg).then(data => {
-      event.sender.send('ListObject-data', data)
-    })
-  })
-
   /**
    * 创建 Bucket，并初始化访问权限
    * @param  {object}   arg     参数对象，必须
@@ -55,14 +43,23 @@ export default function () {
    * @return  {object}    data  返回的数据
    *     @return  {string}    data.Location  操作地址
    */
-  // ipcMain.on('PutBucket', (event, arg) => {
-  //   cos.putBucket(arg, (err, data) => {
-  //     if (err) {
-  //       event.sender.send('PutBucket-error', err)
-  //     }
-  //     event.sender.send('PutBucket-data', data.Location)
-  //   })
-  // })
+  ipcMain.on('HeadBucket', (event, arg) => {
+    cos.headBucket(arg, (err, data) => {
+      if (err) {
+        event.sender.send('HeadBucket-error', err)
+      }
+      event.sender.send('HeadBucket-data', data)
+    })
+  })
+
+  ipcMain.on('PutBucket', (event, arg) => {
+    cos.putBucket(arg, (err, data) => {
+      if (err) {
+        event.sender.send('PutBucket-error', err)
+      }
+      event.sender.send('PutBucket-data', data)
+    })
+  })
 
   /**
    * 删除 Bucket
@@ -74,23 +71,44 @@ export default function () {
    * @return  {object}    data  返回的数据
    *     @return  {string}    data.Location  操作地址
    */
-  // ipcMain.on('DeleteBucket', (event, arg) => {
-  //   cos.putBucket(arg, (err, data) => {
-  //     if (err) {
-  //       event.sender.send('DeleteBucket-error', err)
-  //     }
-  //     event.sender.send('DeleteBucket-data', data.Location)
-  //   })
-  // })
+  ipcMain.on('DeleteBucket', (event, arg) => {
+    cos.deleteBucket(arg, (err, data) => {
+      if (err) {
+        event.sender.send('DeleteBucket-error', err)
+      }
+      event.sender.send('DeleteBucket-data', data)
+    })
+  })
 
-  // ipcMain.on('DeleteObject', (event, arg) => {
-  //   cos.putBucket(arg, (err, data) => {
-  //     if (err) {
-  //       event.sender.send('DeleteBucket-error', err)
-  //     }
-  //     event.sender.send('DeleteBucket-data', data.Location)
-  //   })
-  // })
+  ipcMain.on('ListObject', (event, arg) => {
+    /**
+     * @param  {object}   arg
+     * @param  {string}   arg.Bucket
+     * @param  {string}   arg.Region
+     * @param  {string}   [arg.Prefix]
+     */
+    listDir(cos, arg).then(data => {
+      event.sender.send('ListObject-data', data)
+    })
+  })
+
+  ipcMain.on('HeadObject', (event, arg) => {
+    cos.headObject(arg, (err, data) => {
+      if (err) {
+        event.sender.send('HeadObject-error', err)
+      }
+      event.sender.send('HeadObject-data', data)
+    })
+  })
+
+  ipcMain.on('DeleteObject', (event, arg) => {
+    cos.deleteObject(arg, (err, data) => {
+      if (err) {
+        event.sender.send('DeleteBucket-error', err)
+      }
+      event.sender.send('DeleteBucket-data', data)
+    })
+  })
 
   let uploadsRefresh
 
@@ -204,7 +222,6 @@ export default function () {
     /**
      * @param {object}  arg
      * @param {int[]}   arg.tasks
-     * @param {boolean} arg.wait
      */
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
@@ -314,7 +331,6 @@ export default function () {
     /**
      * @param {object}  arg
      * @param {int[]}   arg.tasks
-     * @param {boolean} arg.wait
      */
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
