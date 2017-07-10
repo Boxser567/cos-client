@@ -1,6 +1,5 @@
 import Vue from 'vue'
-import Resource from 'vue-resource'
-// import axios from 'axios'
+import axios from 'axios'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-default/index.css'
 
@@ -12,12 +11,8 @@ import myfilte from './assets/js/filters'
 
 Vue.use(ElementUI)
 
-
-
-
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
-// Vue.http = Vue.prototype.$http = axios
-Vue.use(Resource)
+Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 
 // filter 挂载到全局

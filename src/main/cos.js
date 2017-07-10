@@ -277,7 +277,9 @@ export default function () {
       }
     }
 
-    await fn(arg.Keys.map(k => ({Key: k, Size: '1'})))
+    if (arg.Keys) {
+      await fn(arg.Keys.map(k => ({Key: k, Size: '1'})))
+    }
 
     for (let dir of arg.Dirs) {
       params.Prefix = dir
