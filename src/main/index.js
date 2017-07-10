@@ -15,7 +15,8 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
-function createWindow () {
+async function createWindow () {
+  let save = await ipc()
   /**
    * Initial window options
    */
@@ -31,11 +32,11 @@ function createWindow () {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    save()
   })
 }
 
-app.on('ready', async () => {
-  await ipc()
+app.on('ready', () => {
   createWindow()
 })
 

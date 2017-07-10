@@ -7,15 +7,13 @@ import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
 import fs from 'fs'
 import path from 'path'
-import { initData } from './db'
+import { initData, updateUploads, updateDownloads } from './db'
 
 export default async function () {
-  let d = await initData
-  let config = d.config
-  let upload = d.upload
-  let download = d.download
+  let init = await initData()
+  let config = init.config
 
-  console.log(d)
+  console.log(init)
 
   let cos = new Cos({
     AppId: '1253834952',
@@ -95,9 +93,10 @@ export default async function () {
      * @param  {string}   arg.Region
      * @param  {string}   [arg.Prefix]
      */
-    listDir(cos, arg).then(data => {
-      event.sender.send('ListObject-data', data)
-    })
+    listDir(cos, arg).then(
+      data => (event.sender.send('ListObject-data', data)),
+      err => (event.sender.send('ListObject-error', err))
+    )
   })
 
   ipcMain.on('HeadObject', (event, arg) => {
@@ -112,9 +111,9 @@ export default async function () {
   ipcMain.on('DeleteObject', (event, arg) => {
     cos.deleteObject(arg, (err, data) => {
       if (err) {
-        event.sender.send('DeleteBucket-error', err)
+        event.sender.send('DeleteObject-error', err)
       }
-      event.sender.send('DeleteBucket-data', data)
+      event.sender.send('DeleteObject-data', data)
     })
   })
 
@@ -124,6 +123,10 @@ export default async function () {
 
   ipcMain.on('GetUploadTasks', (event) => {
     uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
+    if (init.upload.length !== 0) {
+      init.upload.forEach(t => { uploads.newTask(t) })
+      uploadsRefresh()
+    }
   })
 
   ipcMain.on('NewUploadTask', async (event, arg) => {
@@ -264,6 +267,10 @@ export default async function () {
 
   ipcMain.on('GetDownloadTasks', (event) => {
     downloadsRefresh = tasksRefresh(downloads, event, 'GetDownloadTasks-data')
+    if (init.download.length !== 0) {
+      init.download.forEach(t => { uploads.newTask(t) })
+      downloadsRefresh()
+    }
   })
 
   ipcMain.on('NewDownloadTasks', async (event, arg) => {
@@ -370,6 +377,11 @@ export default async function () {
   ipcMain.on('debug', (event, arg) => {
     event.sender.send('debug-data', arg)
   })
+
+  return function () {
+    updateUploads(uploads.tasks)
+    updateDownloads(downloads.tasks)
+  }
 }
 
 function listDir (cos, params) {

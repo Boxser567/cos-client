@@ -78,26 +78,50 @@ async function download () {
   })
 }
 
-let initData = Promise.all([config(), upload(), download()])
-  .then((data) => {
-    return Promise.resolve({
-      config: data[0],
-      upload: data[1],
-      download: data[2]
+function initData () {
+  return Promise.all([config(), upload(), download()])
+    .then((data) => {
+      return Promise.resolve({
+        config: data[0],
+        upload: data[1],
+        download: data[2]
+      })
     })
-  })
+}
 
 async function updateUploads (tasks) {
-  db.run('')
-  let stmt = db.prepare('INSERT INTO lorem VALUES (?)')
-
+  await new Promise((resolve, reject) => {
+    db.run(`DELETE FROM upload`, (err) => {
+      err ? reject(err) : resolve()
+    })
+  })
+  let s = tasks.map(t => {
+    let s = JSON.stringify(t)
+    return `(${t.id},'${s}')`
+  }).join(',')
+  if (s === '') return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    db.run(`INSERT INTO upload VALUES ${s}`)
+  })
 }
 
-function updateDownloads (tasks) {
-
+async function updateDownloads (tasks) {
+  await new Promise((resolve, reject) => {
+    db.run(`DELETE FROM download`, (err) => {
+      err ? reject(err) : resolve()
+    })
+  })
+  let s = tasks.map(t => {
+    let s = JSON.stringify(t)
+    return `(${t.id},'${s}')`
+  }).join(',')
+  if (s === '') return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    db.run(`INSERT INTO download VALUES ${s}`)
+  })
 }
 
-export {initData, db}
+export {initData, updateUploads,updateDownloads, db}
 // let stmt = db.prepare('INSERT INTO lorem VALUES (?)')
 // for (let i = 0; i < 10; i++) {
 //   stmt.run('Ipsum ' + i)
