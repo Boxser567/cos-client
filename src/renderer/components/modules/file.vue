@@ -146,7 +146,7 @@
         let navbar = to.query.folders
         if (navbar && navbar.length) {
           navbar = navbar.split('/')
-          navbar.forEach(n => {if(n) this.navOptions.push({name: n}) })
+          navbar.forEach(n => {if (n) this.navOptions.push({name: n}) })
         }
       }
       //console.log('router钩子', to.params, this.options)
@@ -202,11 +202,12 @@
       goFilePath(index){
         if (!this.navOptions.length) return
         if (index === this.navOptions.length - 1) return
-        this.navOptions.splice(0, 1)
-        let goFolder = ''
+        let goFolder = '',
+          currentArr = [].concat(this.navOptions)
+        currentArr.splice(0, 1)
         if (index != 0) {
-          this.navOptions.forEach((nav, idx) => {
-            if (idx <= index)
+          currentArr.forEach((nav, idx) => {
+            if (idx < index)
               goFolder += nav.name + '/'
           })
         }

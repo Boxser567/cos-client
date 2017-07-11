@@ -123,7 +123,7 @@
           }
           this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => {
             this.$store.commit('menulist/fileloading', {loading: false})
-            this.$store.commit('menulist/unSelectFile')
+//            this.$store.commit('menulist/unSelectFile')
           })
         }
       },
@@ -142,19 +142,18 @@
       },
 
       //文件空白处单击
-      fileContentClick(e){
+      fileContentClick(e) {
         if (e.target.classList.contains('list-info')) {
           this.$store.commit('menulist/unSelectFile')
         }
       },
       //双击文件夹
       goFolder(e, file){
-        console.log(file)
         if (!file.dir) return
         this.options.folders = file.Prefix
         this.options.keyWord = null
         let pms = {bucket: this.options.bucket, region: this.options.region, folders: this.options.folders}
-        this.$store.commit('menulist/unSelectFile')
+//        this.$store.commit('menulist/unSelectFile')
         this.$router.push({
           path: '/file/' + this.options.bucket,
           query: pms

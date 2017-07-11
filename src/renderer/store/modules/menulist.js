@@ -25,6 +25,7 @@ const state = {
   uploadSpeed: null,
 
   downloadSpeed: null,
+
   isShowFileProgress: false,
 
   selectFile: [],
@@ -194,30 +195,6 @@ const mutations = {
     if (val.key) {  //判断shiftkey
       if (state.selectFile && state.selectFile.length > 1) {
         //取最后一个的索引 和本次选择的索引组合
-        // let lastName = state.selectFile.pop().Name
-        // let selectID = state.filelist.findIndex((n) => n.Name === lastName)
-        // console.log(lastName, selectID)
-        // let thisArr = [selectID, val.index]
-        // if (selectID == val.index) return
-        // if (selectID > val.index) {
-        //   thisArr.reverse()
-        // }
-        // let chooseArr = [], fileArr = []
-        // state.selectFile.forEach((s) => {
-        //   chooseArr.push(s.Name)
-        // })
-        // state.filelist.forEach((n, index) => {
-        //   if (chooseArr.indexOf(n.Name) > -1) {
-        //     n.active = false
-        //   }
-        //   if (thisArr[0] < index <= thisArr[1]) {
-        //     n.active = true
-        //     fileArr.push(n)
-        //   }
-        // })
-        // state.selectFile = []
-        // state.selectFile.push(fileArr)
-
       } else if (state.selectFile && state.selectFile.length == 1) {
         let selectID = state.filelist.findIndex((n) => n.Name === state.selectFile[0].Name)
         let thisArr = [selectID, val.index]
@@ -261,7 +238,9 @@ const mutations = {
     if (!state.selectFile) return
     state.selectFile.forEach(function (item) {
       let x = state.filelist.findIndex((n) => n.Name === item.Name)
-      state.filelist[x].active = false
+      if (state.filelist[x] !== undefined) {
+        state.filelist[x].active = false
+      }
     })
     state.selectFile = []
   }

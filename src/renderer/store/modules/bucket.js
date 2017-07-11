@@ -17,8 +17,12 @@ const state = {
 const mutations = {
   getMuService (state, data) {
     console.log('bucket列表', data)
+    for (let key in data) {
+      data[key].forEach(n=>n.active=false)
+    }
     state.bucketList = data
   },
+
   bucketActive (state, bucket) {
     for (let key in state.bucketList) {
       if (key === bucket.AppId) {
@@ -34,9 +38,11 @@ const mutations = {
       }
     }
   },
+
   currentBucket (state, val) {
     state.currentBucket = val
   }
+
 }
 
 const actions = {
@@ -50,7 +56,6 @@ const actions = {
             data[key].forEach(n => n.active = false)
           }
         }
-
         commit('getMuService', data)
         resolve()
       })
