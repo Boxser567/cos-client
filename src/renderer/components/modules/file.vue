@@ -25,39 +25,33 @@
                 <div class="file-opts">
                     <div class="el-button-group">
                         <el-button size="small" @click="fileEvents('upload')">点击上传</el-button>
-
-                        <el-button size="small" @click="newFolder = !newFolder">新建文件夹</el-button>
+                        <el-button size="small" @click="fileEvents('newFolder')">新建文件夹</el-button>
                     </div>
-
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true" @click="fileEvents('download')">下载
+                        <el-button size="small" :plain="true" @click="fileEvents('download')" :disabled="eableBtn()">下载
                         </el-button>
-                        <el-button size="small" :plain="true"
-                                   :disabled="true">复制
+                        <el-button size="small" :plain="true" :disabled="eableBtn()">复制
                         </el-button>
-                        <el-button size="small" :plain="true" @click="menuObj().deleteObj()"
-                                   :disabled="true">删除
+                        <el-button size="small" :plain="true" @click="menuObj().deleteObj()" :disabled="eableBtn()">删除
                         </el-button>
                     </div>
-
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="menuObj().getFileUrl()"
-                                   :disabled="true">获取地址
+                                   :disabled="eableBtn1('adress')">
+                            获取地址
                         </el-button>
                     </div>
-
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="menuObj().dialogSetHttpFn()"
-                                   :disabled="true">设置HTTP头
+                                   :disabled="eableBtn1()">设置HTTP头
                         </el-button>
                     </div>
-
                     <span class="area">{{ options.region | getArea}}</span>
                 </div>
             </div>
         </div>
 
-        <file-list :options="options" :newfo="newFolder"></file-list>
+        <file-list :options="options"></file-list>
 
         <el-dialog title="获取Object地址"
                    custom-class="dialog-http"
@@ -143,7 +137,7 @@
     beforeRouteUpdate (to, from, next) {
       this.options.bucket = to.params.bucket || to.query.bucket
       this.options.region = to.params.region || to.query.region
-      this.navOptions = [{name: this.options.bucket}]
+      this.navOptions = [].concat({name: this.options.bucket})
       if (to.path != from.path) {
         this.options.keyWord = null
         this.options.folders = []
@@ -152,28 +146,14 @@
         let navbar = to.query.folders
         if (navbar && navbar.length) {
           navbar = navbar.split('/')
-          navbar.splice(navbar.length - 1, 1)
-          navbar.forEach((n) => this.navOptions.push({name: n}))
+          navbar.forEach(n => {if(n) this.navOptions.push({name: n}) })
         }
       }
       //console.log('router钩子', to.params, this.options)
       next()
     },
     computed: {
-      fileloading(){
-        return this.$store.state.menulist.fileloading
-      },
-      selectFile(){
-        return this.$store.state.menulist.selectFile
-      },
-      dialogGetHttp: {
-        get(){
-          return this.$store.state.menulist.dialogGetHttp
-        }
-      },
-      fileHeaderInfo(){
-        return this.$store.state.menulist.fileHeaderInfo
-      }
+      ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo'])
     },
     data() {
       return {
@@ -185,32 +165,61 @@
         },
         navOptions: [],
         currentFolder: null,
-        newFolder: false,
+
         inputFocus: false
       }
     },
     methods: {
-      goFilePath(index){
-        if (this.navOptions.length) {
-          if (index == this.navOptions.length - 1) return
-          let goFolder = ''
-          if (index != 0) {
-            this.navOptions.forEach((nav, idx) => {
-              if (idx <= index && nav.name != this.options.bucket)
-                goFolder += nav.name + '/'
-            })
+      eableBtn(){
+        if (this.selectFile && this.selectFile.length) {
+          return false
+        } else {
+          return true
+        }
+      },
+      eableBtn1(type){  //获取地址
+        if (this.selectFile && this.selectFile.length) {
+          let array = this.selectFile.map(n => n.dir ? true : false)
+          if (array.includes(false) && array.includes(true)) {
+            return true
+          } else if (array.includes(true)) {
+            return true
           }
-          let topage = {
-            path: '/file/' + this.options.bucket,
-            query: {
-              bucket: this.options.bucket,
-              region: this.options.region,
-              folders: goFolder
+          else {
+            if (type === 'adress') {
+              if (this.selectFile.length > 1) {
+                return true
+              }
+            } else {
+              return false
             }
           }
-          this.options.keyWord = null
-          this.$router.push(topage)
+        } else {
+          return true
         }
+      },
+
+      goFilePath(index){
+        if (!this.navOptions.length) return
+        if (index === this.navOptions.length - 1) return
+        this.navOptions.splice(0, 1)
+        let goFolder = ''
+        if (index != 0) {
+          this.navOptions.forEach((nav, idx) => {
+            if (idx <= index)
+              goFolder += nav.name + '/'
+          })
+        }
+        let topage = {
+          path: '/file/' + this.options.bucket,
+          query: {
+            bucket: this.options.bucket,
+            region: this.options.region,
+            folders: goFolder
+          }
+        }
+        this.options.keyWord = null
+        this.$router.push(topage)
       },
       blurSearch(){
         this.inputFocus = false
@@ -237,18 +246,6 @@
       },
       searchCancelFn(){
         this.options.keyWord = null
-      },
-      onProgress(filelist) {
-        console.log(filelist)
-        let path = filelist.file.path
-        let fileName = filelist.file.name  //path.replace(/\\/g, '/').replace(/.*\//, '');
-        let params = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
-          Key: fileName,
-          FileName: path
-        }
-        this.$store.dispatch('menulist/sliceUploadFile', params)
       },
       menuObj() {
         let _self = this
@@ -285,15 +282,15 @@
               cancelButtonText: '取消',
               type: 'warning'
             }).then(() => {
-              let parmas = Object.assign(parmsObj, {Key: _self.selectFile.dir ? _self.selectFile.Prefix : _self.selectFile.Key})
-              _self.$store.dispatch('menulist/deleteFile', {pms: parmas}).then(function (resp) {
-                console.log('this-delete', arguments)
-                if (resp.DeleteObjectSuccess) {
-                  _self.fetchFilelist()
-                } else {
-                  _self.$message({type: 'error', message: resp.error})
-                }
-              })
+//              let parmas = Object.assign(parmsObj, {Key: _self.selectFile.dir ? _self.selectFile.Prefix : _self.selectFile.Key})
+//              _self.$store.dispatch('menulist/deleteFile', {pms: parmas}).then(function (resp) {
+//                console.log('this-delete', arguments)
+//                if (resp.DeleteObjectSuccess) {
+//                  _self.fetchFilelist()
+//                } else {
+//                  _self.$message({type: 'error', message: resp.error})
+//                }
+//              })
             }).catch(() => {
             })
           }
@@ -306,10 +303,12 @@
           Prefix: (this.options.folders && this.options.folders.length > 0) ? this.options.folders : ''
         }
         if (types === 'upload') {
-          this.$store.dispatch('menulist/uploadFile', pms)
+          this.$store.commit('menulist/uploadFile', pms)
         }
         if (types === 'download')
-          this.$store.dispatch('menulist/downloadFile', pms)
+          this.$store.commit('menulist/downloadFile', pms)
+        if (types === 'newFolder')
+          this.$store.commit('menulist/newFolder', true)
       },
       fetchFilelist(){        //刷新文件列表，重走路由
         let qey = {
@@ -328,20 +327,6 @@
       },
       backForward(){
 //        this.$router.go(-1);
-      },
-      btnDisable(){
-        if (this.selectFile) {
-          if (this.selectFile.dir) {
-            return false
-          } else if (selectFile.select) {
-            return true
-          }
-          else {
-            return false
-          }
-        } else {
-          return false
-        }
       }
     }
   }

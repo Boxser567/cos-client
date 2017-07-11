@@ -16,16 +16,23 @@ const state = {
 
 const mutations = {
   getMuService (state, data) {
+    console.log('bucket列表', data)
     state.bucketList = data
   },
-  bucketActive (state, index) {
-    state.bucketList.forEach(function (a, i) {
-      a.active = false
-      if (i === index) {
-        a.active = true
-        state.currentBucket = a
+  bucketActive (state, bucket) {
+    for (let key in state.bucketList) {
+      if (key === bucket.AppId) {
+        state.bucketList[key].forEach(x => {
+          if (x.Name === bucket.Name) {
+            x.active = true
+          } else {
+            x.active = false
+          }
+        })
+      } else {
+        state.bucketList[key].forEach(n => n.active = false)
       }
-    })
+    }
   },
   currentBucket (state, val) {
     state.currentBucket = val
@@ -38,14 +45,13 @@ const actions = {
       ipcRenderer.send('ListBucket')
 
       ipcRenderer.once('ListBucket-data', function (event, data) {
-        let list = []
-        if (data.length) {
-          list = data.map(function (b) {
-            b.active = false
-            return b
-          })
+        if (data && typeof data === 'object') {
+          for (let key in data) {
+            data[key].forEach(n => n.active = false)
+          }
         }
-        commit('getMuService', list)
+
+        commit('getMuService', data)
         resolve()
       })
 
