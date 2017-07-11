@@ -143,6 +143,7 @@ App.prototype.init = async function () {
     for (let t of tasks) {
       try {
         let task = await new MockUploadTask(cos, t.name, t.params, t.option)
+        task.modify = '+'
         uploads.newTask(task).then(
           () => {
             task.progress.loaded = task.progress.total
@@ -184,7 +185,7 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
-
+          task.modify = '+'
           // newTask.then 在整个上传完成后调用
           uploads.newTask(task).then(
             () => {
@@ -217,6 +218,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
+      task.modify = '*'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }
@@ -233,6 +235,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
+      task.modify = '*'
       if (task.status === TaskStatus.PAUSE) {
         task.status = TaskStatus.WAIT
       }
@@ -249,6 +252,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
+      task.modify = '-'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }
@@ -269,6 +273,7 @@ App.prototype.init = async function () {
     for (let t of tasks) {
       try {
         let task = await new MockDownloadTask(cos, t.name, t.params, t.option)
+        task.modify = '+'
         downloads.newTask(task).then(
           () => {
             task.progress.loaded = task.progress.total
@@ -316,6 +321,7 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
+          task.modify = '+'
           downloads.newTask(task).then(
             result => (console.log('task done')),
             err => { if (err.message !== 'cancel') console.log(err) }
@@ -353,6 +359,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = downloads.findTask(id)
       if (!task) return
+      task.modify = '*'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }
@@ -370,6 +377,7 @@ App.prototype.init = async function () {
       let task = downloads.findTask(id)
       console.log('task', task)
       if (!task) return
+      task.modify = '*'
       if (task.status === TaskStatus.PAUSE) {
         task.status = TaskStatus.WAIT
       }
@@ -386,6 +394,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = downloads.findTask(id)
       if (!task) return
+      task.modify = '-'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }
