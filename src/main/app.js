@@ -21,9 +21,6 @@ App.prototype.init = async function () {
   let uploads
   let downloads
 
-  let uploadsRefresh
-  let downloadsRefresh
-
   this.config = await init.config()
 
   let cos = new Cos({
@@ -136,12 +133,14 @@ App.prototype.init = async function () {
 
   ipcMain.on('GetUploadTasks', async (event) => {
     if (uploads) {
-      uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
-      uploadsRefresh()
+      uploads.refresher.setEvent(event)
+      uploads.refresh(true)
       return
     }
     uploads = new Tasks(3)
-    uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
+    uploads.refresher = new TasksRefresher(uploads, 'GetUploadTasks-data')
+    uploads.refresh = uploads.refresher.refresh
+    uploads.refresher.setEvent(event)
     let tasks = await init.upload()
     for (let t of tasks) {
       try {
@@ -149,67 +148,26 @@ App.prototype.init = async function () {
         uploads.newTask(task).then(
           () => {
             task.progress.loaded = task.progress.total
-            uploadsRefresh()
+            uploads.refresh()
           },
           err => {
             if (err.message !== 'cancel') {
               console.log('task error', err)
             }
-            uploadsRefresh()
+            uploads.refresh()
           })
-        console.log(t)
         task.progress.loaded = t.loaded
         task.progress.total = t.total
         task.status = t.status
+        uploads.refresh()
       } catch (e) {
         console.log(e)
       }
     }
-    uploadsRefresh(true)
-  })
-
-  ipcMain.on('NewUploadTask', async (event, arg) => {
-    /**
-     * @param  {object}   arg
-     * @param  {string}   arg.Bucket
-     * @param  {string}   arg.Region
-     * @param  {string}   arg.Prefix
-     * @param  {string}   arg.FileName
-     */
-    // todo 同源不同目标
-    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
-
-    for (let item of uploadGenerator(arg.FileName, arg.Prefix)) {
-      try {
-        let task = await new MockUploadTask(cos, item.name, {
-          Bucket: arg.Bucket,
-          Region: arg.Region,
-          Key: item.key
-        })
-
-        // newTask.then 在整个上传完成后调用
-        uploads.newTask(task).then(
-          () => {
-            task.progress.loaded = task.progress.total
-            uploadsRefresh()
-          },
-          err => {
-            if (err.message !== 'cancel') {
-              console.log('task error', err)
-            }
-            uploadsRefresh()
-          })
-      } catch (e) {
-        console.log(e)
-      }
-      uploads.next()
-      uploadsRefresh() // newTask, next 都有更新逻辑
-    }
-    uploadsRefresh(true)
+    uploads.refresh(true)
   })
 
   ipcMain.on('NewUploadTasks', async (event, arg) => {
-    console.log('new')
     /**
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
@@ -233,23 +191,23 @@ App.prototype.init = async function () {
           uploads.newTask(task).then(
             () => {
               task.progress.loaded = task.progress.total
-              uploadsRefresh()
+              uploads.refresh()
               console.log('task done', task.id)
             },
             err => {
               if (err.message !== 'cancel') {
                 console.log('task error', err)
               }
-              uploadsRefresh()
+              uploads.refresh()
             })
         } catch (e) {
           console.log(e)
         }
         uploads.next()
-        uploadsRefresh() // newTask, next 都有更新逻辑
+        uploads.refresh() // newTask, next 都有更新逻辑
       }
     }
-    uploadsRefresh(true)
+    uploads.refresh(true)
   })
 
   ipcMain.on('PauseUploadTasks', (event, arg) => {
@@ -266,7 +224,7 @@ App.prototype.init = async function () {
       }
       task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
-    uploadsRefresh(true)
+    uploads.refresh(true)
   })
 
   ipcMain.on('ResumeUploadTask', (event, arg) => {
@@ -282,7 +240,7 @@ App.prototype.init = async function () {
       }
       uploads.next()
     })
-    uploadsRefresh(true)
+    uploads.refresh(true)
   })
 
   ipcMain.on('DeleteUploadTasks', (event, arg) => {
@@ -298,22 +256,43 @@ App.prototype.init = async function () {
       }
       uploads.deleteTask(id)
     })
-    uploadsRefresh(true)
+    uploads.refresh(true)
   })
 
   ipcMain.on('GetDownloadTasks', async (event) => {
     if (downloads) {
-      downloadsRefresh = tasksRefresh(downloads, event, 'GetDownloadTasks-data')
-      downloadsRefresh()
+      downloads.refresher.setEvent(event)
+      downloads.refresh(true)
       return
     }
     downloads = new Tasks(3)
-    downloadsRefresh = tasksRefresh(downloads, event, 'GetDownloadTasks-data')
+    downloads.refresher = new TasksRefresher(downloads, 'GetDownloadTasks-data')
+    downloads.refresh = downloads.refresher.refresh
+    downloads.refresher.setEvent(event)
     let tasks = await init.download()
-    if (tasks.length !== 0) {
-      tasks.forEach(t => { downloads.newTask(t) })
-      downloadsRefresh()
+    for (let t of tasks) {
+      try {
+        let task = await new MockDownloadTask(cos, t.name, t.params, t.option)
+        downloads.newTask(task).then(
+          () => {
+            task.progress.loaded = task.progress.total
+            downloads.refresh()
+          },
+          err => {
+            if (err.message !== 'cancel') {
+              console.log('task error', err)
+            }
+            downloads.refresh()
+          })
+        task.progress.loaded = t.loaded
+        task.progress.total = t.total
+        task.status = t.status
+        downloads.refresh()
+      } catch (e) {
+        console.log(e)
+      }
     }
+    downloads.refresh(true)
   })
 
   ipcMain.on('NewDownloadTasks', async (event, arg) => {
@@ -346,7 +325,7 @@ App.prototype.init = async function () {
             err => { if (err.message !== 'cancel') console.log(err) }
           )
           downloads.next()
-          downloadsRefresh()
+          downloads.refresh()
         } catch (err) {
           console.log(err)
         }
@@ -366,7 +345,7 @@ App.prototype.init = async function () {
         params.Marker = result.NextMarker
       } while (result.IsTruncated)
     }
-    downloadsRefresh(true)
+    downloads.refresh(true)
   })
 
   ipcMain.on('PauseDownloadTasks', (event, arg) => {
@@ -383,7 +362,7 @@ App.prototype.init = async function () {
       }
       task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
-    downloadsRefresh(true)
+    downloads.refresh(true)
   })
 
   ipcMain.on('ResumeDownloadTask', (event, arg) => {
@@ -392,14 +371,15 @@ App.prototype.init = async function () {
      * @param {int[]}   arg.tasks
      */
     arg.tasks.forEach(id => {
-      let task = uploads.findTask(id)
+      let task = downloads.findTask(id)
+      console.log('task', task)
       if (!task) return
       if (task.status === TaskStatus.PAUSE) {
         task.status = TaskStatus.WAIT
       }
-      uploads.next()
+      downloads.next()
     })
-    downloadsRefresh(true)
+    downloads.refresh(true)
   })
 
   ipcMain.on('DeleteDownloadTasks', (event, arg) => {
@@ -415,7 +395,7 @@ App.prototype.init = async function () {
       }
       downloads.deleteTask(id)
     })
-    downloadsRefresh(true)
+    downloads.refresh(true)
   })
 
   this.save = function () {
@@ -502,12 +482,12 @@ function* downloadGenerator (downloadPath, prefix, contents) {
   }
 }
 
-function tasksRefresh (tasks, event, channel) {
+function TasksRefresher (tasks, channel) {
   let refresh = false
   let fast
   let auto
   let count = 10
-  setInterval(() => {
+  this.obj = setInterval(() => {
     count--
     if (!refresh || (!fast && count > 0)) return
     refresh = false
@@ -517,19 +497,26 @@ function tasksRefresh (tasks, event, channel) {
       clearInterval(auto)
       auto = null
     }
-    console.log('r', tasks)
-    event.sender.send(channel, tasks.tasks.map(t => ({
-      id: t.id,
-      Key: t.params.Key,
-      FileName: t.file.fileName,
-      status: t.status,
-      size: t.progress.total,
-      loaded: t.progress.loaded,
-      speed: t.progress.speed
-    })))
+    console.log('r')
+    try {
+      this.event.sender.send(channel, tasks.tasks.map(t => ({
+        id: t.id,
+        Key: t.params.Key,
+        FileName: t.file.fileName,
+        status: t.status,
+        size: t.progress.total,
+        loaded: t.progress.loaded,
+        speed: t.progress.speed
+      })))
+    } catch (e) {
+      // 可能由窗口关闭先于事件发出导致
+      console.log(e)
+    }
   }, 200)
 
-  return (isFast) => {
+  this.setEvent = e => (this.event = e)
+
+  this.refresh = isFast => {
     fast = isFast || fast
     refresh = true
     if (tasks.empty()) {
