@@ -2,11 +2,11 @@
  * Created by michael on 2017/6/29.
  */
 'use strict'
+import fs from 'fs'
+import path from 'path'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
-import fs from 'fs'
-import path from 'path'
 import { init, save } from './db'
 
 let app
@@ -133,14 +133,12 @@ App.prototype.init = async function () {
 
   ipcMain.on('GetUploadTasks', async (event) => {
     if (uploads) {
-      uploads.refresher.setEvent(event)
+      uploads.refresher.event = event
       uploads.refresh(true)
       return
     }
     uploads = new Tasks(3)
-    uploads.refresher = new TasksRefresher(uploads, 'GetUploadTasks-data')
-    uploads.refresh = uploads.refresher.refresh
-    uploads.refresher.setEvent(event)
+    uploads.setRefresher(event, 'GetUploadTasks-data')
     let tasks = await init.upload()
     for (let t of tasks) {
       try {
@@ -261,14 +259,12 @@ App.prototype.init = async function () {
 
   ipcMain.on('GetDownloadTasks', async (event) => {
     if (downloads) {
-      downloads.refresher.setEvent(event)
+      downloads.refresher.event = event
       downloads.refresh(true)
       return
     }
     downloads = new Tasks(3)
-    downloads.refresher = new TasksRefresher(downloads, 'GetDownloadTasks-data')
-    downloads.refresh = downloads.refresher.refresh
-    downloads.refresher.setEvent(event)
+    downloads.setRefresher(event, 'GetDownloadTasks-data')
     let tasks = await init.download()
     for (let t of tasks) {
       try {
@@ -432,7 +428,6 @@ function listDir (cos, params) {
           params.Marker = result.NextMarker
           return p().then(resolve, reject)
         } else {
-          // console.log(dirs, objects);
           resolve({dirs, objects})
         }
       })
@@ -479,52 +474,6 @@ function* downloadGenerator (downloadPath, prefix, contents) {
       name: path.join(downloadPath, content.Key.substr(pflen)),
       key: content.Key
     }
-  }
-}
-
-function TasksRefresher (tasks, channel) {
-  let refresh = false
-  let fast
-  let auto
-  let count = 10
-  this.obj = setInterval(() => {
-    count--
-    if (!refresh || (!fast && count > 0)) return
-    refresh = false
-    fast = false
-    count = 10
-    if (tasks.empty()) {
-      clearInterval(auto)
-      auto = null
-    }
-    console.log('r')
-    try {
-      this.event.sender.send(channel, tasks.tasks.map(t => ({
-        id: t.id,
-        Key: t.params.Key,
-        FileName: t.file.fileName,
-        status: t.status,
-        size: t.progress.total,
-        loaded: t.progress.loaded,
-        speed: t.progress.speed
-      })))
-    } catch (e) {
-      // 可能由窗口关闭先于事件发出导致
-      console.log(e)
-    }
-  }, 200)
-
-  this.setEvent = e => (this.event = e)
-
-  this.refresh = isFast => {
-    fast = isFast || fast
-    refresh = true
-    if (tasks.empty()) {
-      clearInterval(auto)
-      auto = null
-      return
-    }
-    auto = auto || setInterval(() => { refresh = true }, 1000)
   }
 }
 

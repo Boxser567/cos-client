@@ -82,6 +82,51 @@ Tasks.prototype.next = async function () {
   }
 }
 
+Tasks.prototype.setRefresher = function (event, channel) {
+  let refresh = false
+  let fast
+  let auto
+  let count = 10
+  this.refresher = {}
+  this.refresher.event = event
+  this.refresher.obj = setInterval(() => {
+    count--
+    if (!refresh || (!fast && count > 0)) return
+    refresh = false
+    fast = false
+    count = 10
+    if (this.empty()) {
+      clearInterval(auto)
+      auto = null
+    }
+    try {
+      this.refresher.event.sender.send(channel, this.tasks.map(t => ({
+        id: t.id,
+        Key: t.params.Key,
+        FileName: t.file.fileName,
+        status: t.status,
+        size: t.progress.total,
+        loaded: t.progress.loaded,
+        speed: t.progress.speed
+      })))
+    } catch (e) {
+      // 可能由窗口关闭先于事件发出导致
+      console.log(e)
+    }
+  }, 200)
+
+  this.refresh = isFast => {
+    fast = isFast || fast
+    refresh = true
+    if (this.empty()) {
+      clearInterval(auto)
+      auto = null
+      return
+    }
+    auto = auto || setInterval(() => { refresh = true }, 1000)
+  }
+}
+
 /**
  *
  * @param  {object}   cos
