@@ -6,13 +6,29 @@ import  { remote, ipcRenderer } from  'electron'
 
 const state = {
   filelist: null,
+
   fileloading: true,
-  fileUploadProgress: null,
-  fileUploadSelectID: null,
-  fileDownloadProgress: null,
+
+  uploadProgress: {
+    list: null,
+    status: false
+  },
+
+  fileUploadSelect: [],
+
+  downloadProgress: {
+    list: null,
+    status: false
+  },
+  downloadSelect: [],
+
   uploadSpeed: null,
+
   downloadSpeed: null,
-  selectFile: null,
+
+  isShowFileProgress: false,
+
+  selectFile: [],
 
   fileRightList: [
     {
@@ -71,11 +87,14 @@ const state = {
     },
   ],
 
+  newFolder: false, //新建文件夹
+
   dialogGetHttp: {
     isShow: false,
     bucket: null,
     url: null
   },
+
   fileHeaderInfo: {
     isShow: false,
     initialData: [{
@@ -128,67 +147,105 @@ const mutations = {
   fileloading(state, val){    //文件加载
     state.fileloading = val.loading
   },
+  showFileProgress(state){
+    state.isShowFileProgress = !state.isShowFileProgress
+  },
   updataProgress(state, data){    //初始化上传文件列表
-    let dd = 0
+    let dd = 0, idx
 
-    data.forEach(function (item) {
-      if (state.fileUploadSelectID && state.fileUploadSelectID.length) {
-        if (state.fileUploadSelectID.indexOf(item.id) > -1) {
-          item.active = true
-        }
-      }
-      if (item.status === 'run') {
-        dd += item.speed
-      }
-    })
+    // if (!state.uploadProgress.status) {
+    state.uploadProgress.list = [].concat(data)
+    // state.uploadProgress.status = true
+    // }
 
-    state.uploadSpeed = dd
-    state.fileUploadProgress = data
+    // data.forEach(function (item, index) {
+    //   if (state.fileUploadSelect && state.fileUploadSelect.length) {
+    //     if (item.id === state.fileUploadSelect[0].id) {
+    //       item.active = true
+    //       idx = index
+    //     }
+    //   }
+    //   item.active = false
+    // })
+    // myidx = data.findIndex(n => n.id === state.fileUploadSelect[0].id)
+    // state.uploadSpeed = dd
+    // fileUploadSelect
+    // if (state.fileUploadSelect && state.fileUploadSelect.length) {
+    //   state.fileUploadSelect.forEach(function (upfile) {
+    //     if (upfile) {
+    //       let idx = data.findIndex(n => n.id === upfile.id)
+    //       data[idx].active = true
+    //     }
+    //   })
+    // }
 
     // console.log('总上传数量: ', data, '\n页面渲染列表: ')
 
   },
   downloadProgress(state, data){   //初始化下载文件列表
-    console.log(data)
-    state.fileDownloadProgress = data
+    // if (!state.downloadProgress.status) {
+    state.downloadProgress.list = data
+    // state.downloadProgress.status = true
+    // state.downloadProgress.push()
+    // }
   },
   selectFile(state, val) {       //选择文件
     if (!state.filelist) return
-    let flag = []
-    if (state.selectFile) {
-      let temper = state.filelist.findIndex(n => state.selectFile[0] === n.Name)
-      if (state.filelist[temper].active) {
-        state.filelist[temper].active = false
-      }
-    }
-    state.filelist[val.index].active = true
-    flag.push(state.filelist[val.index].Name)
-    state.selectFile = flag
-  },
-  clearSelectFile(state){
-    let arr = [].concat(state.selectFile)
 
-    function test () {
-      if (arr[0] && arr.length) {
-        let idx = state.filelist.findIndex(n => n.Name === arr[0])
-        state.filelist[idx].active = false
-        arr.splice(0, 1)
-        test()
+    if (val.key) {  //判断shiftkey
+      if (state.selectFile && state.selectFile.length > 1) {
+        //取最后一个的索引 和本次选择的索引组合
+      } else if (state.selectFile && state.selectFile.length == 1) {
+        let selectID = state.filelist.findIndex((n) => n.Name === state.selectFile[0].Name)
+        let thisArr = [selectID, val.index]
+        if (selectID == val.index) return
+        if (selectID > val.index) {
+          thisArr.reverse()
+        }
+        state.selectFile = []
+        for (let i = thisArr[0]; i <= thisArr[1]; i++) {
+          state.filelist[i].active = true
+          state.selectFile.push(state.filelist[i])
+        }
+        state.filelist.push()
+      } else {
+        state.filelist.forEach(function (item, index) {
+          if (index <= val.index) {
+            item.active = true
+          }
+        })
       }
+
+    } else {
+      let chooseArr = []
+      if (state.selectFile && state.selectFile.length) {
+        state.selectFile.forEach((s) => {
+          chooseArr.push(s.Name)
+        })
+        state.filelist.forEach((n) => {
+          if (chooseArr.indexOf(n.Name) > -1) {
+            n.active = false
+          }
+        })
+      }
+      state.filelist[val.index].active = true
+      state.selectFile = []
+      state.selectFile.push(val.file)
     }
 
-    test()
-    state.selectFile = null
   },
-  unSelectFile(state)
-  {      //取消选中文件
-    state.filelist.forEach(function (file) {
-      file.active = false
+  unSelectFile(state){      //取消选中文件
+    if (!state.selectFile) return
+    state.selectFile.forEach(function (item) {
+      let x = state.filelist.findIndex((n) => n.Name === item.Name)
+      if (state.filelist[x] !== undefined) {
+        state.filelist[x].active = false
+      }
     })
+    state.selectFile = []
   }
   ,
-  getFileList(state, data)
-  {       //获取当前文件列表
+  getFileList(state, data){       //获取当前文件列表
     // console.log('当前文件列表', data)
     let index = null
     if (data.objects.length) {
@@ -205,8 +262,7 @@ const mutations = {
     }
     if (index != null) data.objects.splice(index, 1)
     state.filelist = data.objects.concat(data.dirs)
-  }
-  ,
+  },
   searchFileList(state, data){    //搜索文件
     let index = null
     if (data.objects.length) {
@@ -264,121 +320,81 @@ const mutations = {
     state.fileHeaderInfo.data.splice(index, 1)
   },
 
-  selectLoadFile(state, arr)
-  {    //选中上传文件列表de文件
+  selectLoadFile(state, arr){    //选中上传文件列表de文件
     if (!arr) return
-    if (!state.fileUploadProgress && state.fileUploadProgress.length) return
-    // if (arr.key) {
-    //   if (!state.fileUploadSelectID.length) return
-    //   state.fileUploadSelectID.push(arr.index)
-    //   let Array = []
-    //   if (state.fileUploadSelectID[0] > arr.index)
-    //     state.fileUploadSelectID.reverse()
-    //   state.fileUploadProgress.forEach(function (file) {
-    //     if (state.fileUploadSelectID[0] <= file.id <= state.fileUploadSelectID[1]) {
-    //       Array.push(file.id)
-    //     }
-    //   })
-    //   state.fileUploadSelectID = Array
-    // } else {
-    //   state.fileUploadSelectID = [arr.index]
-    //   state.fileUploadProgress[arr.id].active=true
-    // }
+    if (!state.uploadProgress.list && state.uploadProgress.list.length) return
 
-    // state.fileUploadProgress[state.fileUploadSelectID].active = false
-    // state.fileUploadProgress[arr.id].active = true
-    // state.fileUploadSelectID = arr.id
-  }
-}
-
-const actions = {
-  getFileList({commit, rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      rootGetters.userConfig.listObject(params.pms).then(function (resp) {
-        if (params.pms.Page) {
-          resp.keywords = params.pms.Keywords
-          commit('searchFileList', resp)
-        } else {
-          commit('getFileList', resp)
-        }
-        resolve()
-      })
-    })
-  },
-  deleteFile({commit, rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      rootGetters.userConfig.cos.deleteObject(params.pms, function (err, data) {
-        console.log('this----', arguments)
-        if (!err) {
-          resolve(data)
-        } else {
-          reject(err)
+    if (state.fileUploadSelect && state.fileUploadSelect.length) {
+      state.fileUploadSelect.forEach(function (upfile) {
+        let id = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
+        if (id != undefined) {
+          state.uploadProgress.list[id].active = false
+          state.uploadProgress.list.push()
         }
       })
-    })
+    }
+    let idx = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
+    if (idx != undefined) {
+      state.uploadProgress.list[idx].active = true
+      state.uploadProgress.list.push()
+    }
+    state.fileUploadSelect = []
+    state.fileUploadSelect.push(arr.upFile)
+
   },
-  showList({commit}, val){
-    commit('showList', val)
+
+  selectDownloadFile(state, arr){
+    // state.downloadSelect
+    if (!arr) return
+    if (!state.downloadProgress.list && state.downloadProgress.list.length) return
+    if (state.downloadSelect && state.downloadSelect.length) {   //干掉已选中的状态
+      state.downloadSelect.forEach(function (i) {
+        state.downloadProgress.list[i].active = false
+      })
+    }
+    //增加现在选中的状态
+    state.downloadProgress.list[arr.upFile.id].active = true
+    state.downloadSelect.push(arr.upFile.id)
+    state.downloadProgress.list.push()
   },
-  selectFile({commit}, val){
-    commit('selectFile', val.amount)
+
+  newFolder(state, val){
+    state.newFolder = val
   },
-  uploadFile({commit}, pms){
+  uploadFile(state, pms){
     remote.dialog.showOpenDialog({
       filters: [{name: 'All Files', extensions: ['*']}],
       properties: ['openFile', 'openDirectory', 'multiSelections']
     }, function (fileArray) {
       console.log(fileArray)
       if (!fileArray) return
-      fileArray.forEach(function (file) {
-        let path = file
-        let params = Object.assign({
-          FileName: file
-        }, pms)
-        console.log(params)
-        ipcRenderer.send('NewUploadTask', params)
-      })
-      // pms.FileNames = fileArray
-      // console.log('this-pms', pms)
-      // ipcRenderer.send('NewUploadTasks', pms)
+      // fileArray.forEach(function (file) {
+      //   let path = file
+      //   let params = Object.assign({
+      //     FileName: file
+      //   }, pms)
+      //   console.log(params)
+      //   ipcRenderer.send('NewUploadTask', params)
+      // })
+      pms.FileNames = fileArray
+      console.log('this-pms', pms)
+      ipcRenderer.send('NewUploadTasks', pms)
     })
   },
-  downloadFile({state}, pms){
-    if (!state.filelist.length) return
-    if (!state.selectFile) return
-    remote.dialog.showOpenDialog({
-      buttonLabel: '选择',
-      filters: [{name: 'All Files', extensions: ['*']}],
-      properties: ['openDirectory']
-    }, function (fileArray) {
-      if (!fileArray) return
-      pms.Path = fileArray[0]
 
-      let files = state.filelist.find(n => n.Name === state.selectFile[0])
-      if (files.dir) {
-        pms.Dirs = ['' + files.Name + '']
-      } else {
-        pms.Keys = ['' + files.Name + '']
-      }
-
-      ipcRenderer.send('NewDownloadTasks', pms)
-    })
-  },
-  uploadFileCtrl({commit, state}, val){
+  uploadFileCtrl(state, val){
     if (!val)return
-    if (!state.fileUploadProgress) return
-    console.log('this-state.fileUploadProgress', state.fileUploadProgress)
-    let cs = val
-    if (val.id) cs = val.types
+    if (!state.uploadProgress.list) return
+    console.log('this-state.uploadProgress', state.uploadProgress)
 
-    switch (cs) {
+    switch (val.types) {
       case 'begin':
         let parmsBegin = {tasks: []}
         if (val.id) {
           parmsBegin.tasks.push(val.id)
         } else {
-          state.fileUploadProgress.forEach(function (file) {
-            if (state.fileUploadSelectID.indexOf(file.id) > -1) {
+          state.uploadProgress.list.forEach(function (file) {
+            if (state.fileUploadSelect.indexOf(file.id) > -1) {
               parmsBegin.tasks.push(file.id)
             }
           })
@@ -392,8 +408,8 @@ const actions = {
         if (val.id) {
           parmsPurse.tasks.push(val.id)
         } else {
-          state.fileUploadProgress.forEach(function (file) {
-            if (state.fileUploadSelectID.indexOf(file.id) > -1) {
+          state.uploadProgress.list.forEach(function (file) {
+            if (state.fileUploadSelect.indexOf(file.id) > -1) {
               parmsPurse.tasks.push(file.id)
             }
           })
@@ -407,7 +423,7 @@ const actions = {
         if (val.id) {
           parmsCancel.tasks.push(val.id)
         } else {
-          state.fileUploadProgress.forEach(function (file) {
+          state.uploadProgress.list.forEach(function (file) {
             if (state.fileUploadSelectID.indexOf(file.id) > -1) {
               parmsCancel.tasks.push(file.id)
             }
@@ -419,7 +435,7 @@ const actions = {
         break
       case 'allBegin':    //全部开始
         let parmsAllBegin = {tasks: []}
-        state.fileUploadProgress.forEach(function (file) {
+        state.uploadProgress.list.forEach(function (file) {
           if (file.status === 'pause') {
             parmsAllBegin.tasks.push(file.id)
           }
@@ -430,7 +446,7 @@ const actions = {
         break
       case 'allPurse':    //全部暂停
         let parmsAllPurse = {tasks: []}
-        state.fileUploadProgress.forEach(function (file) {
+        state.uploadProgress.list.forEach(function (file) {
           if (['run', 'wait'].indexOf(file.status) > -1) {
             parmsAllPurse.tasks.push(file.id)
           }
@@ -443,7 +459,7 @@ const actions = {
         let parmsAllCancel = {
           tasks: []
         }
-        state.fileUploadProgress.forEach(function (file) {
+        state.uploadProgress.list.forEach(function (file) {
           if (['wait', 'run', 'pause', 'error'].indexOf(file.status) > -1) {
             parmsAllCancel.tasks.push(file.id)
           }
@@ -455,7 +471,7 @@ const actions = {
         break
       case 'clear':
         let parms = {tasks: []}
-        state.fileUploadProgress.forEach(function (file) {
+        state.uploadProgress.list.forEach(function (file) {
           if (file.status === 'complete') {
             parms.tasks.push(file.id)
           }
@@ -468,6 +484,173 @@ const actions = {
         break
     }
   },
+  downloadFile(state, pms){
+    if (!state.selectFile) return
+    remote.dialog.showOpenDialog({
+      buttonLabel: '选择',
+      filters: [{name: 'All Files', extensions: ['*']}],
+      properties: ['openDirectory']
+    }, function (fileArray) {
+      if (!fileArray) return
+      let parms = Object.assign({
+        Path: fileArray[0],
+        Dirs: [],
+        Keys: []
+      }, pms)
+      state.selectFile.forEach(n => {
+        if (n.dir) {
+          parms.Dirs.push(n.Name)
+        } else {
+          parms.Keys.push(n.Name)
+        }
+      })
+      ipcRenderer.send('NewDownloadTasks', parms)
+    })
+
+  },
+  downloadFileCtrl(state, val){
+    if (!val)return
+    if (!state.downloadProgress.list) return
+    console.log('this-state.downloadProgress', state.downloadProgress)
+
+    switch (val.types) {
+      case 'begin':
+        let parmsBegin = {tasks: []}
+        if (val.id) {
+          parmsBegin.tasks.push(val.id)
+        } else {
+          state.downloadProgress.list.forEach(function (file) {
+            if (state.downloadSelect.indexOf(file.id) > -1) {
+              parmsBegin.tasks.push(file.id)
+            }
+          })
+        }
+        if (parmsBegin.tasks.length) {
+          ipcRenderer.send('ResumeDownloadTask', parmsBegin)
+        }
+        break
+      case  'purse':
+        let parmsPurse = {tasks: []}
+        if (val.id) {
+          parmsPurse.tasks.push(val.id)
+        } else {
+          state.downloadProgress.list.forEach(function (file) {
+            if (state.downloadSelect.indexOf(file.id) > -1) {
+              parmsPurse.tasks.push(file.id)
+            }
+          })
+        }
+        if (parmsPurse.tasks.length) {
+          ipcRenderer.send('PauseDownloadTasks', parmsPurse)
+        }
+        break
+      case  'cancel':
+        let parmsCancel = {tasks: []}
+        if (val.id) {
+          parmsCancel.tasks.push(val.id)
+        } else {
+          state.downloadProgress.list.forEach(function (file) {
+            if (state.downloadSelect.indexOf(file.id) > -1) {
+              parmsCancel.tasks.push(file.id)
+            }
+          })
+        }
+        if (parmsCancel.tasks.length) {
+          ipcRenderer.send('DeleteDownloadTasks', parmsCancel)
+        }
+        break
+      case 'allBegin':    //全部开始
+        let parmsAllBegin = {tasks: []}
+        state.downloadProgress.list.forEach(function (file) {
+          if (file.status === 'pause') {
+            parmsAllBegin.tasks.push(file.id)
+          }
+        })
+        if (parmsAllBegin.tasks.length) {
+          ipcRenderer.send('ResumeDownloadTask', parmsAllBegin)
+        }
+        break
+      case 'allPurse':    //全部暂停
+        let parmsAllPurse = {tasks: []}
+        state.downloadProgress.list.forEach(function (file) {
+          if (['run', 'wait'].indexOf(file.status) > -1) {
+            parmsAllPurse.tasks.push(file.id)
+          }
+        })
+        if (parmsAllPurse.tasks.length) {
+          ipcRenderer.send('PauseDownloadTasks', parmsAllPurse)
+        }
+        break
+      case 'allCancel':   //全部取消
+        let parmsAllCancel = {
+          tasks: []
+        }
+        state.downloadProgress.list.forEach(function (file) {
+          if (['wait', 'run', 'pause', 'error'].indexOf(file.status) > -1) {
+            parmsAllCancel.tasks.push(file.id)
+          }
+        })
+        if (parmsAllCancel.tasks.length) {
+          ipcRenderer.send('DeleteDownloadTasks', parmsAllCancel)
+        }
+        break
+      case 'clear':
+        let parms = {tasks: []}
+        state.downloadProgress.list.forEach(function (file) {
+          if (file.status === 'complete') {
+            parms.tasks.push(file.id)
+          }
+        })
+        if (parms.tasks.length) {
+          ipcRenderer.send('DeleteDownloadTasks', parms)
+        }
+        break
+      default :
+        break
+
+    }
+
+  }
+
+}
+
+const actions = {
+  getFileList({commit}, params){
+
+    return new Promise((resolve, reject) => {
+
+      ipcRenderer.send('ListObject', params.pms)
+
+      ipcRenderer.once('ListObject-data', function (event, data) {
+        if (params.pms.Page) {
+          data.keywords = params.pms.Keywords
+          commit('searchFileList', data)
+        } else {
+          commit('getFileList', data)
+        }
+        resolve(data)
+      })
+      ipcRenderer.once('ListObject-error', function (event, err) {
+        reject(err)
+      })
+
+    })
+
+  },
+  deleteFile({commit}, params){
+
+    return new Promise((resolve, reject) => {
+      ipcRenderer.send('DeleteObject', params.pms)
+
+      ipcRenderer.once('DeleteObject-data', function (event, data) {
+        resolve(data)
+      })
+      ipcRenderer.once('DeleteObject-error', function (event, err) {
+        reject(err)
+      })
+    })
+  }
+
 }
 
 export default {

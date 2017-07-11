@@ -10,22 +10,27 @@
                 </ul>
             </div>
             <div class="bucket">
-                <div class="bucket-item" @contextmenu="openMenu($event)">
-                    <div class="loading" v-if="bloading">
-                        <i class="el-icon-loading"></i>
-                    </div>
-                    <div class="item"
-                         v-for="(b,$index) in bucketList"
-                         @click="selectBucket($index,b)"
-                         :key="b.Name"
-                         :class="{ 'active':b.active }"
-                         :bucketName="b.Name"
-                         :bucketRegion="b.Location"
-                    >
-                        <a>{{b.Name}} <i class="el-icon-arrow-down"></i></a>
-                    </div>
+                <!--<div class="loading" v-if="bloading">-->
+                <!--<i class="el-icon-loading"></i>-->
+                <!--</div>-->
+                <div class="bucket-group" v-for="(value,key) in bucketList" :class="{ active:false }">
 
+                    <a class="bucket-tl"> <i class="el-icon-caret-bottom"></i> {{ key }} </a>
+
+                    <div class="bucket-item" @contextmenu="openMenu($event)">
+                        <div class="item"
+                             v-for="b in value"
+                             @click="selectBucket(b)"
+                             :key="b.Name"
+                             :class="{ 'active':b.active }"
+                             :bucketName="b.Name"
+                             :bucketRegion="b.Location"
+                        >
+                            <a>{{b.Name}} <i class="el-icon-arrow-down"></i></a>
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
 
@@ -101,9 +106,12 @@
 
 <script>
   import  { ipcRenderer } from  'electron'
+
   import { mutations, mapState } from 'vuex'
+
   export default {
     name: 'index-page',
+
     data(){
       return {
         bloading: true,
@@ -143,6 +151,7 @@
         rightChooseBucket: null
       }
     },
+
     computed: mapState('bucket', {
       bucketList: 'bucketList',
       currentBucket: 'currentBucket',
@@ -152,29 +161,26 @@
     created(){
       this.fetchData()
     },
+
     methods: {
       fetchData(){
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => this.bloading = false)
         ipcRenderer.send('GetUploadTasks')
 
-
         ipcRenderer.on('GetUploadTasks-data', (event, data) => {
           this.$store.commit('menulist/updataProgress', data)
         })
-
-
 
         ipcRenderer.send('GetDownloadTasks')
         ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
           this.$store.commit('menulist/downloadProgress', data)
         })
 
-
       },
-      selectBucket: function (index, b) {
-        this.$store.commit('bucket/bucketActive', index)
-        this.$store.commit('menulist/clearSelectFile')
+      selectBucket: function (b) {
+        this.$store.commit('bucket/bucketActive', b)
+        this.$store.commit('menulist/unSelectFile')
         this.$router.push({
           path: '/file/' + b.Name,
           query: {

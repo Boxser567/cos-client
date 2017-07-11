@@ -198,7 +198,7 @@
   $size: 120px;
   $time: 160px;
   background: $rightSidebarBgColor;
-  height: calc(100% - 90px);
+  height: calc(100% - 88px);
   overflow: hidden;
   position: relative;
   .list {
@@ -224,13 +224,16 @@
     }
   }
   .list-info {
-    height: calc(100% - 270px - 30px);
     overflow-x: overlay;
     background: #fff;
-    position: relative;
-    &.list-none {
-      //animation: slideUpDown 1s ease-in 0;
-      height: calc(100% - 40px);
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    bottom: 271px;
+    transition: all .5s;
+    &.active{
+      bottom: 41px;
     }
     .name {
       img {
@@ -303,6 +306,7 @@
   z-index: 99;
   background: #fff;
   border-top: 1px solid $borderColor;
+  transition: all .5s;
   &.list-none {
     height: 40px;
   }
@@ -354,16 +358,28 @@
       float: right;
       height: 32px;
       line-height: 30px;
+      padding-right: 40px;
+      position: relative;
       span {
         padding: 0 4px;
         text-align: center;
         display: inline-block;
       }
       i {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        text-align: center;
+        width: 20px;
+        height: 20px;
+        display: inline-block;
         transform: rotate(90deg);
-        color: #bfcbd9;
-        margin-left: 10px;
-        font-size: 10px;
+        color: #afbbc9;
+        font-size: 12px;
+        transition: all .5s;
+        &.active{
+          transform: rotate(-90deg);
+        }
       }
     }
   }
@@ -406,12 +422,21 @@
         top: 4px;
         left: 20px;
       }
+      .tl {
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .el-col-4 {
         line-height: 36px;
         text-align: center;
         color: $fontColorDisable;
         i {
           cursor: pointer;
+          display: inline-block;
+          width: 24px;
+          height: 24px;
         }
       }
     }
