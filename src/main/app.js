@@ -37,23 +37,17 @@ App.prototype.init = async function () {
       if (err) {
         event.sender.send('ListBucket-error', err)
       }
-      let result = []
-      data.Buckets.forEach((v) => {
-        v.Name = v.Name.split('-')[0]
-        result.push(v)
+      let result = {}
+      data.Buckets.forEach(v => {
+        let ss = v.Name.split('-')
+        v.Name = ss[0]
+        v.AppId = ss[1]
+        if (Array.isArray(result[v.AppId])) {
+          result[v.AppId].push(v)
+        } else {
+          result[v.AppId] = [v]
+        }
       })
-
-      //   let result = {}
-      //   data.Buckets.forEach(v => {
-      //   let ss = v.Name.split('-')
-      //   v.Name = ss[0]
-      //   v.AppId = ss[1]
-      //   if (Array.isArray(result[v.AppId])) {
-      //     result[v.AppId].push(v)
-      //   } else {
-      //     result[v.AppId] = [v]
-      //   }
-      // })
       event.sender.send('ListBucket-data', result)
     })
   })

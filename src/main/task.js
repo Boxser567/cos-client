@@ -340,7 +340,6 @@ function MockUploadTask (cos, name, params, option = {}) {
   this.asyncLim = 2
   this.cancel = false
   this.progress = {}
-  this.progress.total = 1 << 20
   this.progress.loaded = 0
   return new Promise((resolve, reject) => {
     fs.stat(name, (err, stats) => {
@@ -353,6 +352,7 @@ function MockUploadTask (cos, name, params, option = {}) {
         fileSize: stats.size,
         sliceSize: option.sliceSize || 1 << 20
       }
+      this.progress.total = stats.size
       resolve(this)
     })
   })

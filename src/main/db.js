@@ -88,7 +88,9 @@ save.upload = async function (tasks) {
       err ? reject(err) : resolve()
     })
   })
-  let s = tasks.map(t => {
+  let values = []
+  for (let t of tasks) {
+    if (!t) continue
     let j = JSON.stringify({
       params: t.params,
       name: t.file.fileName,
@@ -99,11 +101,11 @@ save.upload = async function (tasks) {
         asyncLim: t.asyncLim,
         sliceSize: t.file.sliceSize
       }})
-    return `(${t.id},'${j}')`
-  }).join(',')
-  if (s === '') return Promise.resolve()
+    values.push(`(${t.id},'${j}')`)
+  }
+  if (values.length === 0) return Promise.resolve()
   return new Promise((resolve, reject) => {
-    db.run(`INSERT INTO upload VALUES ${s}`)
+    db.run(`INSERT INTO upload VALUES ${values.join(',')}`, [], resolve)
   })
 }
 
@@ -113,13 +115,22 @@ save.download = async function (tasks) {
       err ? reject(err) : resolve()
     })
   })
-  let s = tasks.map(t => {
-    let s = JSON.stringify(t)
-    return `(${t.id},'${s}')`
-  }).join(',')
-  if (s === '') return Promise.resolve()
+  let values = []
+  for (let t of tasks) {
+    if (!t) continue
+    let j = JSON.stringify({
+      params: t.params,
+      name: t.file.fileName,
+      status: t.status,
+      total: t.progress.total,
+      loaded: t.progress.loaded
+    })
+    values.push(`(${t.id},'${j}')`)
+  }
+
+  if (values.length === 0) return Promise.resolve()
   return new Promise((resolve, reject) => {
-    db.run(`INSERT INTO download VALUES ${s}`)
+    db.run(`INSERT INTO download VALUES ${values.join(',')}`, [], resolve)
   })
 }
 
