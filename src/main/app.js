@@ -7,13 +7,24 @@ import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
 import fs from 'fs'
 import path from 'path'
-import { initData, updateUploads, updateDownloads } from './db'
+import { init, save } from './db'
 
-export default async function () {
-  let init = await initData()
-  let config = init.config
+let app
 
-  console.log(init)
+function App () {
+  if (app) return app
+  app = this
+  app.init()
+}
+
+App.prototype.init = async function () {
+  let uploads
+  let downloads
+
+  let uploadsRefresh
+  let downloadsRefresh
+
+  this.config = await init.config()
 
   let cos = new Cos({
     AppId: '1253834952',
@@ -26,12 +37,24 @@ export default async function () {
       if (err) {
         event.sender.send('ListBucket-error', err)
       }
-      let returnValue = []
+      let result = []
       data.Buckets.forEach((v) => {
         v.Name = v.Name.split('-')[0]
-        returnValue.push(v)
+        result.push(v)
       })
-      event.sender.send('ListBucket-data', returnValue)
+
+      //   let result = {}
+      //   data.Buckets.forEach(v => {
+      //   let ss = v.Name.split('-')
+      //   v.Name = ss[0]
+      //   v.AppId = ss[1]
+      //   if (Array.isArray(result[v.AppId])) {
+      //     result[v.AppId].push(v)
+      //   } else {
+      //     result[v.AppId] = [v]
+      //   }
+      // })
+      event.sender.send('ListBucket-data', result)
     })
   })
 
@@ -117,16 +140,38 @@ export default async function () {
     })
   })
 
-  let uploadsRefresh
-
-  let uploads = new Tasks(3)
-
-  ipcMain.on('GetUploadTasks', (event) => {
-    uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
-    if (init.upload.length !== 0) {
-      init.upload.forEach(t => { uploads.newTask(t) })
+  ipcMain.on('GetUploadTasks', async (event) => {
+    if (uploads) {
+      uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
       uploadsRefresh()
+      return
     }
+    uploads = new Tasks(3)
+    uploadsRefresh = tasksRefresh(uploads, event, 'GetUploadTasks-data')
+    let tasks = await init.upload()
+    for (let t of tasks) {
+      try {
+        let task = await new MockUploadTask(cos, t.name, t.params, t.option)
+        uploads.newTask(task).then(
+          () => {
+            task.progress.loaded = task.progress.total
+            uploadsRefresh()
+          },
+          err => {
+            if (err.message !== 'cancel') {
+              console.log('task error', err)
+            }
+            uploadsRefresh()
+          })
+        console.log(t)
+        task.progress.loaded = t.loaded
+        task.progress.total = t.total
+        task.status = t.status
+      } catch (e) {
+        console.log(e)
+      }
+    }
+    uploadsRefresh(true)
   })
 
   ipcMain.on('NewUploadTask', async (event, arg) => {
@@ -170,6 +215,7 @@ export default async function () {
   })
 
   ipcMain.on('NewUploadTasks', async (event, arg) => {
+    console.log('new')
     /**
      * @param  {object}   arg
      * @param  {string}   arg.Bucket
@@ -261,14 +307,17 @@ export default async function () {
     uploadsRefresh(true)
   })
 
-  let downloadsRefresh
-
-  let downloads = new Tasks(3)
-
-  ipcMain.on('GetDownloadTasks', (event) => {
+  ipcMain.on('GetDownloadTasks', async (event) => {
+    if (downloads) {
+      downloadsRefresh = tasksRefresh(downloads, event, 'GetDownloadTasks-data')
+      downloadsRefresh()
+      return
+    }
+    downloads = new Tasks(3)
     downloadsRefresh = tasksRefresh(downloads, event, 'GetDownloadTasks-data')
-    if (init.download.length !== 0) {
-      init.download.forEach(t => { uploads.newTask(t) })
+    let tasks = await init.download()
+    if (tasks.length !== 0) {
+      tasks.forEach(t => { downloads.newTask(t) })
       downloadsRefresh()
     }
   })
@@ -289,6 +338,7 @@ export default async function () {
       Bucket: arg.Bucket,
       Region: arg.Region
     }
+
     async function fn (contents) {
       for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {
         try {
@@ -374,13 +424,12 @@ export default async function () {
     downloadsRefresh(true)
   })
 
-  ipcMain.on('debug', (event, arg) => {
-    event.sender.send('debug-data', arg)
-  })
-
-  return function () {
-    updateUploads(uploads.tasks)
-    updateDownloads(downloads.tasks)
+  this.save = function () {
+    if (!uploads || !downloads) return Promise.resolve()
+    return Promise.all([
+      save.upload(uploads.tasks),
+      save.download(downloads.tasks)
+    ])
   }
 }
 
@@ -474,6 +523,7 @@ function tasksRefresh (tasks, event, channel) {
       clearInterval(auto)
       auto = null
     }
+    console.log('r', tasks)
     event.sender.send(channel, tasks.tasks.map(t => ({
       id: t.id,
       Key: t.params.Key,
@@ -504,3 +554,5 @@ function getBucket (cos, params) {
     })
   })
 }
+
+export { App }

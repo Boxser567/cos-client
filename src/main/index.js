@@ -1,7 +1,7 @@
 'use strict'
 
 import { app, BrowserWindow } from 'electron'
-import ipc from './cos'
+import { App } from './app'
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -15,8 +15,8 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
-async function createWindow () {
-  let save = await ipc()
+function createWindow () {
+  let app = new App()
   /**
    * Initial window options
    */
@@ -32,7 +32,8 @@ async function createWindow () {
 
   mainWindow.on('closed', () => {
     mainWindow = null
-    save()
+    console.log(app)
+    app.save()
   })
 }
 

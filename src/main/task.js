@@ -271,8 +271,7 @@ UploadTask.prototype.stop = function () {
 }
 
 function getSliceMD5 (fileName, index, start, end) {
-  // todo 改md5
-  let md5 = crypto.createHash('sha1')
+  let md5 = crypto.createHash('md5')
 
   let readStream = fs.createReadStream(fileName, {
     start: start,
@@ -343,7 +342,20 @@ function MockUploadTask (cos, name, params, option = {}) {
   this.progress = {}
   this.progress.total = 1 << 20
   this.progress.loaded = 0
-  return Promise.resolve(this)
+  return new Promise((resolve, reject) => {
+    fs.stat(name, (err, stats) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      this.file = {
+        fileName: name,
+        fileSize: stats.size,
+        sliceSize: option.sliceSize || 1 << 20
+      }
+      resolve(this)
+    })
+  })
 }
 
 MockUploadTask.prototype.start = function () {
