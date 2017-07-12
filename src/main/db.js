@@ -4,7 +4,9 @@
 import sqlite3 from 'sqlite3'
 let db = new (sqlite3.verbose()).Database('gk.sqlite')
 
-async function config () {
+let init = {}
+
+init.config = async function () {
   await new Promise((resolve, reject) => {
     let sqlConfig = `CREATE TABLE IF NOT EXISTS config (
   key   VARCHAR PRIMARY KEY NOT NULL,
@@ -28,7 +30,7 @@ async function config () {
   })
 }
 
-async function upload () {
+init.upload = async function () {
   await new Promise((resolve, reject) => {
     let sqlUpload = `CREATE TABLE IF NOT EXISTS upload (
     id INT PRIMARY KEY,
@@ -53,7 +55,7 @@ async function upload () {
   })
 }
 
-async function download () {
+init.download = async function () {
   await new Promise((resolve, reject) => {
     let sqlDownload = `CREATE TABLE IF NOT EXISTS download (
     id INT PRIMARY KEY,
@@ -78,50 +80,61 @@ async function download () {
   })
 }
 
-function initData () {
-  return Promise.all([config(), upload(), download()])
-    .then((data) => {
-      return Promise.resolve({
-        config: data[0],
-        upload: data[1],
-        download: data[2]
-      })
-    })
-}
+let save = {}
 
-async function updateUploads (tasks) {
+save.upload = async function (tasks) {
   await new Promise((resolve, reject) => {
     db.run(`DELETE FROM upload`, (err) => {
       err ? reject(err) : resolve()
     })
   })
-  let s = tasks.map(t => {
-    let s = JSON.stringify(t)
-    return `(${t.id},'${s}')`
-  }).join(',')
-  if (s === '') return Promise.resolve()
+  let values = []
+  for (let t of tasks) {
+    if (!t) continue
+    let j = JSON.stringify({
+      params: t.params,
+      name: t.file.fileName,
+      status: t.status,
+      total: t.progress.total,
+      loaded: t.progress.loaded,
+      option: {
+        asyncLim: t.asyncLim,
+        sliceSize: t.file.sliceSize
+      }})
+    values.push(`(${t.id},'${j}')`)
+  }
+  if (values.length === 0) return Promise.resolve()
   return new Promise((resolve, reject) => {
-    db.run(`INSERT INTO upload VALUES ${s}`)
+    db.run(`INSERT INTO upload VALUES ${values.join(',')}`, [], resolve)
   })
 }
 
-async function updateDownloads (tasks) {
+save.download = async function (tasks) {
   await new Promise((resolve, reject) => {
     db.run(`DELETE FROM download`, (err) => {
       err ? reject(err) : resolve()
     })
   })
-  let s = tasks.map(t => {
-    let s = JSON.stringify(t)
-    return `(${t.id},'${s}')`
-  }).join(',')
-  if (s === '') return Promise.resolve()
+  let values = []
+  for (let t of tasks) {
+    if (!t) continue
+    let j = JSON.stringify({
+      params: t.params,
+      name: t.file.fileName,
+      status: t.status,
+      total: t.progress.total,
+      loaded: t.progress.loaded
+    })
+    values.push(`(${t.id},'${j}')`)
+  }
+
+  if (values.length === 0) return Promise.resolve()
   return new Promise((resolve, reject) => {
-    db.run(`INSERT INTO download VALUES ${s}`)
+    db.run(`INSERT INTO download VALUES ${values.join(',')}`, [], resolve)
   })
 }
 
-export {initData, updateUploads,updateDownloads, db}
+export {init, save, db}
 // let stmt = db.prepare('INSERT INTO lorem VALUES (?)')
 // for (let i = 0; i < 10; i++) {
 //   stmt.run('Ipsum ' + i)
