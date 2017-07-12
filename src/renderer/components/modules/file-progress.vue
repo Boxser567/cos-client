@@ -30,38 +30,43 @@
                             <el-button size="small" :plain="true" @click="uploadFileCtrl('clear')">清空已完成</el-button>
                         </div>
                     </div>
-                    <div class="progress-file">
-                        <div class="progress-bar" :class="{ active:file.active }"
-                             v-for="(file, index) of uploadProgress.list"
-                             @click="selectLoadFile($event,'upload',file)" :key="file.id">
-                            <img :src="file.Key | getFileImg" alt="">
-                            <el-row>
-                                <el-col :span="12">
-                                    <p class="tl">{{file.Key}}</p>
-                                    <el-progress
-                                            :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>
-                                </el-col>
-                                <el-col :span="4">
-                                    {{file.size | bitSize}}
-                                </el-col>
-                                <el-col :span="4">
-                                    <span v-if="file.status=='wait'">等待中</span>
-                                    <span v-if="file.status=='pause'">暂停</span>
-                                    <span v-if="file.status=='complete'">完成</span>
-                                    <span v-if="file.status=='run'"> {{file.speed | bitSpeed}} </span>
-                                    <span v-if="file.status=='error'">出错</span>
-                                </el-col>
-                                <el-col :span="4">
-                                    <i class="el-icon-caret-right" v-if="file.status=='pause'"
-                                       @click="uploadFileCtrl('begin',file.id)"></i>
-                                    <i v-if="file.status == 'run'" @click="uploadFileCtrl('pause',file.id)"> || </i>
-                                    <i v-if="file.status=='error'" class="el-icon-warning"
-                                       @click="uploadFileCtrl('begin',file.id)"></i>
-                                    <i class="el-icon-close" @click="uploadFileCtrl('cancel',file.id)"></i>
-                                </el-col>
-                            </el-row>
+                    <!--<div class="progress-file">-->
+
+                        <div>
+                        <!--<div class="progress-bar" :class="{ active:file.active }"-->
+                             <!--v-for="(file, index) of uploadProgress.list"-->
+                             <!--@click="selectLoadFile($event,'upload',file)" :key="file.id">-->
+                            <!--<img :src="file.Key | getFileImg" alt="">-->
+                            <!--<el-row>-->
+                                <!--<el-col :span="12">-->
+                                    <!--<p class="tl">{{file.Key}}</p>-->
+                                    <!--<el-progress-->
+                                            <!--:percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>-->
+                                <!--</el-col>-->
+                                <!--<el-col :span="4">-->
+                                    <!--{{file.size | bitSize}}-->
+                                <!--</el-col>-->
+                                <!--<el-col :span="4">-->
+                                    <!--<span v-if="file.status=='wait'">等待中</span>-->
+                                    <!--<span v-if="file.status=='pause'">暂停</span>-->
+                                    <!--<span v-if="file.status=='complete'">完成</span>-->
+                                    <!--<span v-if="file.status=='run'"> {{file.speed | bitSpeed}} </span>-->
+                                    <!--<span v-if="file.status=='error'">出错</span>-->
+                                <!--</el-col>-->
+                                <!--<el-col :span="4">-->
+                                    <!--<i class="el-icon-caret-right" v-if="file.status=='pause'"-->
+                                       <!--@click="uploadFileCtrl('begin',file.id)"></i>-->
+                                    <!--<i v-if="file.status == 'run'" @click="uploadFileCtrl('pause',file.id)"> || </i>-->
+                                    <!--<i v-if="file.status=='error'" class="el-icon-warning"-->
+                                       <!--@click="uploadFileCtrl('begin',file.id)"></i>-->
+                                    <!--<i class="el-icon-close" @click="uploadFileCtrl('cancel',file.id)"></i>-->
+                                <!--</el-col>-->
+                            <!--</el-row>-->
+                        <!--</div>-->
                         </div>
-                    </div>
+                        <upload-item></upload-item>
+
+                    <!--</div>-->
                 </div>
                 <div class="second" v-show=" tabList[1].iscur ">
                     <div class="title-bar">
@@ -126,6 +131,7 @@
 <script>
 
   import { mapState } from 'vuex'
+  import uploadItem from './upload-item.vue'
 
   export default {
     name: 'fileProgress-page',
@@ -139,6 +145,7 @@
         ]
       }
     },
+    components: {uploadItem},
     computed: {
       ...mapState('menulist', ['uploadSpeed', 'downloadSpeed', 'downloadProgress', 'uploadProgress', 'isShowFileProgress'])
     },

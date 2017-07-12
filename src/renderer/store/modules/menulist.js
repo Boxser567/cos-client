@@ -10,7 +10,7 @@ const state = {
   fileloading: true,
 
   uploadProgress: {
-    list: null,
+    list: [],
     status: false
   },
 
@@ -151,10 +151,9 @@ const mutations = {
     state.isShowFileProgress = !state.isShowFileProgress
   },
   updataProgress(state, data){    //初始化上传文件列表
-    let dd = 0, idx
-
+    console.log('data',data)
     // if (!state.uploadProgress.status) {
-    state.uploadProgress.list = [].concat(data)
+      state.uploadProgress.list = [].concat(data)
     // state.uploadProgress.status = true
     // }
 
