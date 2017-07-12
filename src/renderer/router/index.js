@@ -2,14 +2,14 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 Vue.use(Router)
+
+let login
+
 const router = new Router({
   scrollBehavior: () => ({y: 0}),
   routes: [
     {
       path: '/login',
-      meta: {
-        loginAuth: true
-      },
       name: 'loginPage',
       component: require('@/components/login')
     },
@@ -17,6 +17,11 @@ const router = new Router({
       path: '/',
       component: require('@/components/index'),
       beforeEnter: (to, from, next) => {
+        if (login) {
+          next()
+          return
+        }
+        login = true
         next('/login')
       },
       children: [
@@ -32,18 +37,7 @@ const router = new Router({
         }
       ]
     }
-
   ]
 })
-
-// router.beforeEach((to, from, next) => {
-//   // let userC =localStorage.getItem('users')
-//   if(1){
-//     next('/login')
-//   }else{
-//     next()
-//   }
-//   return
-// })
 
 export default router

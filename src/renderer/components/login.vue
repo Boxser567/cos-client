@@ -8,10 +8,38 @@
         </el-form-item>
         <el-form-item>
             <el-button type="primary" @click="login">登录</el-button>
-            <!--<router-link :to="{ path: '/' }">User</router-link>-->
         </el-form-item>
     </el-form>
 </template>
+
+<script>
+  import { ipcRenderer } from 'electron'
+  export default {
+    name: 'loginPage',
+    data () {
+      return {}
+    },
+    created () {},
+    methods: {
+      login () {
+        ipcRenderer.send('Login', {
+          action: 'new',
+          form: {
+            SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
+            SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
+          }
+        })
+        ipcRenderer.once('Login-data', (event, arg) => {
+          if (arg.error) {
+            alert(arg.error.message)
+            return
+          }
+          this.$router.replace('/')
+        })
+      }
+    }
+  }
+</script>
 
 <style>
     .login-form {
@@ -23,30 +51,7 @@
         margin-left: -200px;
     }
 
-    button {
+    .login-form button {
         width: 100%;
     }
 </style>
-
-<script>
-  export default {
-    name: 'loginPage',
-    data(){
-      return {
-        thisKey: null
-      }
-    },
-    methods: {
-      login(){
-        console.log(this.$router)
-
-
-
-
-//        this.$router.push({name: 'loginPage'})
-      }
-    }
-  }
-
-
-</script>

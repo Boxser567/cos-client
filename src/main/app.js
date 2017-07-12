@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
-import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
+import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks, TaskStatus } from './task'
 import { init, save } from './db'
 
 let app
@@ -23,10 +23,41 @@ App.prototype.init = async function () {
 
   this.config = await init.config()
 
-  let cos = new Cos({
-    AppId: '1253834952',
-    SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
-    SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
+  let cos
+
+  ipcMain.on('LoginCheck', (event, arg) => {
+    event.returnValue = !!this.config.SecretId
+  })
+
+  ipcMain.on('Login', (event, arg) => {
+    switch (arg.action) {
+      case 'check':
+        cos = new Cos({
+          AppId: '1253834952',
+          SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
+          SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
+        })
+        break
+      case 'new':
+        cos = new Cos({
+          SecretId: arg.form.SecretId,
+          SecretKey: arg.form.SecretKey
+        })
+        break
+      case 'clean':
+        // todo
+        break
+    }
+    cos.getService((err, data) => {
+      if (err) {
+        if (err.statusCode) {
+          err.message = err.error.Message
+        }
+        event.sender.send('Login-data', {error: err})
+        return
+      }
+      event.sender.send('Login-data', {})
+    })
   })
 
   ipcMain.on('ListBucket', (event) => {
@@ -142,7 +173,7 @@ App.prototype.init = async function () {
     let tasks = await init.upload()
     for (let t of tasks) {
       try {
-        let task = await new MockUploadTask(cos, t.name, t.params, t.option)
+        let task = await new UploadTask(cos, t.name, t.params, t.option)
         task.modify = '+'
         uploads.newTask(task).then(
           () => {
@@ -182,7 +213,7 @@ App.prototype.init = async function () {
     for (let name of arg.FileNames) {
       for (let item of uploadGenerator(name, arg.Prefix)) {
         try {
-          let task = await new MockUploadTask(cos, item.name, {
+          let task = await new UploadTask(cos, item.name, {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
@@ -276,7 +307,7 @@ App.prototype.init = async function () {
     let tasks = await init.download()
     for (let t of tasks) {
       try {
-        let task = await new MockDownloadTask(cos, t.name, t.params, t.option)
+        let task = await new DownloadTask(cos, t.name, t.params, t.option)
         task.modify = '+'
         downloads.newTask(task).then(
           () => {
@@ -322,7 +353,7 @@ App.prototype.init = async function () {
     async function fn (contents) {
       for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {
         try {
-          let task = await new MockDownloadTask(cos, item.name, {
+          let task = await new DownloadTask(cos, item.name, {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
