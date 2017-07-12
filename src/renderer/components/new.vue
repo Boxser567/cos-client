@@ -1,10 +1,16 @@
 <template>
     <el-form class="login-form">
         <el-form-item>
-            <el-input type="text" placeholder="Access Key ID"></el-input>
+            <el-input type="text" v-model="SecretId" placeholder="Access Key ID"></el-input>
         </el-form-item>
         <el-form-item>
-            <el-input type="password" placeholder="Access Key Secret"></el-input>
+            <el-input type="password" v-model="SecretKey" placeholder="Access Key Secret"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-input type="password" v-model="password1" placeholder="password1"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-input type="password" v-model="password2" placeholder="password2"></el-input>
         </el-form-item>
         <el-form-item>
             <el-button type="primary" @click="login">登录</el-button>
@@ -17,24 +23,34 @@
   export default {
     name: 'newPage',
     data () {
-      return {}
+      return {
+        SecretId: '',
+        SecretKey: '',
+        password1: '',
+        password2: ''
+      }
     },
     created () {},
     methods: {
       login () {
-        ipcRenderer.send('Login', {
+        ipcRenderer.sendSync('Login', {
           action: 'new',
           form: {
-            SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
-            SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
+            // AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4
+            SecretId: this.SecretId,
+            // qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8
+            SecretKey: this.SecretKey,
+            password: this.password1
           }
         })
-        ipcRenderer.once('Login-data', (event, arg) => {
-          if (arg.error) {
-            alert(arg.error.message)
-            return
-          }
+        // 检查Secret同时获取数据
+        ipcRenderer.send('ListBucket')
+
+        ipcRenderer.once('ListBucket-data', (event, arg) => {
           this.$router.replace('/')
+        })
+        ipcRenderer.once('ListBucket-error', (event, err) => {
+          alert(err)
         })
       }
     }

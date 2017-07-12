@@ -21,50 +21,38 @@ App.prototype.init = async function () {
   let uploads
   let downloads
 
-  this.config = await init.config()
+  let config = await init.config()
 
   let cos
 
   ipcMain.on('LoginCheck', (event) => {
-    // event.returnValue = !!this.config.SecretId
-    event.returnValue = true
+    event.returnValue = !!config.cos
   })
 
   ipcMain.on('Login', (event, arg) => {
     switch (arg.action) {
       case 'check':
-        if (arg.form.password !== '1111') {
-          event.sender.send('Login-data', {error: new Error('password mismatch')})
+        if (arg.form.password !== config.password) {
+          event.returnValue = {message: 'password mismatch'}
           return
         }
-        cos = new Cos({
-          AppId: '1253834952',
-          SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
-          SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
-        })
+        cos = new Cos(config.cos)
         break
       case 'new':
-        cos = new Cos({
+        config.cos = {
           // todo only for debug
           AppId: '1253834952',
           SecretId: arg.form.SecretId,
           SecretKey: arg.form.SecretKey
-        })
+        }
+        config.password = arg.form.password
+        cos = new Cos(config.cos)
         break
       case 'clean':
         // todo
         break
     }
-    cos.getService((err, data) => {
-      if (err) {
-        if (err.statusCode) {
-          err.message = err.error.Message
-        }
-        event.sender.send('Login-data', {error: err})
-        return
-      }
-      event.sender.send('Login-data', {})
-    })
+    event.returnValue = null
   })
 
   ipcMain.on('ListBucket', (event) => {
@@ -350,12 +338,12 @@ App.prototype.init = async function () {
      * @param  {string[]}  [arg.Keys]     文件下载
      * @param  {string[]}  [arg.Dirs] 文件夹下载
      */
-    // todo 同源不同目标
-    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+      // todo 同源不同目标
+      // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
     let params = {
-      Bucket: arg.Bucket,
-      Region: arg.Region
-    }
+        Bucket: arg.Bucket,
+        Region: arg.Region
+      }
 
     async function fn (contents) {
       for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {
@@ -458,6 +446,7 @@ App.prototype.init = async function () {
   this.save = function () {
     if (!uploads || !downloads) return Promise.resolve()
     return Promise.all([
+      save.config(config),
       save.upload(uploads.tasks),
       save.download(downloads.tasks)
     ])

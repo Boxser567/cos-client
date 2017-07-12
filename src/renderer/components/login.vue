@@ -1,7 +1,7 @@
 <template>
     <el-form class="login-form">
         <el-form-item>
-            <el-input type="password" placeholder="password"></el-input>
+            <el-input type="password" v-model="password" placeholder="password"></el-input>
         </el-form-item>
         <el-form-item>
             <el-button type="primary" @click="login">登录</el-button>
@@ -14,23 +14,32 @@
   export default {
     name: 'loginPage',
     data () {
-      return {}
+      return {
+        password: ''
+      }
     },
     created () {},
     methods: {
       login () {
-        ipcRenderer.send('Login', {
+        console.log(this.password)
+        let err = ipcRenderer.sendSync('Login', {
           action: 'check',
           form: {
-            password: '1111'
+            password: this.password + ''
           }
         })
-        ipcRenderer.once('Login-data', (event, arg) => {
-          if (arg.error) {
-            alert(arg.error.message)
-            return
-          }
+        if (err) {
+          alert(err.message)
+          return
+        }
+        // 检查Secret同时获取数据
+        ipcRenderer.send('ListBucket')
+
+        ipcRenderer.once('ListBucket-data', (event, arg) => {
           this.$router.replace('/')
+        })
+        ipcRenderer.once('ListBucket-error', (event, err) => {
+          alert(err)
         })
       }
     }

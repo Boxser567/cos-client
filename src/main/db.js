@@ -23,7 +23,7 @@ init.config = async function () {
       }
       let config = {}
       for (let item of rows) {
-        config[item.key] = item.value
+        config[item.key] = JSON.parse(item.value)
       }
       resolve(config)
     })
@@ -81,6 +81,24 @@ init.download = async function () {
 }
 
 let save = {}
+
+save.config = async function (config) {
+  await new Promise((resolve, reject) => {
+    db.run(`DELETE FROM config`, (err) => {
+      err ? reject(err) : resolve()
+    })
+  })
+  let values = []
+  for (let k in config) {
+    if (!config.hasOwnProperty(k) || !config[k]) continue
+    let j = JSON.stringify(config[k])
+    values.push(`('${k}','${j}')`)
+  }
+  if (values.length === 0) return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    db.run(`INSERT INTO config VALUES ${values.join(',')}`, [], resolve)
+  })
+}
 
 save.upload = async function (tasks) {
   await new Promise((resolve, reject) => {
