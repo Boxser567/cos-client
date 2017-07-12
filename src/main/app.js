@@ -7,10 +7,14 @@ import path from 'path'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks, TaskStatus } from './task'
-import { init, save, clear } from './db'
+import { clear, init, save } from './db'
 
 let app
 
+/**
+ * 单例类，在应用初始化时初始化config，在窗口创建时初始化uploads和downloads，
+ * 窗口关闭时config，uploads，downloads记录数据库，但不清除。
+ */
 function App () {
   if (app) return app
   app = this
@@ -49,8 +53,10 @@ App.prototype.init = async function () {
         cos = new Cos(config.cos)
         break
       case 'clear':
-        // 只能在登陆期间调用，此时uploads和downloads尚未加载
+        // 只能在GetUploadTasks调用前调用
         config = {}
+        uploads = null
+        downloads = null
         clear()
         break
     }
@@ -343,6 +349,7 @@ App.prototype.init = async function () {
      */
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+
     let params = {
       Bucket: arg.Bucket,
       Region: arg.Region

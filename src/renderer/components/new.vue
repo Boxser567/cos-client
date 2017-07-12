@@ -48,6 +48,7 @@
         ipcRenderer.send('ListBucket')
 
         ipcRenderer.once('ListBucket-data', (event, arg) => {
+          console.log(arg)
           this.$router.replace('/')
         })
         ipcRenderer.once('ListBucket-error', (event, err) => {

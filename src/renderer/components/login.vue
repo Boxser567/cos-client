@@ -24,7 +24,6 @@
     created () {},
     methods: {
       login () {
-        console.log(this.password)
         let err = ipcRenderer.sendSync('Login', {
           action: 'check',
           form: {

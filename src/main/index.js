@@ -32,7 +32,6 @@ function createWindow () {
 
   mainWindow.on('closed', () => {
     mainWindow = null
-    console.log(app)
     app.save()
   })
 }
