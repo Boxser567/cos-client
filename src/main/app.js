@@ -146,10 +146,12 @@ App.prototype.init = async function () {
         task.modify = '+'
         uploads.newTask(task).then(
           () => {
+            task.modify = '*'
             task.progress.loaded = task.progress.total
             uploads.refresh()
           },
           err => {
+            task.modify = '*'
             if (err.message !== 'cancel') {
               console.log('task error', err)
             }
@@ -189,11 +191,13 @@ App.prototype.init = async function () {
           // newTask.then 在整个上传完成后调用
           uploads.newTask(task).then(
             () => {
+              task.modify = '*'
               task.progress.loaded = task.progress.total
               uploads.refresh()
               console.log('task done', task.id)
             },
             err => {
+              task.modify = '*'
               if (err.message !== 'cancel') {
                 console.log('task error', err)
               }
@@ -276,10 +280,12 @@ App.prototype.init = async function () {
         task.modify = '+'
         downloads.newTask(task).then(
           () => {
+            task.modify = '*'
             task.progress.loaded = task.progress.total
             downloads.refresh()
           },
           err => {
+            task.modify = '*'
             if (err.message !== 'cancel') {
               console.log('task error', err)
             }
@@ -323,8 +329,16 @@ App.prototype.init = async function () {
           })
           task.modify = '+'
           downloads.newTask(task).then(
-            result => (console.log('task done')),
-            err => { if (err.message !== 'cancel') console.log(err) }
+            result => {
+              task.modify = '*'
+              console.log('task done')
+              downloads.refresh()
+            },
+            err => {
+              task.modify = '*'
+              if (err.message !== 'cancel') console.log(err)
+              downloads.refresh()
+            }
           )
           downloads.next()
           downloads.refresh()
@@ -412,36 +426,31 @@ App.prototype.init = async function () {
   }
 }
 
-function listDir (cos, params) {
+async function listDir (cos, params) {
   let dirs = []
   let objects = []
   params.Delimiter = '/'
-  return (function p () {
-    return new Promise((resolve, reject) => {
-      cos.getBucket(params, (err, result) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        let pflen = params.Prefix ? params.Prefix.length : 0
-        result.CommonPrefixes.forEach(v => {
-          if (v.Prefix !== params.Prefix) {
-            dirs.push({
-              Name: v.Prefix.slice(pflen, -1),
-              Prefix: v.Prefix
-            })
-          }
-        })
-        result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
-        if (result.IsTruncated === 'true') {
-          params.Marker = result.NextMarker
-          return p().then(resolve, reject)
-        } else {
-          resolve({dirs, objects})
-        }
-      })
+  let result
+  let pflen = params.Prefix ? params.Prefix.length : 0
+
+  do {
+    result = await new Promise((resolve, reject) => {
+      cos.getBucket(params, (err, result) => { err ? reject(err) : resolve(result) })
     })
-  })()
+
+    result.CommonPrefixes.forEach(v => {
+      if (v.Prefix !== params.Prefix) {
+        dirs.push({
+          Name: v.Prefix.slice(pflen, -1),
+          Prefix: v.Prefix
+        })
+      }
+    })
+    result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
+
+    params.Marker = result.NextMarker
+  } while (result.IsTruncated === 'true')
+  return {dirs, objects}
 }
 
 function* uploadGenerator (name, prefix) {
