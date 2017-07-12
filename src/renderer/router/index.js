@@ -16,6 +16,9 @@ const router = new Router({
     {
       path: '/',
       component: require('@/components/index'),
+      beforeEnter: (to, from, next) => {
+        next('/login')
+      },
       children: [
         {
           path: '',
@@ -32,12 +35,13 @@ const router = new Router({
 
   ]
 })
+
 // router.beforeEach((to, from, next) => {
-//   let userC =localStorage.getItem('users')
-//   if(userC){
-//     next()
-//   }else{
+//   // let userC =localStorage.getItem('users')
+//   if(1){
 //     next('/login')
+//   }else{
+//     next()
 //   }
 //   return
 // })

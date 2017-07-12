@@ -7,8 +7,8 @@
             <el-input type="password" placeholder="Access Key Secret"></el-input>
         </el-form-item>
         <el-form-item>
-            <!--<el-button type="primary" @click="login">登录</el-button>-->
-            <router-link :to="{ path: '/' }">User</router-link>
+            <el-button type="primary" @click="login">登录</el-button>
+            <!--<router-link :to="{ path: '/' }">User</router-link>-->
         </el-form-item>
     </el-form>
 </template>
@@ -39,7 +39,11 @@
     methods: {
       login(){
         console.log(this.$router)
-        this.$router.push({name: 'loginPage'})
+
+
+
+
+//        this.$router.push({name: 'loginPage'})
       }
     }
   }
