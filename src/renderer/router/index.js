@@ -16,9 +16,6 @@ const router = new Router({
     {
       path: '/',
       component: require('@/components/index'),
-      beforeEnter: (to, from, next) => {
-        next('/login')
-      },
       children: [
         {
           path: '',

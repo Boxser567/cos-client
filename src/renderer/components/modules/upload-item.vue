@@ -6,9 +6,39 @@
                      :tobottom="toBottom"
                      :totop="totop"
         >
-            <Item v-for="(item, $index) in items" :index="$index" :key="$index"></Item>
+            <!--<Item v-for="(item, $index) in uploadItem" :index="$index" :key="$index"></Item>-->
+            <div class="progress-bar" :class="{ active:file.active }"
+                 v-for="(file, $index) in uploadItem"
+                 @click="selectLoadFile($event,'upload',file)" :index="$index" :key="file.id">
+                <img :src="file.Key | getFileImg" alt="">
+                <el-row>
+                    <el-col :span="12">
+                        <p class="tl">{{file.Key}}</p>
+                        <el-progress :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>
+                    </el-col>
+                    <el-col :span="4">
+                        {{file.size | bitSize}}
+                    </el-col>
+                    <el-col :span="4">
+                        <span v-if="file.status=='wait'">等待中</span>
+                        <span v-if="file.status=='pause'">暂停</span>
+                        <span v-if="file.status=='complete'">完成</span>
+                        <span v-if="file.status=='run'"> {{file.speed | bitSpeed}} </span>
+                        <span v-if="file.status=='error'">出错</span>
+                        {{$index}}
+                    </el-col>
+                    <el-col :span="4">
+                        <i class="el-icon-caret-right" v-if="file.status=='pause'"
+                           @click="uploadFileCtrl('begin',file.id)"></i>
+                        <i v-if="file.status == 'run'" @click="uploadFileCtrl('pause',file.id)"> || </i>
+                        <i v-if="file.status=='error'" class="el-icon-warning"
+                           @click="uploadFileCtrl('begin',file.id)"></i>
+                        <i class="el-icon-close" @click="uploadFileCtrl('cancel',file.id)"></i>
+                    </el-col>
+                </el-row>
+            </div>
         </VirtualList>
-        <Loading class="list-loading" :loading="loading"></Loading>
+        <Loading class="list-loading" :loading="uploadProgress.loading"></Loading>
     </div>
 </template>
 
@@ -21,51 +51,33 @@
     name: 'infinite-test',
     components: {Item, VirtualList, Loading},
     computed: {
-      uploadProgress(){
+      uploadProgress() {
         return this.$store.state.menulist.uploadProgress
+      },
+      uploadItem(){
+        return this.$store.state.menulist.uploadItem
       }
     },
     data () {
-      return {
-        page: 0,
-        loading: false,
-        items: []
-      }
-    },
-    created(){
-      this.getList()
-    },
-    watch: {
-      'uploadProgress': {
-        handler: function () {
-          this.getList()
-        },
-        deep: true
-      }
+      return {}
     },
     methods: {
-      getList(){
-        console.log('uploadProgress', this.uploadProgress)
-        this.loading = true
-        if (this.uploadProgress.list && this.uploadProgress.list.length) {
-          for (let i = this.page * 20, len = (this.page + 1) * 20; i < len; i++) {
-            if (this.uploadProgress.list[i])
-              this.items.push(this.uploadProgress.list[i])
-          }
-          this.page++
-        }
-        this.loading = false
-        if(this.page>4){
-
-        }
-      },
       toBottom () {
-        if (!this.loading) {
-
-          this.getList()
+        if (!this.uploadProgress.loading) {
+          console.log('下', this.uploadItem, this.uploadProgress)
+          this.$store.commit('menulist/uploadItemAdd')
         }
       },
       totop(){
+        if (!this.uploadProgress.loading) {
+          console.log('上', this.uploadItem, this.uploadProgress)
+          this.$store.commit('menulist/uploadItemSub')
+        }
+      },
+      selectLoadFile(e, type, file){
+
+      },
+      uploadFileCtrl(type, id){
 
       }
     }
