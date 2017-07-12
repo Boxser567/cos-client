@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import { ipcRenderer } from 'electron'
 
 Vue.use(Router)
 
@@ -10,8 +11,16 @@ const router = new Router({
   routes: [
     {
       path: '/login',
-      name: 'loginPage',
-      component: require('@/components/login')
+      name: 'login',
+      component: require('@/components/login'),
+      beforeEnter: (to, from, next) => {
+        ipcRenderer.sendSync('LoginCheck') ? next() : next('/new')
+      }
+    },
+    {
+      path: '/new',
+      name: 'new',
+      component: require('@/components/new')
     },
     {
       path: '/',

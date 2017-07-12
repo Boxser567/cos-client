@@ -1,7 +1,10 @@
 <template>
     <el-form class="login-form">
         <el-form-item>
-            <el-input type="password" placeholder="password"></el-input>
+            <el-input type="text" placeholder="Access Key ID"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-input type="password" placeholder="Access Key Secret"></el-input>
         </el-form-item>
         <el-form-item>
             <el-button type="primary" @click="login">登录</el-button>
@@ -12,7 +15,7 @@
 <script>
   import { ipcRenderer } from 'electron'
   export default {
-    name: 'loginPage',
+    name: 'newPage',
     data () {
       return {}
     },
@@ -20,9 +23,10 @@
     methods: {
       login () {
         ipcRenderer.send('Login', {
-          action: 'check',
+          action: 'new',
           form: {
-            password: '1111'
+            SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
+            SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
           }
         })
         ipcRenderer.once('Login-data', (event, arg) => {

@@ -25,13 +25,18 @@ App.prototype.init = async function () {
 
   let cos
 
-  ipcMain.on('LoginCheck', (event, arg) => {
-    event.returnValue = !!this.config.SecretId
+  ipcMain.on('LoginCheck', (event) => {
+    // event.returnValue = !!this.config.SecretId
+    event.returnValue = true
   })
 
   ipcMain.on('Login', (event, arg) => {
     switch (arg.action) {
       case 'check':
+        if (arg.form.password !== '1111') {
+          event.sender.send('Login-data', {error: new Error('password mismatch')})
+          return
+        }
         cos = new Cos({
           AppId: '1253834952',
           SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
@@ -40,6 +45,8 @@ App.prototype.init = async function () {
         break
       case 'new':
         cos = new Cos({
+          // todo only for debug
+          AppId: '1253834952',
           SecretId: arg.form.SecretId,
           SecretKey: arg.form.SecretKey
         })
