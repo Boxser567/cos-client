@@ -7,7 +7,7 @@ import path from 'path'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks, TaskStatus } from './task'
-import { init, save } from './db'
+import { init, save, clear } from './db'
 
 let app
 
@@ -48,8 +48,10 @@ App.prototype.init = async function () {
         config.password = arg.form.password
         cos = new Cos(config.cos)
         break
-      case 'clean':
-        // todo
+      case 'clear':
+        // 只能在登陆期间调用，此时uploads和downloads尚未加载
+        config = {}
+        clear()
         break
     }
     event.returnValue = null
@@ -59,6 +61,7 @@ App.prototype.init = async function () {
     cos.getService((err, data) => {
       if (err) {
         event.sender.send('ListBucket-error', err)
+        return
       }
       let result = {}
       data.Buckets.forEach(v => {
@@ -338,12 +341,12 @@ App.prototype.init = async function () {
      * @param  {string[]}  [arg.Keys]     文件下载
      * @param  {string[]}  [arg.Dirs] 文件夹下载
      */
-      // todo 同源不同目标
-      // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+    // todo 同源不同目标
+    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
     let params = {
-        Bucket: arg.Bucket,
-        Region: arg.Region
-      }
+      Bucket: arg.Bucket,
+      Region: arg.Region
+    }
 
     async function fn (contents) {
       for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {

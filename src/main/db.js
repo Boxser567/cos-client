@@ -152,7 +152,13 @@ save.download = async function (tasks) {
   })
 }
 
-export {init, save, db}
+let clear = function () {
+  db.run(`DELETE FROM config`)
+  db.run(`DELETE FROM download`)
+  db.run(`DELETE FROM upload`)
+}
+
+export {init, save, clear, db}
 // let stmt = db.prepare('INSERT INTO lorem VALUES (?)')
 // for (let i = 0; i < 10; i++) {
 //   stmt.run('Ipsum ' + i)

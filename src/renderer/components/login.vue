@@ -6,6 +6,9 @@
         <el-form-item>
             <el-button type="primary" @click="login">登录</el-button>
         </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="clear">清除</el-button>
+        </el-form-item>
     </el-form>
 </template>
 
@@ -41,6 +44,10 @@
         ipcRenderer.once('ListBucket-error', (event, err) => {
           alert(err)
         })
+      },
+      clear () {
+        ipcRenderer.sendSync('Login', {action: 'clear'})
+        this.$router.replace('/new')
       }
     }
   }

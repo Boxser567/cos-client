@@ -13,7 +13,10 @@
             <el-input type="password" v-model="password2" placeholder="password2"></el-input>
         </el-form-item>
         <el-form-item>
-            <el-button type="primary" @click="login">登录</el-button>
+            <el-button type="primary" @click="save">保存</el-button>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="debug">debug</el-button>
         </el-form-item>
     </el-form>
 </template>
@@ -32,18 +35,16 @@
     },
     created () {},
     methods: {
-      login () {
+      save () {
         ipcRenderer.sendSync('Login', {
           action: 'new',
           form: {
-            // AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4
             SecretId: this.SecretId,
-            // qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8
             SecretKey: this.SecretKey,
             password: this.password1
           }
         })
-        // 检查Secret同时获取数据
+        // todo 检查Secret同时获取数据
         ipcRenderer.send('ListBucket')
 
         ipcRenderer.once('ListBucket-data', (event, arg) => {
@@ -52,6 +53,10 @@
         ipcRenderer.once('ListBucket-error', (event, err) => {
           alert(err)
         })
+      },
+      debug () {
+        this.SecretId = 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4'
+        this.SecretKey = 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
       }
     }
   }
