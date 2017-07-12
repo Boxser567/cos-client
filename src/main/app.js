@@ -6,11 +6,15 @@ import fs from 'fs'
 import path from 'path'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
-import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
-import { init, save } from './db'
+import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks, TaskStatus } from './task'
+import { clear, init, save } from './db'
 
 let app
 
+/**
+ * 单例类，在应用初始化时初始化config，在窗口创建时初始化uploads和downloads，
+ * 窗口关闭时config，uploads，downloads记录数据库，但不清除。
+ */
 function App () {
   if (app) return app
   app = this
@@ -21,18 +25,49 @@ App.prototype.init = async function () {
   let uploads
   let downloads
 
-  this.config = await init.config()
+  let config = await init.config()
 
-  let cos = new Cos({
-    AppId: '1253834952',
-    SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
-    SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
+  let cos
+
+  ipcMain.on('LoginCheck', (event) => {
+    event.returnValue = !!config.cos
+  })
+
+  ipcMain.on('Login', (event, arg) => {
+    switch (arg.action) {
+      case 'check':
+        if (arg.form.password !== config.password) {
+          event.returnValue = {message: 'password mismatch'}
+          return
+        }
+        cos = new Cos(config.cos)
+        break
+      case 'new':
+        config.cos = {
+          // todo only for debug
+          AppId: '1253834952',
+          SecretId: arg.form.SecretId,
+          SecretKey: arg.form.SecretKey
+        }
+        config.password = arg.form.password
+        cos = new Cos(config.cos)
+        break
+      case 'clear':
+        // 只能在GetUploadTasks调用前调用
+        config = {}
+        uploads = null
+        downloads = null
+        clear()
+        break
+    }
+    event.returnValue = null
   })
 
   ipcMain.on('ListBucket', (event) => {
     cos.getService((err, data) => {
       if (err) {
         event.sender.send('ListBucket-error', err)
+        return
       }
       let result = {}
       data.Buckets.forEach(v => {
@@ -142,7 +177,7 @@ App.prototype.init = async function () {
     let tasks = await init.upload()
     for (let t of tasks) {
       try {
-        let task = await new MockUploadTask(cos, t.name, t.params, t.option)
+        let task = await new UploadTask(cos, t.name, t.params, t.option)
         task.modify = '+'
         uploads.newTask(task).then(
           () => {
@@ -182,7 +217,7 @@ App.prototype.init = async function () {
     for (let name of arg.FileNames) {
       for (let item of uploadGenerator(name, arg.Prefix)) {
         try {
-          let task = await new MockUploadTask(cos, item.name, {
+          let task = await new UploadTask(cos, item.name, {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
@@ -276,7 +311,7 @@ App.prototype.init = async function () {
     let tasks = await init.download()
     for (let t of tasks) {
       try {
-        let task = await new MockDownloadTask(cos, t.name, t.params, t.option)
+        let task = await new DownloadTask(cos, t.name, t.params, t.option)
         task.modify = '+'
         downloads.newTask(task).then(
           () => {
@@ -314,6 +349,7 @@ App.prototype.init = async function () {
      */
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+
     let params = {
       Bucket: arg.Bucket,
       Region: arg.Region
@@ -322,7 +358,7 @@ App.prototype.init = async function () {
     async function fn (contents) {
       for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {
         try {
-          let task = await new MockDownloadTask(cos, item.name, {
+          let task = await new DownloadTask(cos, item.name, {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
@@ -420,6 +456,7 @@ App.prototype.init = async function () {
   this.save = function () {
     if (!uploads || !downloads) return Promise.resolve()
     return Promise.all([
+      save.config(config),
       save.upload(uploads.tasks),
       save.download(downloads.tasks)
     ])
