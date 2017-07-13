@@ -87,12 +87,34 @@
     methods: {
       select (event, item) {
         event.preventDefault()
-        // if (!event.shiftKey) {
-        this.list.forEach(v => { Vue.set(v, 'active', false) })
+        if (!event.shiftKey) {
+          if (this.selected.length === 1 && this.selected[0] === item.id) {
+            this.selected = []
+            item.active = false
+            return
+          }
+          this.list.forEach(v => { Vue.set(v, 'active', false) })
+          this.selected = [item.id]
+          Vue.set(item, 'active', true)
+          return
+        }
+        let start = this.list[0].id
+        let isStart
+        if (this.selected.length !== 0) {
+          start = Math.min(...this.selected)
+        }
         this.selected = []
-        this.selected.push(item.id)
-        Vue.set(item, 'active', true)
-        // }
+        this.list.forEach(v => { Vue.set(v, 'active', false) })
+        for (let v of this.list) {
+          if (v.id >= start) {
+            isStart = true
+          }
+          if (isStart) {
+            Vue.set(v, 'active', true)
+            this.selected.push(v.id)
+          }
+          if (v.id >= item.id) break
+        }
       },
       send (type, range, id) {
         console.log('send', type, range, id)
@@ -146,5 +168,3 @@
     }
   }
 </script>
-
-

@@ -217,11 +217,18 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
-      if (task.status === TaskStatus.COMPLETE) return
-      if (task.status === TaskStatus.RUN) {
-        task.stop()
+      switch (task.status) {
+        case TaskStatus.RUN:
+          task.stop()
+          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+          break
+        case TaskStatus.WAIT:
+        case TaskStatus.PAUSE:
+          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+          break
+        case TaskStatus.COMPLETE:
+        case TaskStatus.ERROR:
       }
-      task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
     uploads.refresh(true)
   })
@@ -234,8 +241,14 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
-      if (task.status === TaskStatus.PAUSE) {
-        task.status = TaskStatus.WAIT
+      switch (task.status) {
+        case TaskStatus.ERROR:
+        case TaskStatus.PAUSE:
+          task.status = TaskStatus.WAIT
+          break
+        case TaskStatus.WAIT:
+        case TaskStatus.RUN:
+        case TaskStatus.COMPLETE:
       }
       uploads.next()
     })
@@ -302,12 +315,12 @@ App.prototype.init = async function () {
      * @param  {string[]}  [arg.Keys]     文件下载
      * @param  {string[]}  [arg.Dirs] 文件夹下载
      */
-    // todo 同源不同目标
-    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+      // todo 同源不同目标
+      // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
     let params = {
-      Bucket: arg.Bucket,
-      Region: arg.Region
-    }
+        Bucket: arg.Bucket,
+        Region: arg.Region
+      }
 
     async function fn (contents) {
       for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {
@@ -354,10 +367,18 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = downloads.findTask(id)
       if (!task) return
-      if (task.status === TaskStatus.RUN) {
-        task.stop()
+      switch (task.status) {
+        case TaskStatus.RUN:
+          task.stop()
+          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+          break
+        case TaskStatus.WAIT:
+        case TaskStatus.PAUSE:
+          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+          break
+        case TaskStatus.COMPLETE:
+        case TaskStatus.ERROR:
       }
-      task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
     })
     downloads.refresh(true)
   })
@@ -369,10 +390,15 @@ App.prototype.init = async function () {
      */
     arg.tasks.forEach(id => {
       let task = downloads.findTask(id)
-      console.log('task', task)
       if (!task) return
-      if (task.status === TaskStatus.PAUSE) {
-        task.status = TaskStatus.WAIT
+      switch (task.status) {
+        case TaskStatus.ERROR:
+        case TaskStatus.PAUSE:
+          task.status = TaskStatus.WAIT
+          break
+        case TaskStatus.WAIT:
+        case TaskStatus.RUN:
+        case TaskStatus.COMPLETE:
       }
       downloads.next()
     })
