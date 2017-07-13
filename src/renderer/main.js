@@ -8,6 +8,9 @@ import router from './router'
 import store from './store'
 
 import myfilte from './assets/js/filters'
+import VueVirtualScroller from 'vue-virtual-scroller'
+
+Vue.use(VueVirtualScroller)
 
 Vue.use(ElementUI)
 

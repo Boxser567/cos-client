@@ -152,10 +152,10 @@ const mutations = {
   },
   updataProgress(state, data){    //初始化上传文件列表
     console.log('data',data)
-    // if (!state.uploadProgress.status) {
-      state.uploadProgress.list = [].concat(data)
-    // state.uploadProgress.status = true
-    // }
+    if (!state.uploadProgress.status) {
+      state.uploadProgress.list = data
+    state.uploadProgress.status = true
+    }
 
     // data.forEach(function (item, index) {
     //   if (state.fileUploadSelect && state.fileUploadSelect.length) {
