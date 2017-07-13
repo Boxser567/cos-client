@@ -217,6 +217,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
+      if (task.status === TaskStatus.COMPLETE) return
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }

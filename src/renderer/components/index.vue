@@ -105,14 +105,12 @@
 </template>
 
 <script>
-  import  { ipcRenderer } from  'electron'
-
   import { mutations, mapState } from 'vuex'
 
   export default {
     name: 'index-page',
 
-    data(){
+    data () {
       return {
         bloading: true,
         bucketMenu: {
@@ -154,29 +152,18 @@
 
     computed: mapState('bucket', {
       bucketList: 'bucketList',
-      currentBucket: 'currentBucket',
+      currentBucket: 'currentBucket'
 
     }),
 
-    created(){
+    created () {
       this.fetchData()
     },
 
     methods: {
-      fetchData(){
+      fetchData () {
         this.bloading = true
-        this.$store.dispatch('bucket/getService').then(() => this.bloading = false)
-        ipcRenderer.send('GetUploadTasks')
-
-        ipcRenderer.on('GetUploadTasks-data', (event, data) => {
-          this.$store.commit('menulist/updataProgress', data)
-        })
-
-        ipcRenderer.send('GetDownloadTasks')
-        ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
-          this.$store.commit('menulist/downloadProgress', data)
-        })
-
+        this.$store.dispatch('bucket/getService').then(() => { this.bloading = false })
       },
       selectBucket: function (b) {
         this.$store.commit('bucket/bucketActive', b)
@@ -190,7 +177,7 @@
           }
         })
       },
-      submitForm: function () {       //新建bucket
+      submitForm: function () { // 新建bucket
         if (this.myform.bucketName.length > 40) {
           this.$message.error('bucket不能超过40字符!')
           return
@@ -262,7 +249,7 @@
             message: '下载中，请稍后!'
           })
         }).catch(() => {})
-      },
+      }
     }
   }
 </script>
