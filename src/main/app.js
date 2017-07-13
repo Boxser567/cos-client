@@ -264,13 +264,13 @@ App.prototype.init = async function () {
           task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
           break
         case TaskStatus.WAIT:
-          if (!arg.wait){
+          if (!arg.wait) {
             task.modify = '*'
             task.status = TaskStatus.PAUSE
           }
-            break
+          break
         case TaskStatus.PAUSE:
-          if (!arg.wait){
+          if (!arg.wait) {
             task.modify = '*'
             task.status = TaskStatus.WAIT
           }
@@ -428,17 +428,25 @@ App.prototype.init = async function () {
      * @param {boolean} arg.wait
      */
     arg.tasks.forEach(id => {
-      // todo
       let task = downloads.findTask(id)
       if (!task) return
       switch (task.status) {
         case TaskStatus.RUN:
+          task.modify = '*'
           task.stop()
           task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
           break
         case TaskStatus.WAIT:
+          if (!arg.wait) {
+            task.modify = '*'
+            task.status = TaskStatus.PAUSE
+          }
+          break
         case TaskStatus.PAUSE:
-          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+          if (!arg.wait) {
+            task.modify = '*'
+            task.status = TaskStatus.WAIT
+          }
           break
         case TaskStatus.COMPLETE:
         case TaskStatus.ERROR:

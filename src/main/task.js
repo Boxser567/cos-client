@@ -101,19 +101,17 @@ Tasks.prototype.setRefresher = function (event, channel) {
     }
     let s = []
     this.tasks.forEach(t => {
-      if (t.status === TaskStatus.RUN || t.modify) {
-        s.push({
-          id: t.id,
-          Key: t.params.Key,
-          FileName: t.file.fileName,
-          status: t.status,
-          size: t.progress.total,
-          loaded: t.progress.loaded,
-          speed: t.progress.speed,
-          modify: t.modify || '*'
-        })
-        t.modify = ''
-      }
+      s.push({
+        id: t.id,
+        Key: t.params.Key,
+        FileName: t.file.fileName,
+        status: t.status,
+        size: t.progress.total,
+        loaded: t.progress.loaded,
+        speed: t.progress.speed,
+        modify: t.modify || '*'
+      })
+      t.modify = ''
     })
     try {
       this.refresher.event.sender.send(channel, s)
