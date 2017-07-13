@@ -6,11 +6,15 @@ import fs from 'fs'
 import path from 'path'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
-import { MockDownloadTask, MockUploadTask, Tasks, TaskStatus } from './task'
-import { init, save } from './db'
+import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks, TaskStatus } from './task'
+import { clear, init, save } from './db'
 
 let app
 
+/**
+ * 单例类，在应用初始化时初始化config，在窗口创建时初始化uploads和downloads，
+ * 窗口关闭时config，uploads，downloads记录数据库，但不清除。
+ */
 function App () {
   if (app) return app
   app = this
@@ -21,18 +25,49 @@ App.prototype.init = async function () {
   let uploads
   let downloads
 
-  this.config = await init.config()
+  let config = await init.config()
 
-  let cos = new Cos({
-    AppId: '1253834952',
-    SecretId: 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4',
-    SecretKey: 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
+  let cos
+
+  ipcMain.on('LoginCheck', (event) => {
+    event.returnValue = !!config.cos
+  })
+
+  ipcMain.on('Login', (event, arg) => {
+    switch (arg.action) {
+      case 'check':
+        if (arg.form.password !== config.password) {
+          event.returnValue = {message: 'password mismatch'}
+          return
+        }
+        cos = new Cos(config.cos)
+        break
+      case 'new':
+        config.cos = {
+          // todo only for debug
+          AppId: '1253834952',
+          SecretId: arg.form.SecretId,
+          SecretKey: arg.form.SecretKey
+        }
+        config.password = arg.form.password
+        cos = new Cos(config.cos)
+        break
+      case 'clear':
+        // 只能在GetUploadTasks调用前调用
+        config = {}
+        uploads = null
+        downloads = null
+        clear()
+        break
+    }
+    event.returnValue = null
   })
 
   ipcMain.on('ListBucket', (event) => {
     cos.getService((err, data) => {
       if (err) {
         event.sender.send('ListBucket-error', err)
+        return
       }
       let result = {}
       data.Buckets.forEach(v => {
@@ -142,13 +177,16 @@ App.prototype.init = async function () {
     let tasks = await init.upload()
     for (let t of tasks) {
       try {
-        let task = await new MockUploadTask(cos, t.name, t.params, t.option)
+        let task = await new UploadTask(cos, t.name, t.params, t.option)
+        task.modify = '+'
         uploads.newTask(task).then(
           () => {
+            task.modify = '*'
             task.progress.loaded = task.progress.total
             uploads.refresh()
           },
           err => {
+            task.modify = '*'
             if (err.message !== 'cancel') {
               console.log('task error', err)
             }
@@ -179,20 +217,22 @@ App.prototype.init = async function () {
     for (let name of arg.FileNames) {
       for (let item of uploadGenerator(name, arg.Prefix)) {
         try {
-          let task = await new MockUploadTask(cos, item.name, {
+          let task = await new UploadTask(cos, item.name, {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
           })
-
+          task.modify = '+'
           // newTask.then 在整个上传完成后调用
           uploads.newTask(task).then(
             () => {
+              task.modify = '*'
               task.progress.loaded = task.progress.total
               uploads.refresh()
               console.log('task done', task.id)
             },
             err => {
+              task.modify = '*'
               if (err.message !== 'cancel') {
                 console.log('task error', err)
               }
@@ -219,12 +259,21 @@ App.prototype.init = async function () {
       if (!task) return
       switch (task.status) {
         case TaskStatus.RUN:
+          task.modify = '*'
           task.stop()
           task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
           break
         case TaskStatus.WAIT:
+          if (!arg.wait){
+            task.modify = '*'
+            task.status = TaskStatus.PAUSE
+          }
+            break
         case TaskStatus.PAUSE:
-          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+          if (!arg.wait){
+            task.modify = '*'
+            task.status = TaskStatus.WAIT
+          }
           break
         case TaskStatus.COMPLETE:
         case TaskStatus.ERROR:
@@ -244,6 +293,7 @@ App.prototype.init = async function () {
       switch (task.status) {
         case TaskStatus.ERROR:
         case TaskStatus.PAUSE:
+          task.modify = '*'
           task.status = TaskStatus.WAIT
           break
         case TaskStatus.WAIT:
@@ -263,6 +313,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
+      task.modify = '-'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }
@@ -282,13 +333,16 @@ App.prototype.init = async function () {
     let tasks = await init.download()
     for (let t of tasks) {
       try {
-        let task = await new MockDownloadTask(cos, t.name, t.params, t.option)
+        let task = await new DownloadTask(cos, t.name, t.params, t.option)
+        task.modify = '+'
         downloads.newTask(task).then(
           () => {
+            task.modify = '*'
             task.progress.loaded = task.progress.total
             downloads.refresh()
           },
           err => {
+            task.modify = '*'
             if (err.message !== 'cancel') {
               console.log('task error', err)
             }
@@ -315,24 +369,33 @@ App.prototype.init = async function () {
      * @param  {string[]}  [arg.Keys]     文件下载
      * @param  {string[]}  [arg.Dirs] 文件夹下载
      */
-      // todo 同源不同目标
-      // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+    // todo 同源不同目标
+    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
     let params = {
-        Bucket: arg.Bucket,
-        Region: arg.Region
-      }
+      Bucket: arg.Bucket,
+      Region: arg.Region
+    }
 
     async function fn (contents) {
       for (let item of downloadGenerator(arg.Path, arg.Prefix, contents)) {
         try {
-          let task = await new MockDownloadTask(cos, item.name, {
+          let task = await new DownloadTask(cos, item.name, {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
           })
+          task.modify = '+'
           downloads.newTask(task).then(
-            result => (console.log('task done')),
-            err => { if (err.message !== 'cancel') console.log(err) }
+            result => {
+              task.modify = '*'
+              console.log('task done')
+              downloads.refresh()
+            },
+            err => {
+              task.modify = '*'
+              if (err.message !== 'cancel') console.log(err)
+              downloads.refresh()
+            }
           )
           downloads.next()
           downloads.refresh()
@@ -365,6 +428,7 @@ App.prototype.init = async function () {
      * @param {boolean} arg.wait
      */
     arg.tasks.forEach(id => {
+      // todo
       let task = downloads.findTask(id)
       if (!task) return
       switch (task.status) {
@@ -394,6 +458,7 @@ App.prototype.init = async function () {
       switch (task.status) {
         case TaskStatus.ERROR:
         case TaskStatus.PAUSE:
+          task.modify = '*'
           task.status = TaskStatus.WAIT
           break
         case TaskStatus.WAIT:
@@ -413,6 +478,7 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = downloads.findTask(id)
       if (!task) return
+      task.modify = '-'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }
@@ -424,42 +490,38 @@ App.prototype.init = async function () {
   this.save = function () {
     if (!uploads || !downloads) return Promise.resolve()
     return Promise.all([
+      save.config(config),
       save.upload(uploads.tasks),
       save.download(downloads.tasks)
     ])
   }
 }
 
-function listDir (cos, params) {
+async function listDir (cos, params) {
   let dirs = []
   let objects = []
   params.Delimiter = '/'
-  return (function p () {
-    return new Promise((resolve, reject) => {
-      cos.getBucket(params, (err, result) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        let pflen = params.Prefix ? params.Prefix.length : 0
-        result.CommonPrefixes.forEach(v => {
-          if (v.Prefix !== params.Prefix) {
-            dirs.push({
-              Name: v.Prefix.slice(pflen, -1),
-              Prefix: v.Prefix
-            })
-          }
-        })
-        result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
-        if (result.IsTruncated === 'true') {
-          params.Marker = result.NextMarker
-          return p().then(resolve, reject)
-        } else {
-          resolve({dirs, objects})
-        }
-      })
+  let result
+  let pflen = params.Prefix ? params.Prefix.length : 0
+
+  do {
+    result = await new Promise((resolve, reject) => {
+      cos.getBucket(params, (err, result) => { err ? reject(err) : resolve(result) })
     })
-  })()
+
+    result.CommonPrefixes.forEach(v => {
+      if (v.Prefix !== params.Prefix) {
+        dirs.push({
+          Name: v.Prefix.slice(pflen, -1),
+          Prefix: v.Prefix
+        })
+      }
+    })
+    result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
+
+    params.Marker = result.NextMarker
+  } while (result.IsTruncated === 'true')
+  return {dirs, objects}
 }
 
 function* uploadGenerator (name, prefix) {

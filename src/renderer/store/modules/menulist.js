@@ -11,8 +11,12 @@ const state = {
 
   uploadProgress: {
     list: [],
-    status: false
+    status: false,
+    loading: false,
+    count: 20,
+    page: 0
   },
+  uploadItem: [],
 
   fileUploadSelect: [],
 
@@ -150,12 +154,51 @@ const mutations = {
   showFileProgress(state){
     state.isShowFileProgress = !state.isShowFileProgress
   },
-  updataProgress(state, data){    //初始化上传文件列表
-    console.log('data',data)
-    if (!state.uploadProgress.status) {
-      state.uploadProgress.list = data
-    state.uploadProgress.status = true
+  setStates(state){
+    state.uploadProgress.list = []
+    for (let k = 0; k < 201; k++) {
+      let obj = {id: k, Key: 'test' + k, size: 0, speed: 0, status: 'run'}
+      state.uploadProgress.list.push(obj)
+      if (k < 20)
+        state.uploadItem.push(obj)
     }
+  },
+  updataProgress(state, data){    //初始化上传文件列表
+
+    // if (!state.uploadProgress.status) {
+    //   state.uploadProgress.list = [].concat(data)
+    //   state.uploadProgress.status = true
+    //   if (data.length > state.uploadProgress.count) {
+    //     for (let i = 0; i < state.uploadProgress.count; i++) {
+    //       state.uploadItem.push(data[i])
+    //     }
+    //   } else {
+    //     state.uploadItem = [].concat(data)
+    //   }
+    // } else {
+    //   data.forEach(n => {
+    //     if (n.modify === '+') {
+    //       state.uploadProgress.list.push(n)
+    //       if (state.uploadItem.length < 20) {
+    //         state.uploadItem.push(n)
+    //       }
+    //     }
+    //     if (n.modify === '*') {
+    //       if (state.uploadProgress[n.id]) {
+    //         state.uploadProgress[n.id].status = n.status
+    //         state.uploadProgress[n.id].loaded = n.loaded
+    //       }
+    //       if (state.uploadItem.length < 20) {
+    //         state.uploadItem.forEach((x, idx) => {
+    //           if (x.id === n.id) {
+    //             state.uploadItem[idx].status = n.status
+    //             state.uploadItem[idx].loaded = n.loaded
+    //           }
+    //         })
+    //       }
+    //     }
+    //   })
+    // }
 
     // data.forEach(function (item, index) {
     //   if (state.fileUploadSelect && state.fileUploadSelect.length) {
@@ -181,8 +224,60 @@ const mutations = {
     // console.log('总上传数量: ', data, '\n页面渲染列表: ')
 
   },
+  uploadItemAdd(state){
+    if (state.uploadProgress.list.length > state.uploadItem.length) {
+      state.uploadProgress.loading = true
+      if (state.uploadProgress.page === 0) {
+        state.uploadItem = []
+      }
+      let j = state.uploadProgress.page * state.uploadProgress.count,
+        len = j + 20//(state.uploadProgress.page + 1) * state.uploadProgress.count
+      for (; j < len; j++) {
+        if (state.uploadProgress.list[j])
+          state.uploadItem.push(state.uploadProgress.list[j])
+      }
+      if (state.uploadItem.length > 40) {
+        let m = 0, subLen = state.uploadItem.length - 40
+        for (; m < subLen; m++) {
+          state.uploadItem.splice(0, 1)
+        }
+      }
+      state.uploadProgress.page += 1
+      state.uploadProgress.loading = false
+    }
+
+  },
+  uploadItemSub(state){
+    if (state.uploadProgress.page === 0) return
+    state.uploadProgress.loading = true
+    if (state.uploadProgress.page > 0) {
+      let j = (state.uploadProgress.page - 2) * state.uploadProgress.count,
+        len = j + 20
+      if (j >= 0) {
+        for (; len > j; len--) {
+          if (state.uploadProgress.list[len])
+            state.uploadItem.unshift(state.uploadProgress.list[len])
+        }
+      }
+    }
+    if (state.uploadItem.length > 40) {
+      //删除末尾20条数据
+      let n = (state.uploadProgress.page - 1) * state.uploadProgress.count,
+        dlen = n + 20
+      for (; n < dlen; n++) {
+        if (state.uploadItem[n])
+          state.uploadItem.splice(n, 1)
+      }
+    }
+    state.uploadProgress.loading = false
+    state.uploadProgress.page -= 1
+  },
+  uploadLoading(state, val){
+    state.uploadProgress.loading = val
+  },
+
   downloadProgress(state, data){   //初始化下载文件列表
-    // if (!state.downloadProgress.status) {
+                                   // if (!state.downloadProgress.status) {
     state.downloadProgress.list = data
     // state.downloadProgress.status = true
     // state.downloadProgress.push()

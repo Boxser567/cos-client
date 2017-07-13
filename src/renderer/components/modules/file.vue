@@ -45,6 +45,8 @@
                         <el-button size="small" :plain="true" @click="menuObj().dialogSetHttpFn()"
                                    :disabled="eableBtn1()">设置HTTP头
                         </el-button>
+                        <el-button size="small" :plain="true" @click="setupload">设置zhi
+                        </el-button>
                     </div>
                     <span class="area">{{ options.region | getArea}}</span>
                 </div>
@@ -170,6 +172,9 @@
       }
     },
     methods: {
+      setupload(){
+        this.$store.commit('menulist/setStates')
+      },
       eableBtn(){
         if (this.selectFile && this.selectFile.length) {
           return false
