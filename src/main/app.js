@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { ipcMain } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
-import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks, TaskStatus } from './task'
+import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks } from './task'
 import { clear, init, save } from './db'
 
 let app
@@ -22,7 +22,9 @@ function App () {
 }
 
 App.prototype.init = async function () {
+  /** @type {Tasks} */
   let uploads
+  /** @type {Tasks} */
   let downloads
 
   let config = await init.config()
@@ -250,73 +252,30 @@ App.prototype.init = async function () {
     /**
      * @param {object}  arg
      * @param {int[]}   arg.tasks
+     * @param {boolean} arg.all
      * @param {boolean} arg.wait
      */
-    arg.tasks.forEach(id => {
-      let task = uploads.findTask(id)
-      if (!task) return
-      switch (task.status) {
-        case TaskStatus.RUN:
-          task.modify = true
-          task.stop()
-          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
-          break
-        case TaskStatus.WAIT:
-          if (!arg.wait) {
-            task.modify = true
-            task.status = TaskStatus.PAUSE
-          }
-          break
-        case TaskStatus.PAUSE:
-          if (arg.wait) {
-            task.modify = true
-            task.status = TaskStatus.WAIT
-          }
-          break
-        case TaskStatus.COMPLETE:
-        case TaskStatus.ERROR:
-      }
-    })
-    uploads.refresh(true)
+    uploads.pause(arg.tasks, arg.all, arg.wait)
   })
 
   ipcMain.on('ResumeUploadTask', (event, arg) => {
     /**
      * @param {object}  arg
      * @param {int[]}   arg.tasks
+     * @param {boolean} arg.all
      */
-    arg.tasks.forEach(id => {
-      let task = uploads.findTask(id)
-      if (!task) return
-      switch (task.status) {
-        case TaskStatus.ERROR:
-        case TaskStatus.PAUSE:
-          task.modify = true
-          task.status = TaskStatus.WAIT
-          break
-        case TaskStatus.WAIT:
-        case TaskStatus.RUN:
-        case TaskStatus.COMPLETE:
-      }
-      uploads.next()
-    })
-    uploads.refresh(true)
+    uploads.resume(arg.tasks, arg.all)
   })
 
   ipcMain.on('DeleteUploadTasks', (event, arg) => {
     /**
-     * @param {object} arg
-     * @param {int[]}  arg.tasks
+     * @param {object}  arg
+     * @param {int[]}   arg.tasks
+     * @param {boolean} arg.all
+     * @param {boolean} arg.onlyComplete
+     * @param {boolean} arg.onlyNotComplete
      */
-    arg.tasks.forEach(id => {
-      let task = uploads.findTask(id)
-      if (!task) return
-      if (task.status === TaskStatus.RUN) {
-        task.stop()
-      }
-      uploads.deleteTask(id)
-    })
-    uploads.refresh(true)
+    uploads.delete(arg.tasks, arg.all, arg.onlyComplete, arg.onlyNotComplete)
   })
 
   ipcMain.on('GetDownloadTasks', async (event) => {
@@ -365,8 +324,10 @@ App.prototype.init = async function () {
      * @param  {string[]}  [arg.Keys]     文件下载
      * @param  {string[]}  [arg.Dirs] 文件夹下载
      */
+
     // todo 同源不同目标
     // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
+
     let params = {
       Bucket: arg.Bucket,
       Region: arg.Region
@@ -420,73 +381,30 @@ App.prototype.init = async function () {
     /**
      * @param {object}  arg
      * @param {int[]}   arg.tasks
+     * @param {boolean} arg.all
      * @param {boolean} arg.wait
      */
-    arg.tasks.forEach(id => {
-      let task = downloads.findTask(id)
-      if (!task) return
-      switch (task.status) {
-        case TaskStatus.RUN:
-          task.modify = true
-          task.stop()
-          task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
-          break
-        case TaskStatus.WAIT:
-          if (!arg.wait) {
-            task.modify = true
-            task.status = TaskStatus.PAUSE
-          }
-          break
-        case TaskStatus.PAUSE:
-          if (arg.wait) {
-            task.modify = true
-            task.status = TaskStatus.WAIT
-          }
-          break
-        case TaskStatus.COMPLETE:
-        case TaskStatus.ERROR:
-      }
-    })
-    downloads.refresh(true)
+    downloads.pause(arg.tasks, arg.all, arg.wait)
   })
 
   ipcMain.on('ResumeDownloadTask', (event, arg) => {
     /**
      * @param {object}  arg
      * @param {int[]}   arg.tasks
+     * @param {boolean} arg.all
      */
-    arg.tasks.forEach(id => {
-      let task = downloads.findTask(id)
-      if (!task) return
-      switch (task.status) {
-        case TaskStatus.ERROR:
-        case TaskStatus.PAUSE:
-          task.modify = true
-          task.status = TaskStatus.WAIT
-          break
-        case TaskStatus.WAIT:
-        case TaskStatus.RUN:
-        case TaskStatus.COMPLETE:
-      }
-      downloads.next()
-    })
-    downloads.refresh(true)
+    downloads.resume(arg.tasks, arg.all)
   })
 
   ipcMain.on('DeleteDownloadTasks', (event, arg) => {
     /**
-     * @param {object} arg
-     * @param {int[]} arg.tasks
+     * @param {object}  arg
+     * @param {int[]}   arg.tasks
+     * @param {boolean} arg.all
+     * @param {boolean} arg.onlyComplete
+     * @param {boolean} arg.onlyNotComplete
      */
-    arg.tasks.forEach(id => {
-      let task = downloads.findTask(id)
-      if (!task) return
-      if (task.status === TaskStatus.RUN) {
-        task.stop()
-      }
-      downloads.deleteTask(id)
-    })
-    downloads.refresh(true)
+    downloads.delete(arg.tasks, arg.all, arg.onlyComplete, arg.onlyNotComplete)
   })
 
   this.save = function () {

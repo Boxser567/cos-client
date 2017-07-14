@@ -55,7 +55,6 @@
 </template>
 
 <script>
-  import Vue from 'vue'
   import { ipcRenderer } from 'electron'
 
   export default {
@@ -92,19 +91,19 @@
         for (let v of val) {
           while (i < v.id) {
             if (this.normaliseList[i]) {
-              console.debug(`${this.type} normaliseList del id = ${i}`)
+              console.debug(`${this.type} normaliseList - id = ${i}`)
               delete this.normaliseList[i]
             }
             i++
           }
           if (!this.normaliseList[i]) {
-            console.debug(`${this.type} normaliseList add id = ${i}`)
-            Vue.set(this.normaliseList, i, v)
+            console.debug(`${this.type} normaliseList + id = ${i}`)
+            this.$set(this.normaliseList, i, v)
             i++
             continue
           }
           if (v.modify || v.status === 'run') {
-            console.debug(`${this.type} normaliseList mod id = ${i}`)
+            console.debug(`${this.type} normaliseList * id = ${i}`)
             this.normaliseList[i].status = v.status
             this.normaliseList[i].size = v.size
             this.normaliseList[i].loaded = v.loaded
@@ -114,7 +113,7 @@
         }
         while (i < this.normaliseList.length) {
           if (this.normaliseList[i]) {
-            console.debug(`${this.type} normaliseList del id = ${i}`)
+            console.debug(`${this.type} normaliseList - id = ${i}`)
             delete this.normaliseList[i]
           }
           i++
@@ -141,27 +140,25 @@
             this.normaliseList[item.id].active = false
             return
           }
-          this.normaliseList.forEach(v => { if (v) Vue.set(v, 'active', false) })
+          this.selected.forEach(id => {
+            let v = this.normaliseList[id]
+            if (v) this.$set(v, 'active', false)
+          })
           this.selected = [item.id]
-          Vue.set(this.normaliseList[item.id], 'active', true)
+          this.$set(this.normaliseList[item.id], 'active', true)
           return
         }
-        let start = this.showList[0].id
-        let isStart
-        if (this.selected.length !== 0) {
-          start = Math.min(...this.selected)
-        }
+        let start = this.selected.length === 0 ? this.showList[0].id : this.selected[0]
+        this.selected.forEach(id => {
+          let v = this.normaliseList[id]
+          if (v) this.$set(v, 'active', false)
+        })
         this.selected = []
-        this.normaliseList.forEach(v => { Vue.set(v, 'active', false) })
-        for (let v of this.normaliseList) {
-          if (v.id >= start) {
-            isStart = true
-          }
-          if (isStart) {
-            Vue.set(v, 'active', true)
-            this.selected.push(v.id)
-          }
-          if (v.id >= item.id) break
+        for (let i = start; i <= item.id; i++) {
+          let v = this.normaliseList[i]
+          if (!v) continue
+          this.$set(v, 'active', true)
+          this.selected.push(v.id)
         }
         this.refresh()
       },
@@ -172,9 +169,7 @@
             msg = {tasks: this.selected}
             break
           case 'all':
-            this.list.forEach(v => {
-              msg.tasks.push(v.id)
-            })
+            msg.all = true
             break
           case 'one':
             msg = {tasks: [id]}
@@ -194,24 +189,16 @@
         }
       },
       cancelAll () {
-        let msg = {tasks: []}
-
-        this.list.forEach((v) => {
-          if (v.status === 'complete') return
-          msg.tasks.push(v.id)
+        ipcRenderer.send(this.channels.delete, {
+          all: true,
+          onlyNotComplete: true
         })
-
-        ipcRenderer.send(this.channels.delete, msg)
       },
       clearAll () {
-        let msg = {tasks: []}
-
-        this.list.forEach((v) => {
-          if (v.status !== 'complete') return
-          msg.tasks.push(v.id)
+        ipcRenderer.send(this.channels.delete, {
+          all: true,
+          onlyComplete: true
         })
-
-        ipcRenderer.send(this.channels.delete, msg)
       }
     }
   }

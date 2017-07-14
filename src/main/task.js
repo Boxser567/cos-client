@@ -134,6 +134,114 @@ Tasks.prototype.setRefresher = function (event, channel) {
 }
 
 /**
+ * @param {int[]}   tasks
+ * @param {boolean} all
+ * @param {boolean} wait
+ */
+Tasks.prototype.pause = function (tasks, all, wait) {
+  let fn = (task) => {
+    if (!task) return
+    switch (task.status) {
+      case TaskStatus.RUN:
+        task.modify = true
+        task.stop()
+        task.status = wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+        break
+      case TaskStatus.WAIT:
+        if (!wait) {
+          task.modify = true
+          task.status = TaskStatus.PAUSE
+        }
+        break
+      case TaskStatus.PAUSE:
+        if (wait) {
+          task.modify = true
+          task.status = TaskStatus.WAIT
+        }
+        break
+      case TaskStatus.COMPLETE:
+      case TaskStatus.ERROR:
+    }
+  }
+  if (all) {
+    this.tasks.forEach(fn)
+  } else {
+    tasks.forEach(id => {
+      fn(this.findTask(id))
+    })
+  }
+  this.refresh(true)
+}
+
+/**
+ * @param {int[]}   tasks
+ * @param {boolean} all
+ */
+Tasks.prototype.resume = function (tasks, all) {
+  let fn = (task) => {
+    if (!task) return
+    switch (task.status) {
+      case TaskStatus.ERROR:
+      case TaskStatus.PAUSE:
+        task.modify = true
+        task.status = TaskStatus.WAIT
+        break
+      case TaskStatus.WAIT:
+      case TaskStatus.RUN:
+      case TaskStatus.COMPLETE:
+    }
+    this.next()
+  }
+  if (all) {
+    this.tasks.forEach(fn)
+  } else {
+    tasks.forEach(id => {
+      fn(this.findTask(id))
+    })
+  }
+  this.refresh(true)
+}
+
+/**
+ * @param {int[]}   tasks
+ * @param {boolean} all
+ * @param {boolean} onlyComplete
+ * @param {boolean} onlyNotComplete
+ */
+Tasks.prototype.delete = function (tasks, all, onlyComplete, onlyNotComplete) {
+  let fn = (task) => {
+    if (!task) return
+    switch (task.status) {
+      case TaskStatus.COMPLETE:
+        if (!onlyNotComplete) {
+          this.deleteTask(task.id)
+        }
+        return
+      case TaskStatus.RUN:
+        if (!onlyComplete) {
+          task.stop()
+          this.deleteTask(task.id)
+        }
+        return
+      case TaskStatus.WAIT:
+      case TaskStatus.PAUSE:
+      case TaskStatus.ERROR:
+        if (!onlyComplete) {
+          this.deleteTask(task.id)
+        }
+    }
+  }
+  if (all) {
+    this.tasks.forEach(fn)
+  } else {
+    tasks.forEach(id => {
+      fn(this.findTask(id))
+    })
+  }
+  this.refresh(true)
+}
+
+/**
  *
  * @param  {object}   cos
  * @param  {string}   name
