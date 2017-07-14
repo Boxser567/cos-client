@@ -16,36 +16,36 @@
                 <el-button size="small" :plain="true" @click="clearAll()">清空已完成</el-button>
             </div>
         </div>
-        <virtual-scroller class="scroller progress-file" :items="list" item-height="40" content-tag="div">
-            <template scope="file">
-                <div class="progress-bar" :key="file.item.id" :class="{ active: file.item.active }"
-                     @click="select($event, file.item)">
-                    <img :src="file.item.Key | getFileImg" alt="">
+        <virtual-scroller class="scroller progress-file" :items="showList" item-height="40" content-tag="div">
+            <template scope="props">
+                <div class="progress-bar" :key="props.item.id" :class="{ active: props.item.active }"
+                     @click="select($event, props.item)">
+                    <img :src="props.item.Key | getFileImg" alt="">
                     <el-row>
                         <el-col :span="12">
-                            <p class="tl">{{file.item.Key}}</p>
+                            <p class="tl">{{props.item.Key}}</p>
                             <el-progress
-                                    :percentage="(file.item.loaded/file.item.size * 100) | getInteger"></el-progress>
+                                    :percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>
                         </el-col>
                         <el-col :span="4">
-                            {{file.item.size | bitSize}}
+                            {{props.item.size | bitSize}}
                         </el-col>
                         <el-col :span="4">
-                            <span v-if="file.item.status=='wait'">等待中</span>
-                            <span v-if="file.item.status=='pause'">暂停</span>
-                            <span v-if="file.item.status=='complete'">完成</span>
-                            <span v-if="file.item.status=='run'"> {{file.item.speed | bitSpeed}} </span>
-                            <span v-if="file.item.status=='error'">出错</span>
+                            <span v-if="props.item.status=='wait'">等待中</span>
+                            <span v-if="props.item.status=='pause'">暂停</span>
+                            <span v-if="props.item.status=='complete'">完成</span>
+                            <span v-if="props.item.status=='run'"> {{props.item.speed | bitSpeed}} </span>
+                            <span v-if="props.item.status=='error'">出错</span>
                         </el-col>
                         <el-col :span="4">
-                            <i v-if="file.item.status == 'pause'" class="el-icon-caret-right"
-                               @click="send('begin', 'one', file.item.id)"></i>
-                            <i v-if="file.item.status == 'run'"
-                               @click="send('pause', 'one', file.item.id)"> || </i>
-                            <i v-if="file.item.status == 'error'" class="el-icon-warning"
-                               @click="send('begin', 'one', file.item.id)"></i>
+                            <i v-if="props.item.status == 'pause'" class="el-icon-caret-right"
+                               @click="send('begin', 'one', props.item.id)"></i>
+                            <i v-if="props.item.status == 'run'"
+                               @click="send('pause', 'one', props.item.id)"> || </i>
+                            <i v-if="props.item.status == 'error'" class="el-icon-warning"
+                               @click="send('begin', 'one', props.item.id)"></i>
                             <i class="el-icon-close"
-                               @click="send('delete', 'one', file.item.id)"></i>
+                               @click="send('delete', 'one', props.item.id)"></i>
                         </el-col>
                     </el-row>
                 </div>
@@ -60,6 +60,14 @@
 
   export default {
     name: 'progress-list',
+    props: ['list', 'type'],
+    data () {
+      return {
+        selected: [],
+        normaliseList: [],
+        showList: []
+      }
+    },
     computed: {
       channels () {
         switch (this.type) {
@@ -78,34 +86,74 @@
         }
       }
     },
-    props: ['list', 'type'],
-    data () {
-      return {
-        selected: []
+    watch: {
+      list: function (val) {
+        let i = 0
+        for (let v of val) {
+          while (i < v.id) {
+            if (this.normaliseList[i]) {
+              console.debug(`${this.type} normaliseList del id = ${i}`)
+              delete this.normaliseList[i]
+            }
+            i++
+          }
+          if (!this.normaliseList[i]) {
+            console.debug(`${this.type} normaliseList add id = ${i}`)
+            Vue.set(this.normaliseList, i, v)
+            i++
+            continue
+          }
+          if (v.modify || v.status === 'run') {
+            console.debug(`${this.type} normaliseList mod id = ${i}`)
+            this.normaliseList[i].status = v.status
+            this.normaliseList[i].size = v.size
+            this.normaliseList[i].loaded = v.loaded
+            this.normaliseList[i].speed = v.speed
+          }
+          i++
+        }
+        while (i < this.normaliseList.length) {
+          if (this.normaliseList[i]) {
+            console.debug(`${this.type} normaliseList del id = ${i}`)
+            delete this.normaliseList[i]
+          }
+          i++
+        }
+        this.refresh()
       }
     },
     methods: {
+      refresh: function () {
+        let arr = []
+        for (let v of this.normaliseList) {
+          if (v) {
+            arr.push(v)
+          }
+        }
+        console.log(`refresh ${this.type} showList.length = ${arr.length}`)
+        this.showList = arr
+      },
       select (event, item) {
         event.preventDefault()
         if (!event.shiftKey) {
           if (this.selected.length === 1 && this.selected[0] === item.id) {
             this.selected = []
-            item.active = false
+            this.normaliseList[item.id].active = false
             return
           }
-          this.list.forEach(v => { Vue.set(v, 'active', false) })
+          this.normaliseList.forEach(v => { if (v) Vue.set(v, 'active', false) })
           this.selected = [item.id]
-          Vue.set(item, 'active', true)
+          Vue.set(this.normaliseList[item.id], 'active', true)
           return
         }
-        let start = this.list[0].id
+        let start = this.showList[0].id
         let isStart
         if (this.selected.length !== 0) {
           start = Math.min(...this.selected)
         }
         this.selected = []
-        this.list.forEach(v => { Vue.set(v, 'active', false) })
-        for (let v of this.list) {
+        this.normaliseList.forEach(v => { Vue.set(v, 'active', false) })
+        for (let v of this.normaliseList) {
           if (v.id >= start) {
             isStart = true
           }
@@ -115,9 +163,9 @@
           }
           if (v.id >= item.id) break
         }
+        this.refresh()
       },
       send (type, range, id) {
-        console.log('send', type, range, id)
         let msg = {tasks: []}
         switch (range) {
           case 'select':

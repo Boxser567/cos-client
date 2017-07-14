@@ -109,9 +109,9 @@ Tasks.prototype.setRefresher = function (event, channel) {
         size: t.progress.total,
         loaded: t.progress.loaded,
         speed: t.progress.speed,
-        modify: t.modify || '*'
+        modify: t.modify
       })
-      t.modify = ''
+      t.modify = false
     })
     try {
       this.refresher.event.sender.send(channel, s)

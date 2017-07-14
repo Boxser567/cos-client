@@ -178,15 +178,14 @@ App.prototype.init = async function () {
     for (let t of tasks) {
       try {
         let task = await new UploadTask(cos, t.name, t.params, t.option)
-        task.modify = '+'
         uploads.newTask(task).then(
           () => {
-            task.modify = '*'
+            task.modify = true
             task.progress.loaded = task.progress.total
             uploads.refresh()
           },
           err => {
-            task.modify = '*'
+            task.modify = true
             if (err.message !== 'cancel') {
               console.log('task error', err)
             }
@@ -222,17 +221,16 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
-          task.modify = '+'
           // newTask.then 在整个上传完成后调用
           uploads.newTask(task).then(
             () => {
-              task.modify = '*'
+              task.modify = true
               task.progress.loaded = task.progress.total
               uploads.refresh()
               console.log('task done', task.id)
             },
             err => {
-              task.modify = '*'
+              task.modify = true
               if (err.message !== 'cancel') {
                 console.log('task error', err)
               }
@@ -259,19 +257,19 @@ App.prototype.init = async function () {
       if (!task) return
       switch (task.status) {
         case TaskStatus.RUN:
-          task.modify = '*'
+          task.modify = true
           task.stop()
           task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
           break
         case TaskStatus.WAIT:
           if (!arg.wait) {
-            task.modify = '*'
+            task.modify = true
             task.status = TaskStatus.PAUSE
           }
           break
         case TaskStatus.PAUSE:
-          if (!arg.wait) {
-            task.modify = '*'
+          if (arg.wait) {
+            task.modify = true
             task.status = TaskStatus.WAIT
           }
           break
@@ -293,7 +291,7 @@ App.prototype.init = async function () {
       switch (task.status) {
         case TaskStatus.ERROR:
         case TaskStatus.PAUSE:
-          task.modify = '*'
+          task.modify = true
           task.status = TaskStatus.WAIT
           break
         case TaskStatus.WAIT:
@@ -313,7 +311,6 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = uploads.findTask(id)
       if (!task) return
-      task.modify = '-'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }
@@ -334,15 +331,14 @@ App.prototype.init = async function () {
     for (let t of tasks) {
       try {
         let task = await new DownloadTask(cos, t.name, t.params, t.option)
-        task.modify = '+'
         downloads.newTask(task).then(
           () => {
-            task.modify = '*'
+            task.modify = true
             task.progress.loaded = task.progress.total
             downloads.refresh()
           },
           err => {
-            task.modify = '*'
+            task.modify = true
             if (err.message !== 'cancel') {
               console.log('task error', err)
             }
@@ -384,15 +380,14 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
-          task.modify = '+'
           downloads.newTask(task).then(
             result => {
-              task.modify = '*'
+              task.modify = true
               console.log('task done')
               downloads.refresh()
             },
             err => {
-              task.modify = '*'
+              task.modify = true
               if (err.message !== 'cancel') console.log(err)
               downloads.refresh()
             }
@@ -432,19 +427,19 @@ App.prototype.init = async function () {
       if (!task) return
       switch (task.status) {
         case TaskStatus.RUN:
-          task.modify = '*'
+          task.modify = true
           task.stop()
           task.status = arg.wait ? TaskStatus.WAIT : TaskStatus.PAUSE
           break
         case TaskStatus.WAIT:
           if (!arg.wait) {
-            task.modify = '*'
+            task.modify = true
             task.status = TaskStatus.PAUSE
           }
           break
         case TaskStatus.PAUSE:
-          if (!arg.wait) {
-            task.modify = '*'
+          if (arg.wait) {
+            task.modify = true
             task.status = TaskStatus.WAIT
           }
           break
@@ -466,7 +461,7 @@ App.prototype.init = async function () {
       switch (task.status) {
         case TaskStatus.ERROR:
         case TaskStatus.PAUSE:
-          task.modify = '*'
+          task.modify = true
           task.status = TaskStatus.WAIT
           break
         case TaskStatus.WAIT:
@@ -486,7 +481,6 @@ App.prototype.init = async function () {
     arg.tasks.forEach(id => {
       let task = downloads.findTask(id)
       if (!task) return
-      task.modify = '-'
       if (task.status === TaskStatus.RUN) {
         task.stop()
       }

@@ -53,13 +53,13 @@
     created () {
       ipcRenderer.send('GetUploadTasks')
       ipcRenderer.on('GetUploadTasks-data', (event, data) => {
-        console.log(data.length)
+        console.log('GetUploadTasks-data', data.length)
         this.uploadList = data
       })
 
       ipcRenderer.send('GetDownloadTasks')
       ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
-        console.log(data.length)
+        console.log('GetDownloadTasks-data', data.length)
         this.downloadList = data
       })
     },
