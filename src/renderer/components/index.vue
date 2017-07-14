@@ -4,18 +4,16 @@
             <div class="logo">Oss</div>
             <div class="bucket-opt">
                 <ul>
-                    <li><a @click="dialogAddVisible=true"><i class="el-icon-plus"></i>新建</a></li>
-                    <li><a><i class="el-icon-setting"></i>设置</a></li>
+                    <li><a @click="dialogAddVisible = true"><i class="el-icon-plus"></i>新建</a></li>
+                    <li><a @click="dialogSettingVisible=true"><i class="el-icon-setting"></i>设置</a></li>
                     <li><a @click="fetchData"><i class="el-icon-star-on"></i>刷新</a></li>
                 </ul>
             </div>
             <div class="bucket">
-                <!--<div class="loading" v-if="bloading">-->
-                <!--<i class="el-icon-loading"></i>-->
-                <!--</div>-->
+
                 <div class="bucket-group" v-for="(value,key) in bucketList" :class="{ active:false }">
 
-                    <a class="bucket-tl"> <i class="el-icon-caret-bottom"></i> {{ key }} </a>
+                    <a class="bucket-tl"> <span>AppID：</span> {{ key }} </a>
 
                     <div class="bucket-item" @contextmenu="openMenu($event)">
                         <div class="item"
@@ -45,67 +43,25 @@
             <router-view></router-view>
         </div>
 
-        <!--添加bucket-->
-        <el-dialog title="添加bucket" custom-class="dilog-addbucket" :visible.sync="dialogAddVisible">
-            <el-form :model="myform">
-                <el-form-item label="Bucket名称">
-                    <el-input v-model="myform.bucketName" placeholder="请输入Bucket名称"></el-input>
-                </el-form-item>
-                <el-form-item label="所属地域">
-                    <el-select v-model="myform.areaDef" placeholder="请选择">
-                        <el-option
-                                v-for="item in myform.areaList"
-                                :key="item.value"
-                                :label="item.label"
-                                :value="item.value">
-                        </el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="访问权限">
-                    <el-radio class="radio" v-model="myform.limit" label="public-read">公有读私有写</el-radio>
-                    <el-radio class="radio" v-model="myform.limit" label="private">私有读写</el-radio>
-                </el-form-item>
-                <el-form-item label="CDN加速">
-                    <el-radio class="radio" v-model="myform.cdnSpeed" label="open">开启</el-radio>
-                    <el-radio class="radio" v-model="myform.cdnSpeed" label="close">关闭</el-radio>
-                </el-form-item>
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-                <el-button @click="dialogAddVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitForm()">确 定</el-button>
-            </div>
-        </el-dialog>
+        <add-bucket :dialogAddVisible="dialogAddVisible" @closeBucket="dialogAddVisible = false"
+                    @freshBucket="fetchData"></add-bucket>
 
         <!--属性管理-->
-        <el-dialog v-if="currentBucket" :title="currentBucket.Name" size="large" custom-class="dilog-propertybucket"
-                   :visible.sync="dialogManageVisible">
-            <el-row>
-                <el-col :span="8">Bucket名称:</el-col>
-                <el-col :span="16">{{currentBucket.Bucket}}</el-col>
-            </el-row>
-            <el-row>
-                <el-col :span="8">所属地域:</el-col>
-                <el-col :span="16">{{currentBucket.Region}}</el-col>
-            </el-row>
-            <el-row>
-                <el-col :span="8">访问权限:</el-col>
-                <el-col :span="16">
-                    <el-radio class="radio" v-model="myform.limit" label="public-read">公有读私有写</el-radio>
-                    <el-radio class="radio" v-model="myform.limit" label="private">私有读写</el-radio>
-                </el-col>
-            </el-row>
+        <proto-manage :dialogManageVisible="dialogManageVisible" :currentBucket="currentBucket"
+                      @freshBucket="fetchData" @closeManage="dialogManageVisible=false"></proto-manage>
+        <!--设置-->
+        <setting :dialogSettingVisible="dialogSettingVisible" @closeDiolog="dialogSettingVisible = false"></setting>
 
-            <div slot="footer" class="dialog-footer">
-                <el-button type="danger" @click="deleteBucket">删除 Bucket</el-button>
-                <el-button type="primary" @click="dialogManageVisible = false">确 定</el-button>
-                <el-button @click="dialogManageVisible = false">取 消</el-button>
-            </div>
-        </el-dialog>
     </div>
 </template>
 
 <script>
+  import  { ipcRenderer } from  'electron'
+
   import { mutations, mapState } from 'vuex'
+  import setting from  './modules/setting.vue'
+  import addBucket from  './modules/add-bucket.vue'
+  import protoManage from  './modules/property-manager.vue'
 
   export default {
     name: 'index-page',
@@ -126,48 +82,44 @@
         },
         dialogAddVisible: false,
         dialogManageVisible: false,
-        myform: {
-          bucketName: '',
-          limit: 'public-read',
-          areaList: [
-            {
-              value: 'cn-south',
-              label: '华南'
-            }, {
-              value: 'cn-north',
-              label: '华北'
-            }, {
-              value: 'cn-east',
-              label: '华东'
-            }, {
-              value: 'cn-southwest',
-              label: '西南'
-            }],
-          areaDef: 'cn-south',
-          cdnSpeed: 'close'
-        },
+        dialogSettingVisible: false,
         rightChooseBucket: null
       }
     },
 
-    computed: mapState('bucket', {
-      bucketList: 'bucketList',
-      currentBucket: 'currentBucket'
+    components: {addBucket, protoManage, setting},
 
-    }),
+    computed: {
+      ...mapState('bucket', ['bucketList', 'currentBucket'])
+    },
 
-    created () {
-      this.fetchData()
+    created(){
+//      this.fetchData()
+      this.fetchPost()
     },
 
     methods: {
-      fetchData () {
+      fetchData(){
         this.bloading = true
-        this.$store.dispatch('bucket/getService').then(() => { this.bloading = false })
+        this.$store.dispatch('bucket/getService').then(() => {
+          this.bloading = false
+        })
+      },
+      fetchPost(){
+        ipcRenderer.send('GetUploadTasks')
+
+        ipcRenderer.on('GetUploadTasks-data', (event, data) => {
+          this.$store.commit('menulist/updataProgress', data)
+        })
+
+        ipcRenderer.send('GetDownloadTasks')
+        ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
+          this.$store.commit('menulist/downloadProgress', data)
+        })
       },
       selectBucket: function (b) {
-        this.$store.commit('bucket/bucketActive', b)
-        this.$store.commit('menulist/unSelectFile')
+        this.$store.commit('bucket/bucketActive', b.Name)
+//        this.$store.commit('menulist/unSelectFile')
         this.$router.push({
           path: '/file/' + b.Name,
           query: {
@@ -177,25 +129,7 @@
           }
         })
       },
-      submitForm: function () { // 新建bucket
-        if (this.myform.bucketName.length > 40) {
-          this.$message.error('bucket不能超过40字符!')
-          return
-        }
-        if (!(/^[a-z\d]+$/.test(this.myform.bucketName))) {
-          this.$message.error('bucket格式有误!')
-          return
-        }
-        let params = {
-          Bucket: this.myform.bucketName,
-          Region: this.myform.areaDef,
-          ACL: this.myform.limit
-        }
-        this.$store.dispatch('bucket/putBucket', {pms: params}).then(() => {
-          this.fetchData()
-          this.dialogAddVisible = false
-        })
-      },
+
       setMenu: function (top, left) {
         let largestHeight = window.innerHeight - this.$refs.right.offsetHeight - 25
         let largestWidth = window.innerWidth - this.$refs.right.offsetWidth - 25
@@ -204,9 +138,11 @@
         this.bucketMenu.top = top + 'px'
         this.bucketMenu.left = left + 'px'
       },
+
       closeMenu: function () {
         this.bucketMenu.viewMenu = false
       },
+
       openMenu: function (e) {
         let doms = e.target.parentNode
         if (e.target.tagName === 'I') {
@@ -224,12 +160,6 @@
         e.preventDefault()
       },
 
-      deleteBucket: function () {
-        this.$store.dispatch('bucket/deleteBucket').then(() => {
-          this.fetchData()
-          this.dialogManageVisible = false
-        })
-      },
       getProperty: function () {
         this.bucketMenu.viewMenu = false
         this.dialogManageVisible = true
@@ -254,7 +184,5 @@
   }
 </script>
 
-<style lang="scss">
-    @import "../assets/style/globals.scss";
-</style>
+
 

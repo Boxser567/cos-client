@@ -1,3 +1,4 @@
+
 .index {
   position: absolute;
   top: 0;
@@ -26,6 +27,7 @@
     bottom: 0;
     right: 0;
     overflow: hidden;
+    background: #fff;
   }
 
   //右键菜单
@@ -390,7 +392,7 @@
     }
     .progress-file {
       overflow: auto;
-      max-height: 180px;
+      height: 180px;
       .progress-bar {
         &:hover {
           background: $fileBgColor;

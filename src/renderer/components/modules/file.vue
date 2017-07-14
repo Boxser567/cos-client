@@ -45,8 +45,6 @@
                         <el-button size="small" :plain="true" @click="menuObj().dialogSetHttpFn()"
                                    :disabled="eableBtn1()">设置HTTP头
                         </el-button>
-                        <el-button size="small" :plain="true" @click="setupload">设置zhi
-                        </el-button>
                     </div>
                     <span class="area">{{ options.region | getArea}}</span>
                 </div>
@@ -132,10 +130,19 @@
 
 <script>
   import filelist from './file-list.vue'
+  import store from '../../store'
   import { mutations, mapState, actions } from 'vuex'
   export default {
     name: 'filepage',
     components: {'file-list': filelist},
+//    beforeRouteEnter(to, from, next){
+//      console.log('beforeRouteEnter',arguments)
+//      //路由变动控制左侧菜单
+//      let menuName = to.path.split('/')
+//      menuName = menuName.pop()
+//      store.commit('bucket/bucketActive', menuName)
+//      next()
+//    },
     beforeRouteUpdate (to, from, next) {
       this.options.bucket = to.params.bucket || to.query.bucket
       this.options.region = to.params.region || to.query.region
@@ -143,6 +150,7 @@
       if (to.path != from.path) {
         this.options.keyWord = null
         this.options.folders = []
+
       } else {
         this.options.folders = to.query.folders
         let navbar = to.query.folders
@@ -172,9 +180,6 @@
       }
     },
     methods: {
-      setupload(){
-        this.$store.commit('menulist/setStates')
-      },
       eableBtn(){
         if (this.selectFile && this.selectFile.length) {
           return false
@@ -231,8 +236,10 @@
         this.inputFocus = false
       },
       focusSearch(){
+        console.log(this.navOptions)
         if (this.navOptions && this.navOptions.length) {
-          this.currentFolder = ([].concat(this.navOptions.pop())).name
+          let obj = this.navOptions[this.navOptions.length - 1]
+          this.currentFolder = obj.name
           this.inputFocus = true
         }
       },
@@ -288,15 +295,15 @@
               cancelButtonText: '取消',
               type: 'warning'
             }).then(() => {
-//              let parmas = Object.assign(parmsObj, {Key: _self.selectFile.dir ? _self.selectFile.Prefix : _self.selectFile.Key})
-//              _self.$store.dispatch('menulist/deleteFile', {pms: parmas}).then(function (resp) {
-//                console.log('this-delete', arguments)
-//                if (resp.DeleteObjectSuccess) {
-//                  _self.fetchFilelist()
-//                } else {
-//                  _self.$message({type: 'error', message: resp.error})
-//                }
-//              })
+              let parmas = Object.assign(parmsObj, {Key: _self.selectFile.dir ? _self.selectFile.Prefix : _self.selectFile.Key})
+              _self.$store.dispatch('menulist/deleteFile', {pms: parmas}).then(function (resp) {
+                console.log('this-delete', arguments)
+                if (resp.DeleteObjectSuccess) {
+                  _self.fetchFilelist()
+                } else {
+                  _self.$message({type: 'error', message: resp.error})
+                }
+              })
             }).catch(() => {
             })
           }
@@ -329,10 +336,10 @@
         })
       },
       goForward(){
-        console.log(this.$router)
+        this.$router.go(-1)
       },
       backForward(){
-//        this.$router.go(-1);
+        this.$router.go(1)
       }
     }
   }

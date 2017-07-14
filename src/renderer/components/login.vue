@@ -1,15 +1,17 @@
 <template>
-    <el-form class="login-form">
-        <el-form-item>
-            <el-input type="password" v-model="password" placeholder="password"></el-input>
-        </el-form-item>
-        <el-form-item>
-            <el-button type="primary" @click="login">登录</el-button>
-        </el-form-item>
-        <el-form-item>
-            <el-button type="primary" @click="clear">清除</el-button>
-        </el-form-item>
-    </el-form>
+    <div class="locked-form">
+        <el-form>
+            <el-form-item>
+                <el-input type="password" size="large" v-model="password" placeholder="password"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="login">登录</el-button>
+            </el-form-item>
+            <el-form-item>
+                <el-button  @click="clear">清除</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
 </template>
 
 <script>
@@ -35,34 +37,16 @@
           return
         }
         // 检查Secret同时获取数据
-        ipcRenderer.send('ListBucket')
-
-        ipcRenderer.once('ListBucket-data', (event, arg) => {
+        this.$store.dispatch('bucket/getService').then((res) => {
+          console.log(res)
           this.$router.replace('/')
-        })
-        ipcRenderer.once('ListBucket-error', (event, err) => {
-          alert(err)
+//          this.$message('请正确填写登录信息！');
         })
       },
       clear () {
         ipcRenderer.sendSync('Login', {action: 'clear'})
-        this.$router.replace('/new')
+        this.$router.replace('/locked')
       }
     }
   }
 </script>
-
-<style>
-    .login-form {
-        width: 320px;
-        padding: 40px;
-        position: absolute;
-        top: 20%;
-        left: 50%;
-        margin-left: -200px;
-    }
-
-    .login-form button {
-        width: 100%;
-    }
-</style>

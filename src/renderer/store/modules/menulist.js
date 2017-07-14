@@ -16,7 +16,6 @@ const state = {
     count: 20,
     page: 0
   },
-  uploadItem: [],
 
   fileUploadSelect: [],
 
@@ -154,51 +153,12 @@ const mutations = {
   showFileProgress(state){
     state.isShowFileProgress = !state.isShowFileProgress
   },
-  setStates(state){
-    state.uploadProgress.list = []
-    for (let k = 0; k < 201; k++) {
-      let obj = {id: k, Key: 'test' + k, size: 0, speed: 0, status: 'run'}
-      state.uploadProgress.list.push(obj)
-      if (k < 20)
-        state.uploadItem.push(obj)
-    }
-  },
   updataProgress(state, data){    //初始化上传文件列表
-
-    // if (!state.uploadProgress.status) {
-    //   state.uploadProgress.list = [].concat(data)
-    //   state.uploadProgress.status = true
-    //   if (data.length > state.uploadProgress.count) {
-    //     for (let i = 0; i < state.uploadProgress.count; i++) {
-    //       state.uploadItem.push(data[i])
-    //     }
-    //   } else {
-    //     state.uploadItem = [].concat(data)
-    //   }
-    // } else {
-    //   data.forEach(n => {
-    //     if (n.modify === '+') {
-    //       state.uploadProgress.list.push(n)
-    //       if (state.uploadItem.length < 20) {
-    //         state.uploadItem.push(n)
-    //       }
-    //     }
-    //     if (n.modify === '*') {
-    //       if (state.uploadProgress[n.id]) {
-    //         state.uploadProgress[n.id].status = n.status
-    //         state.uploadProgress[n.id].loaded = n.loaded
-    //       }
-    //       if (state.uploadItem.length < 20) {
-    //         state.uploadItem.forEach((x, idx) => {
-    //           if (x.id === n.id) {
-    //             state.uploadItem[idx].status = n.status
-    //             state.uploadItem[idx].loaded = n.loaded
-    //           }
-    //         })
-    //       }
-    //     }
-    //   })
-    // }
+    console.log('data', data)
+    if (!state.uploadProgress.status) {
+      state.uploadProgress.list = data
+      state.uploadProgress.status = true
+    }
 
     // data.forEach(function (item, index) {
     //   if (state.fileUploadSelect && state.fileUploadSelect.length) {
@@ -415,26 +375,51 @@ const mutations = {
   },
 
   selectLoadFile(state, arr){    //选中上传文件列表de文件
-    if (!arr) return
-    if (!state.uploadProgress.list && state.uploadProgress.list.length) return
+    let listArr = [].concat(state.uploadProgress.list)
+    if (!listArr && listArr.length) return
 
-    if (state.fileUploadSelect && state.fileUploadSelect.length) {
-      state.fileUploadSelect.forEach(function (upfile) {
-        let id = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
-        if (id != undefined) {
-          state.uploadProgress.list[id].active = false
-          state.uploadProgress.list.push()
+    if (state.uploadSelect.length === 0) {
+      state.uploadSelect.push(arr.upFile.id)
+    }
+    if (state.uploadSelect.length === 1) {
+      if (state.uploadSelect[0] === arr.upFile.id) {
+        state.uploadSelect = []
+      } else {
+        if (!arr.key) {
+          state.uploadSelect.splice(0, 1)
+          state.uploadSelect.push(arr.upFile.id)
+        } else {
+          let arr = [state.uploadSelect[0], arr.upFile.id]
+          for (let i = state.uploadSelect[0]; i < listArr.length; i++) {
+
+          }
         }
-      })
+      }
     }
-    let idx = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
-    if (idx != undefined) {
-      state.uploadProgress.list[idx].active = true
-      state.uploadProgress.list.push()
+    if (state.uploadSelect.length > 1) {
+      state.uploadSelect = []
+      state.uploadSelect.push(arr.upFile.id)
     }
-    state.fileUploadSelect = []
-    state.fileUploadSelect.push(arr.upFile)
 
+    // if (state.fileUploadSelect && state.fileUploadSelect.length) {
+    //   state.fileUploadSelect.forEach(function (upfile) {
+    //     let id = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
+    //     if (id != undefined) {
+    //       state.uploadProgress.list[id].active = false
+    //       state.uploadProgress.list.push()
+    //     }
+    //   })
+    // }
+    //
+    // let idx = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
+    //
+    // if (idx != undefined) {
+    //   state.uploadProgress.list[idx].active = true
+    //   state.uploadProgress.list.push()
+    // }
+    //
+    // state.fileUploadSelect = []
+    // state.fileUploadSelect.push(arr.upFile)
   },
 
   selectDownloadFile(state, arr){

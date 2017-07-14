@@ -1,22 +1,19 @@
 <template>
     <el-form class="login-form">
         <el-form-item>
-            <el-input type="text" v-model="SecretId" placeholder="Access Key ID"></el-input>
+            <el-input type="text" v-model="SecretId" size="large" placeholder="Access Key ID"></el-input>
         </el-form-item>
         <el-form-item>
-            <el-input type="password" v-model="SecretKey" placeholder="Access Key Secret"></el-input>
+            <el-input type="password" v-model="SecretKey"  size="large" placeholder="Access Key Secret"></el-input>
         </el-form-item>
         <el-form-item>
             <el-input type="password" v-model="password1" placeholder="password1"></el-input>
         </el-form-item>
+        <!--<el-form-item>-->
+            <!--<el-input type="password" v-model="password2" placeholder="password2"></el-input>-->
+        <!--</el-form-item>-->
         <el-form-item>
-            <el-input type="password" v-model="password2" placeholder="password2"></el-input>
-        </el-form-item>
-        <el-form-item>
-            <el-button type="primary" @click="save">保存</el-button>
-        </el-form-item>
-        <el-form-item>
-            <el-button type="primary" @click="debug">debug</el-button>
+            <el-button @click="debug">debug</el-button>  <el-button type="primary" @click="save">登录</el-button>
         </el-form-item>
     </el-form>
 </template>
@@ -45,15 +42,22 @@
           }
         })
         // todo 检查Secret同时获取数据
-        ipcRenderer.send('ListBucket')
 
-        ipcRenderer.once('ListBucket-data', (event, arg) => {
-          console.log(arg)
-          this.$router.replace('/')
+        this.$store.dispatch('bucket/getService').then((res) => {
+          console.log(res)
+          this.$message('请正确填写登录信息！');
         })
-        ipcRenderer.once('ListBucket-error', (event, err) => {
-          alert(err)
-        })
+
+//        ipcRenderer.send('ListBucket')
+//
+//        ipcRenderer.once('ListBucket-data', (event, arg) => {
+//          console.log(arg)
+//          this.$router.replace('/')
+//        })
+//        ipcRenderer.once('ListBucket-error', (event, err) => {
+//
+//          this.$message('请正确填写登录信息！');
+//        })
       },
       debug () {
         this.SecretId = 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4'
@@ -62,18 +66,3 @@
     }
   }
 </script>
-
-<style>
-    .login-form {
-        width: 320px;
-        padding: 40px;
-        position: absolute;
-        top: 20%;
-        left: 50%;
-        margin-left: -200px;
-    }
-
-    .login-form button {
-        width: 100%;
-    }
-</style>

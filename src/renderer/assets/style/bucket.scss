@@ -23,22 +23,28 @@
   }
 }
 .bucket-group{
-  transition: all .5s;
+  position: absolute;
+  top:77px;
+  bottom: 0;
+  left: 0;
+  right:0;
+  overflow: auto;
   &.active{
     height: 45px;
     overflow: hidden;
   }
   .bucket-tl{
     display: block;
-    color: #fff;
-    height: 36px;
-    line-height: 36px;
+    color: #eaeaea;
+    height: 32px;
+    line-height: 32px;
     padding-left: 20px;
     background: rgba(255,255,255,.1);
     margin-top: 10px;
     text-indent: 3px;
     font-size: 15px;
     font-weight: bold;
+    user-select:initial
   }
 }
 .bucket-item {

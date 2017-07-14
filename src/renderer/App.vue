@@ -11,5 +11,8 @@
 </script>
 
 <style>
-  /* CSS */
+  @import '../../node_modules/element-ui/lib/theme-default/index.css';
+</style>
+<style lang="scss">
+  @import "./assets/style/globals.scss";
 </style>
