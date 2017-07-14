@@ -88,22 +88,25 @@
     watch: {
       list: function (val) {
         let i = 0
+        let dirty = false
         for (let v of val) {
           while (i < v.id) {
             if (this.normaliseList[i]) {
-              console.debug(`${this.type} normaliseList - id = ${i}`)
+              dirty = true
+              // console.debug(`${this.type} normaliseList - id = ${i}`)
               delete this.normaliseList[i]
             }
             i++
           }
           if (!this.normaliseList[i]) {
-            console.debug(`${this.type} normaliseList + id = ${i}`)
+            dirty = true
+            // console.debug(`${this.type} normaliseList + id = ${i}`)
             this.$set(this.normaliseList, i, v)
             i++
             continue
           }
           if (v.modify || v.status === 'run') {
-            console.debug(`${this.type} normaliseList * id = ${i}`)
+            // console.debug(`${this.type} normaliseList * id = ${i}`)
             this.normaliseList[i].status = v.status
             this.normaliseList[i].size = v.size
             this.normaliseList[i].loaded = v.loaded
@@ -113,12 +116,15 @@
         }
         while (i < this.normaliseList.length) {
           if (this.normaliseList[i]) {
-            console.debug(`${this.type} normaliseList - id = ${i}`)
+            dirty = true
+            // console.debug(`${this.type} normaliseList - id = ${i}`)
             delete this.normaliseList[i]
           }
           i++
         }
-        this.refresh()
+        if (dirty) {
+          this.refresh()
+        }
       }
     },
     methods: {
@@ -129,7 +135,7 @@
             arr.push(v)
           }
         }
-        console.log(`refresh ${this.type} showList.length = ${arr.length}`)
+        // console.log(`refresh ${this.type} showList.length = ${arr.length}`)
         this.showList = arr
       },
       select (event, item) {
@@ -160,7 +166,6 @@
           this.$set(v, 'active', true)
           this.selected.push(v.id)
         }
-        this.refresh()
       },
       send (type, range, id) {
         let msg = {tasks: []}

@@ -46,8 +46,6 @@ App.prototype.init = async function () {
         break
       case 'new':
         config.cos = {
-          // todo only for debug
-          AppId: '1253834952',
           SecretId: arg.form.SecretId,
           SecretKey: arg.form.SecretKey
         }
@@ -76,6 +74,8 @@ App.prototype.init = async function () {
         let ss = v.Name.split('-')
         v.Name = ss[0]
         v.AppId = ss[1]
+        config.cos.AppId = v.AppId
+        cos.options.AppId = v.AppId
         if (Array.isArray(result[v.AppId])) {
           result[v.AppId].push(v)
         } else {
@@ -161,6 +161,15 @@ App.prototype.init = async function () {
 
   ipcMain.on('DeleteObject', (event, arg) => {
     cos.deleteObject(arg, (err, data) => {
+      if (err) {
+        event.sender.send('DeleteObject-error', err)
+      }
+      event.sender.send('DeleteObject-data', data)
+    })
+  })
+
+  ipcMain.on('CopyObject', (event, arg) => {
+    cos.putObjectCopy(arg, (err, data) => {
       if (err) {
         event.sender.send('DeleteObject-error', err)
       }
@@ -460,15 +469,17 @@ function* uploadGenerator (name, prefix) {
   src.push(name)
 
   while (src.length) {
-    let dir = src.shift()
+    let dir = src.pop()
+    let subsrc = []
     for (let name of fs.readdirSync(dir)) {
       name = path.join(dir, name)
       if (fs.statSync(name).isDirectory()) {
-        src.push(name)
+        subsrc.unshift(name)
         continue
       }
       yield {name, key: prefix + name.substr(dirLen).replace('\\', '/')}
     }
+    src.push(...subsrc)
   }
 }
 
