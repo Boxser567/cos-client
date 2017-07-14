@@ -18,9 +18,9 @@ const router = new Router({
       }
     },
     {
-      path: '/new',
-      name: 'new',
-      component: require('@/components/new')
+      path: '/locked',
+      name: 'locked',
+      component: require('@/components/locked')
     },
     {
       path: '/',

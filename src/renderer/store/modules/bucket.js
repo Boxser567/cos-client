@@ -4,13 +4,13 @@
 import { ipcRenderer } from 'electron'
 
 const state = {
-  bucketList: [],
+  bucketList: null,
   currentBucket: null,
   menu: {
     viewMenu: false,
     top: '0px',
     left: '0px'
-  }
+  },
 
 }
 
@@ -18,28 +18,26 @@ const mutations = {
   getMuService (state, data) {
     console.log('bucket列表', data)
     for (let key in data) {
-      data[key].forEach(n=>n.active=false)
+      data[key].forEach(n => n.active = false)
     }
     state.bucketList = data
   },
 
-  bucketActive (state, bucket) {
+  bucketActive (state, bucketName) {
     for (let key in state.bucketList) {
-      if (key === bucket.AppId) {
-        state.bucketList[key].forEach(x => {
-          if (x.Name === bucket.Name) {
-            x.active = true
-          } else {
-            x.active = false
-          }
-        })
-      } else {
-        state.bucketList[key].forEach(n => n.active = false)
-      }
+      state.bucketList[key].forEach(x => {
+        if (x.Name === bucketName) {
+          x.active = true
+        } else {
+          x.active = false
+        }
+      })
     }
   },
 
-  currentBucket (state, val) {
+  currentBucket
+    (state, val)
+  {
     state.currentBucket = val
   }
 
@@ -51,17 +49,11 @@ const actions = {
       ipcRenderer.send('ListBucket')
 
       ipcRenderer.once('ListBucket-data', function (event, data) {
-        if (data && typeof data === 'object') {
-          for (let key in data) {
-            data[key].forEach(n => n.active = false)
-          }
-        }
         commit('getMuService', data)
-        resolve()
+        resolve(data)
       })
 
       ipcRenderer.once('ListBucket-error', function (event, err) {
-        console.log(err)
         reject(err)
       })
     })

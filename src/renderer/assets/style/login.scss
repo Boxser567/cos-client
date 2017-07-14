@@ -1,0 +1,24 @@
+.login-form ,.locked-form{
+  width: 320px;
+  padding: 40px;
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  margin-left: -200px;
+  input {
+    border: none;
+    color: #fff;
+    background: rgba(255, 255, 255, .1);
+  }
+}
+
+.login-form button {
+  width: 43%;
+  &:nth-child(2) {
+    margin-left: 12.3333%;
+  }
+}
+
+.locked-form button{
+  width: 100%;
+}
