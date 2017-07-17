@@ -179,38 +179,53 @@ App.prototype.init = async function () {
 
   ipcMain.on('GetUploadTasks', async (event) => {
     if (uploads) {
-      uploads.refresher.event = event
-      uploads.refresh(true)
+      uploads.removeAllListeners('refresh')
+      uploads.on('refresh', (data) => {
+        try {
+          event.sender.send('GetUploadTasks-data', data)
+        } catch (e) {
+          console.error(e)
+        }
+      })
+      uploads.refresh()
       return
     }
     uploads = new Tasks(3)
-    uploads.setRefresher(event, 'GetUploadTasks-data')
+
+    uploads.on('done', (task, result) => {
+      task.progress.loaded = task.progress.total
+      console.log('task done', task.id)
+    })
+
+    uploads.on('cancel', (task, result) => {
+      console.log('cancel', task.id)
+    })
+
+    uploads.on('error', (task, err) => {
+      console.error(err)
+    })
+
+    uploads.on('refresh', (data) => {
+      try {
+        event.sender.send('GetUploadTasks-data', data)
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
     let tasks = await init.upload()
     for (let t of tasks) {
       try {
         let task = await new UploadTask(cos, t.name, t.params, t.option)
-        uploads.newTask(task).then(
-          () => {
-            task.modify = true
-            task.progress.loaded = task.progress.total
-            uploads.refresh()
-          },
-          err => {
-            task.modify = true
-            if (err.message !== 'cancel') {
-              console.log('task error', err)
-            }
-            uploads.refresh()
-          })
+        uploads.newTask(task)
         task.progress.loaded = t.loaded
         task.progress.total = t.total
         task.status = t.status
-        uploads.refresh()
       } catch (e) {
         console.log(e)
       }
     }
-    uploads.refresh(true)
+    uploads.refresh()
   })
 
   ipcMain.on('NewUploadTasks', async (event, arg) => {
@@ -232,29 +247,14 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
-          // newTask.then 在整个上传完成后调用
-          uploads.newTask(task).then(
-            () => {
-              task.modify = true
-              task.progress.loaded = task.progress.total
-              uploads.refresh()
-              console.log('task done', task.id)
-            },
-            err => {
-              task.modify = true
-              if (err.message !== 'cancel') {
-                console.log('task error', err)
-              }
-              uploads.refresh()
-            })
+          uploads.newTask(task)
         } catch (e) {
           console.log(e)
         }
         uploads.next()
-        uploads.refresh() // newTask, next 都有更新逻辑
       }
     }
-    uploads.refresh(true)
+    uploads.refresh()
   })
 
   ipcMain.on('PauseUploadTasks', (event, arg) => {
@@ -289,38 +289,49 @@ App.prototype.init = async function () {
 
   ipcMain.on('GetDownloadTasks', async (event) => {
     if (downloads) {
-      downloads.refresher.event = event
-      downloads.refresh(true)
+      downloads.removeAllListeners('refresh')
+      downloads.on('refresh', (data) => {
+        try {
+          event.sender.send('GetDownloadTasks-data', data)
+        } catch (e) {
+          console.error(e)
+        }
+      })
+      downloads.refresh()
       return
     }
     downloads = new Tasks(3)
-    downloads.setRefresher(event, 'GetDownloadTasks-data')
+
+    downloads.on('done', (task, result) => {
+      task.progress.loaded = task.progress.total
+      console.log('task done', task.id)
+    })
+
+    downloads.on('error', (task, err) => {
+      console.error(err)
+    })
+
+    downloads.on('refresh', (data) => {
+      try {
+        event.sender.send('GetDownloadTasks-data', data)
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
     let tasks = await init.download()
     for (let t of tasks) {
       try {
         let task = await new DownloadTask(cos, t.name, t.params, t.option)
-        downloads.newTask(task).then(
-          () => {
-            task.modify = true
-            task.progress.loaded = task.progress.total
-            downloads.refresh()
-          },
-          err => {
-            task.modify = true
-            if (err.message !== 'cancel') {
-              console.log('task error', err)
-            }
-            downloads.refresh()
-          })
+        downloads.newTask(task)
         task.progress.loaded = t.loaded
         task.progress.total = t.total
         task.status = t.status
-        downloads.refresh()
       } catch (e) {
         console.log(e)
       }
     }
-    downloads.refresh(true)
+    downloads.refresh()
   })
 
   ipcMain.on('NewDownloadTasks', async (event, arg) => {
@@ -350,20 +361,8 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
-          downloads.newTask(task).then(
-            result => {
-              task.modify = true
-              console.log('task done')
-              downloads.refresh()
-            },
-            err => {
-              task.modify = true
-              if (err.message !== 'cancel') console.log(err)
-              downloads.refresh()
-            }
-          )
+          downloads.newTask(task)
           downloads.next()
-          downloads.refresh()
         } catch (err) {
           console.log(err)
         }
@@ -383,7 +382,7 @@ App.prototype.init = async function () {
         params.Marker = result.NextMarker
       } while (result.IsTruncated)
     }
-    downloads.refresh(true)
+    downloads.refresh()
   })
 
   ipcMain.on('PauseDownloadTasks', (event, arg) => {
