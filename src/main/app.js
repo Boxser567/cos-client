@@ -86,6 +86,15 @@ App.prototype.init = async function () {
     })
   })
 
+  ipcMain.on('HeadBucket', (event, arg) => {
+    cos.headBucket(arg, (err, data) => {
+      if (err) {
+        event.sender.send('HeadBucket-error', err)
+      }
+      event.sender.send('HeadBucket-data', data)
+    })
+  })
+
   /**
    * 创建 Bucket，并初始化访问权限
    * @param  {object}   arg     参数对象，必须
@@ -100,15 +109,6 @@ App.prototype.init = async function () {
    * @return  {object}    data  返回的数据
    *     @return  {string}    data.Location  操作地址
    */
-  ipcMain.on('HeadBucket', (event, arg) => {
-    cos.headBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('HeadBucket-error', err)
-      }
-      event.sender.send('HeadBucket-data', data)
-    })
-  })
-
   ipcMain.on('PutBucket', (event, arg) => {
     cos.putBucket(arg, (err, data) => {
       if (err) {
@@ -195,6 +195,10 @@ App.prototype.init = async function () {
     })
   })
 
+  ipcMain.on('GetObjectUrl', (event, arg) => {
+    event.returnValue = `${arg.Bucket}-${cos.options.AppId}.${arg.Region}.myqcloud.com/${arg.Key}?Authorization=${cos.getAuth(arg)}`
+  })
+
   ipcMain.on('DeleteObject', (event, arg) => {
     cos.deleteObject(arg, (err, data) => {
       if (err) {
@@ -230,7 +234,7 @@ App.prototype.init = async function () {
             Bucket: arg.dst.Bucket,
             Region: arg.dst.Region,
             Key: arg.dst.Prefix + item,
-            CopySource: `${arg.src.Bucket}-${config.cos.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
+            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
           })
         } catch (err) {
           console.log(err)

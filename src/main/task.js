@@ -573,13 +573,15 @@ function DownloadTask (cos, name, params, option = {}) {
         reject(err)
         return
       }
-      this.file.fileSize = parseInt(result['content-length'])
+      this.file.fileSize = parseInt(result.headers['content-length'])
+      this.progress.total = this.file.fileSize
       resolve(this)
     })
   })
 }
 
 DownloadTask.prototype.start = function () {
+  this.cancel = false
   this.params.Output = fs.createWriteStream(this.file.fileName + '.tmp')
 
   this.params.Output.on('drain', () => {
@@ -597,6 +599,9 @@ DownloadTask.prototype.start = function () {
   }).then(() => {
     fs.renameSync(this.file.fileName + '.tmp', this.file.fileName)
     return Promise.resolve()
+  }, (err) => {
+    fs.unlinkSync(this.file.fileName + '.tmp')
+    throw err
   })
 }
 
