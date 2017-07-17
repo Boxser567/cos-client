@@ -118,6 +118,24 @@ App.prototype.init = async function () {
     })
   })
 
+  ipcMain.on('GetBucketAcl', (event, arg) => {
+    cos.getBucketAcl(arg, (err, data) => {
+      if (err) {
+        event.sender.send('GetBucketAcl-error', err)
+      }
+      event.sender.send('GetBucketAcl-data', data)
+    })
+  })
+
+  ipcMain.on('PutBucketAcl', (event, arg) => {
+    cos.putBucketAcl(arg, (err, data) => {
+      if (err) {
+        event.sender.send('PutBucketAcl-error', err)
+      }
+      event.sender.send('PutBucketAcl-data', data)
+    })
+  })
+
   /**
    * 删除 Bucket
    * @param  {object}   arg     参数对象，必须
@@ -159,6 +177,24 @@ App.prototype.init = async function () {
     })
   })
 
+  ipcMain.on('GetObjectAcl', (event, arg) => {
+    cos.putObjectCopy(arg, (err, data) => {
+      if (err) {
+        event.sender.send('GetObjectAcl-error', err)
+      }
+      event.sender.send('GetObjectAcl-data', data)
+    })
+  })
+
+  ipcMain.on('PutObjectAcl', (event, arg) => {
+    cos.putObjectCopy(arg, (err, data) => {
+      if (err) {
+        event.sender.send('PutObjectAcl-error', err)
+      }
+      event.sender.send('PutObjectAcl-data', data)
+    })
+  })
+
   ipcMain.on('DeleteObject', (event, arg) => {
     cos.deleteObject(arg, (err, data) => {
       if (err) {
@@ -168,13 +204,58 @@ App.prototype.init = async function () {
     })
   })
 
-  ipcMain.on('CopyObject', (event, arg) => {
-    cos.putObjectCopy(arg, (err, data) => {
-      if (err) {
-        event.sender.send('DeleteObject-error', err)
+  ipcMain.on('CopyObjects', async (event, arg) => {
+    /**
+     * @param  {object}    arg
+     * @param  {object}    arg.src
+     * @param  {string}    arg.src.Bucket
+     * @param  {string}    arg.src.Region
+     * @param  {string}    arg.src.Prefix
+     * @param  {object}    arg.dst
+     * @param  {string}    arg.dst.Bucket
+     * @param  {string}    arg.dst.Region
+     * @param  {string}    arg.dst.Prefix
+     * @param  {string[]}  [arg.Keys]     文件复制
+     * @param  {string[]}  [arg.Dirs]     文件夹复制
+     */
+
+    if (arg.dst.Prefix !== '') {
+      arg.dst.Prefix = arg.dst.Prefix.substr(-1) === '/' ? arg.dst.Prefix : arg.dst.Prefix + '/'
+    }
+
+    async function fn (contents) {
+      for (let item of copyGenerator(arg.src.Prefix, contents)) {
+        try {
+          await putObjectCopy(cos, {
+            Bucket: arg.dst.Bucket,
+            Region: arg.dst.Region,
+            Key: arg.dst.Prefix + item,
+            CopySource: `${arg.src.Bucket}-${config.cos.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
+          })
+        } catch (err) {
+          console.log(err)
+        }
       }
-      event.sender.send('DeleteObject-data', data)
-    })
+    }
+
+    if (arg.Keys) {
+      await fn(arg.Keys.map(k => ({Key: k, Size: '1'})))
+    }
+
+    let params = {
+      Bucket: arg.src.Bucket,
+      Region: arg.src.Region
+    }
+
+    for (let dir of arg.Dirs) {
+      params.Prefix = dir
+      let result
+      do {
+        result = await getBucket(cos, params)
+        await fn(result.Contents)
+        params.Marker = result.NextMarker
+      } while (result.IsTruncated === 'true')
+    }
   })
 
   ipcMain.on('GetUploadTasks', async (event) => {
@@ -183,8 +264,9 @@ App.prototype.init = async function () {
       uploads.on('refresh', (data) => {
         try {
           event.sender.send('GetUploadTasks-data', data)
-        } catch (e) {
-          console.error(e)
+        } catch (err) {
+          console.warn(err)
+          uploads.removeAllListeners('refresh')
         }
       })
       uploads.refresh()
@@ -208,8 +290,9 @@ App.prototype.init = async function () {
     uploads.on('refresh', (data) => {
       try {
         event.sender.send('GetUploadTasks-data', data)
-      } catch (e) {
-        console.error(e)
+      } catch (err) {
+        console.warn(err)
+        uploads.removeAllListeners('refresh')
       }
     })
 
@@ -339,10 +422,10 @@ App.prototype.init = async function () {
      * @param  {object}    arg
      * @param  {string}    arg.Bucket
      * @param  {string}    arg.Region
-     * @param  {string}    arg.Path       本地路径
-     * @param  {string}    arg.Prefix     远程路径
-     * @param  {string[]}  [arg.Keys]     文件下载
-     * @param  {string[]}  [arg.Dirs] 文件夹下载
+     * @param  {string}    arg.Path     本地路径
+     * @param  {string}    arg.Prefix   远程路径
+     * @param  {string[]}  [arg.Keys]   文件下载
+     * @param  {string[]}  [arg.Dirs]   文件夹下载
      */
 
     // todo 同源不同目标
@@ -380,7 +463,7 @@ App.prototype.init = async function () {
         result = await getBucket(cos, params)
         await fn(result.Contents)
         params.Marker = result.NextMarker
-      } while (result.IsTruncated)
+      } while (result.IsTruncated === 'true')
     }
     downloads.refresh()
   })
@@ -496,9 +579,28 @@ function* downloadGenerator (downloadPath, prefix, contents) {
   }
 }
 
+function* copyGenerator (src, contents) {
+  if (src !== '') {
+    src = src.substr(-1) === '/' ? src : src + '/'
+  }
+  let slen = src.length
+  for (let content of contents) {
+    if (content.Size === '0') continue
+    yield content.Key.substr(slen)
+  }
+}
+
 function getBucket (cos, params) {
   return new Promise((resolve, reject) => {
     cos.getBucket(params, (err, data) => {
+      err ? reject(err) : resolve(data)
+    })
+  })
+}
+
+function putObjectCopy (cos, params) {
+  return new Promise((resolve, reject) => {
+    cos.putObjectCopy(params, (err, data) => {
       err ? reject(err) : resolve(data)
     })
   })
