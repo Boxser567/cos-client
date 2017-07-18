@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "axios": "^0.16.1",
+    "clipboard": "^1.7.1",
     "cos-nodejs-sdk-v5": "^2.0.1",
     "cos-util": "^0.2.3",
     "electron-builder": "^19.13.0",

@@ -91,68 +91,17 @@ const state = {
   ],
 
   newFolder: false, //新建文件夹
-
-  dialogGetHttp: {
-    isShow: false,
-    bucket: null,
-    url: null
-  },
-
-  fileHeaderInfo: {
-    isShow: false,
-    initialData: [{
-      value: '1',
-      label: 'Cache-Control'
-    }, {
-      value: '2',
-      label: 'Content-Type'
-    }, {
-      value: '3',
-      label: 'Content-Disposition'
-    }, {
-      value: '4',
-      label: 'Content-Language'
-    }, {
-      value: '5',
-      label: 'Content-Encoding'
-    }, {
-      value: '6',
-      label: 'x-cos-meta'
-    }],
-    data: [{
-      date: [{
-        value: '1',
-        label: 'Cache-Control'
-      }, {
-        value: '2',
-        label: 'Content-Type'
-      }, {
-        value: '3',
-        label: 'Content-Disposition'
-      }, {
-        value: '4',
-        label: 'Content-Language'
-      }, {
-        value: '5',
-        label: 'Content-Encoding'
-      }, {
-        value: '6',
-        label: 'x-cos-meta'
-      }],
-      cosMeta: '',
-      value: '',
-      select: ''
-    }]
-  }
 }
 
 const mutations = {
   fileloading(state, val){    //文件加载
     state.fileloading = val.loading
   },
+
   showFileProgress(state){
     state.isShowFileProgress = !state.isShowFileProgress
   },
+
   updataProgress(state, data){    //初始化上传文件列表
     console.log('data', data)
     if (!state.uploadProgress.status) {
@@ -184,6 +133,7 @@ const mutations = {
     // console.log('总上传数量: ', data, '\n页面渲染列表: ')
 
   },
+
   uploadItemAdd(state){
     if (state.uploadProgress.list.length > state.uploadItem.length) {
       state.uploadProgress.loading = true
@@ -207,6 +157,7 @@ const mutations = {
     }
 
   },
+
   uploadItemSub(state){
     if (state.uploadProgress.page === 0) return
     state.uploadProgress.loading = true
@@ -232,6 +183,7 @@ const mutations = {
     state.uploadProgress.loading = false
     state.uploadProgress.page -= 1
   },
+
   uploadLoading(state, val){
     state.uploadProgress.loading = val
   },
@@ -243,6 +195,7 @@ const mutations = {
     // state.downloadProgress.push()
     // }
   },
+
   selectFile(state, val) {       //选择文件
     if (!state.filelist) return
 
@@ -288,6 +241,7 @@ const mutations = {
     }
 
   },
+
   unSelectFile(state){      //取消选中文件
     if (!state.selectFile) return
     state.selectFile.forEach(function (item) {
@@ -297,8 +251,8 @@ const mutations = {
       }
     })
     state.selectFile = []
-  }
-  ,
+  },
+
   getFileList(state, data){       //获取当前文件列表
     // console.log('当前文件列表', data)
     let index = null
@@ -317,6 +271,7 @@ const mutations = {
     if (index != null) data.objects.splice(index, 1)
     state.filelist = data.objects.concat(data.dirs)
   },
+
   searchFileList(state, data){    //搜索文件
     let index = null
     if (data.objects.length) {
@@ -339,39 +294,6 @@ const mutations = {
       }
     })
     state.filelist = serchlist
-  },
-
-  getFileHttp(state, param){      //获取文件 地址
-    if (state.selectFile)
-      state.dialogGetHttp = {
-        isShow: true,
-        bucket: param.Bucket,
-        url: 'http://' + param.Bucket + '-1253834952.' + param.Region + '.myqcloud.com/' + state.selectFile.Key
-      }
-  },
-  setFileHttpHidden(state){     //文件地址 模态窗口显示隐藏
-    state.dialogGetHttp.isShow = false
-  },
-  setHttp(state, val){          //Http 模态窗显示隐藏
-    if (val === 'cancel')
-      state.fileHeaderInfo.isShow = false
-    else {
-      state.fileHeaderInfo.isShow = true
-    }
-  },
-  selectHttpChange(state, parms){
-    state.fileHeaderInfo.data.forEach(function (item, idx) {
-      if (idx === parms.index) {
-        item.select = parms.list.select
-      }
-    })
-  },
-  addHttpDom(state){
-    state.fileHeaderInfo.data.push({date: state.fileHeaderInfo.initialData, value: '', select: '', cosMeta: ''})
-  },
-  deleteHttpDom(state, index)
-  {
-    state.fileHeaderInfo.data.splice(index, 1)
   },
 
   selectLoadFile(state, arr){    //选中上传文件列表de文件
@@ -440,6 +362,7 @@ const mutations = {
   newFolder(state, val){
     state.newFolder = val
   },
+
   uploadFile(state, pms){
     remote.dialog.showOpenDialog({
       filters: [{name: 'All Files', extensions: ['*']}],
@@ -563,6 +486,7 @@ const mutations = {
         break
     }
   },
+
   downloadFile(state, pms){
     if (!state.selectFile) return
     remote.dialog.showOpenDialog({
@@ -587,6 +511,7 @@ const mutations = {
     })
 
   },
+
   downloadFileCtrl(state, val){
     if (!val)return
     if (!state.downloadProgress.list) return
