@@ -1,51 +1,62 @@
 <template>
-    <div class="locked-form">
-        <el-form>
-            <el-form-item>
-                <el-input type="password" size="large" v-model="password" placeholder="password"></el-input>
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="login">登录</el-button>
-            </el-form-item>
-            <el-form-item>
-                <el-button  @click="clear">清除</el-button>
-            </el-form-item>
-        </el-form>
-    </div>
+    <el-form class="login-form">
+        <el-form-item>
+            <el-input type="text" v-model="AppId" size="large" placeholder="App ID"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-input type="text" v-model="SecretId" size="large" placeholder="Access Key ID"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-input type="password" v-model="SecretKey" size="large" placeholder="Access Key Secret"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-input type="password" v-model="password1" placeholder="password1"></el-input>
+        </el-form-item>
+        <!--<el-form-item>-->
+        <!--<el-input type="password" v-model="password2" placeholder="password2"></el-input>-->
+        <!--</el-form-item>-->
+        <el-form-item>
+            <el-button @click="debug">debug</el-button>
+            <el-button type="primary" @click="save">登录</el-button>
+        </el-form-item>
+    </el-form>
 </template>
 
 <script>
   import { ipcRenderer } from 'electron'
   export default {
-    name: 'loginPage',
+    name: 'newPage',
     data () {
       return {
-        password: ''
+        AppId: '',
+        SecretId: '',
+        SecretKey: '',
+        password1: '',
+        password2: ''
       }
     },
     created () {},
     methods: {
-      login () {
-        let err = ipcRenderer.sendSync('Login', {
-          action: 'check',
-          form: {
-            password: this.password + ''
-          }
+      save () {
+        this.$store.dispatch('setConfig', {
+          cos: {
+            AppId: this.AppId,
+            SecretId: this.SecretId,
+            SecretKey: this.SecretKey
+          },
+          password: this.password1
         })
-        if (err) {
-          alert(err.message)
-          return
-        }
-        // 检查Secret同时获取数据
-        this.$store.dispatch('bucket/getService').then((res) => {
-          console.log(res)
+        this.$store.dispatch('bucket/getService').then(() => {
           this.$router.replace('/')
-//          this.$message('请正确填写登录信息！');
+        }, (err) => {
+          ipcRenderer.send('ClearAll')
+          this.$message(err.error.Message)
         })
       },
-      clear () {
-        ipcRenderer.sendSync('Login', {action: 'clear'})
-        this.$router.replace('/locked')
+      debug () {
+        this.AppId = '1253834952'
+        this.SecretId = 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4'
+        this.SecretKey = 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
       }
     }
   }

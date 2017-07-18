@@ -4,6 +4,7 @@
 'use strict'
 import fs from 'fs'
 import crypto from 'crypto'
+import events from 'events'
 
 /**
  * Enum for task status.
@@ -19,6 +20,7 @@ const TaskStatus = {
 }
 
 function Tasks (max) {
+  events.EventEmitter.call(this)
   let nextId = 0
   let maxActivity = max
   let activity = 0
@@ -40,17 +42,17 @@ function Tasks (max) {
   }
   this.full = () => activity >= max
   this.empty = () => activity === 0
+  this.initRefresh()
 }
+
+Tasks.prototype = Object.create(events.EventEmitter.prototype)
 
 Tasks.prototype.newTask = function (task) {
   let id = this.getId()
   task.id = id
   task.status = TaskStatus.WAIT
   this.tasks[id] = task
-  return new Promise((resolve, reject) => {
-    task.resolve = resolve
-    task.reject = reject
-  })
+  this.emit('new', task)
 }
 
 Tasks.prototype.findTask = function (id) {
@@ -73,32 +75,32 @@ Tasks.prototype.next = async function () {
     try {
       let result = await task.start()
       task.status = TaskStatus.COMPLETE
-      task.resolve(result)
+      this.emit('done', task, result)
     } catch (err) {
-      task.status = err.message === 'cancel' ? TaskStatus.PAUSE : TaskStatus.ERROR
-      task.reject(err)
+      if (err.message === 'cancel') {
+        task.status = TaskStatus.PAUSE
+        this.emit('cancel', task)
+      } else {
+        task.status = TaskStatus.ERROR
+        this.emit('error', task, err)
+      }
     }
+    task.modify = true
     this.done()
   }
 }
 
-Tasks.prototype.setRefresher = function (event, channel) {
+Tasks.prototype.initRefresh = function () {
   let refresh = false
-  let fast
-  let auto
+  let force
   let count = 10
-  this.refresher = {}
-  this.refresher.event = event
-  this.refresher.obj = setInterval(() => {
+  this.refresher = setInterval(() => {
     count--
-    if (!refresh || (!fast && count > 0)) return
+    if ((!refresh && this.empty()) || (!force && count > 0)) return
+
     refresh = false
-    fast = false
+    force = false
     count = 10
-    if (this.empty()) {
-      clearInterval(auto)
-      auto = null
-    }
     let s = []
     this.tasks.forEach(t => {
       s.push({
@@ -113,27 +115,22 @@ Tasks.prototype.setRefresher = function (event, channel) {
       })
       t.modify = false
     })
-    try {
-      this.refresher.event.sender.send(channel, s)
-    } catch (e) {
-      // 可能由窗口关闭先于事件发出导致
-      console.log(e)
-    }
+    this.emit('refresh', s)
   }, 200)
 
-  this.refresh = isFast => {
-    fast = isFast || fast
+  this.on('new', () => { refresh = true })
+  this.on('done', () => { refresh = true })
+  this.on('error', () => { refresh = true })
+  this.on('cancel', () => { refresh = true })
+
+  this.refresh = () => {
+    force = true
     refresh = true
-    if (this.empty()) {
-      clearInterval(auto)
-      auto = null
-      return
-    }
-    auto = auto || setInterval(() => { refresh = true }, 1000)
   }
 }
 
 /**
+ * 对指定task发出pause指令
  * @param {int[]}   tasks
  * @param {boolean} all
  * @param {boolean} wait
@@ -174,6 +171,7 @@ Tasks.prototype.pause = function (tasks, all, wait) {
 }
 
 /**
+ * 对指定task发出resume指令
  * @param {int[]}   tasks
  * @param {boolean} all
  */
@@ -203,6 +201,7 @@ Tasks.prototype.resume = function (tasks, all) {
 }
 
 /**
+ * 对指定task发出delete指令
  * @param {int[]}   tasks
  * @param {boolean} all
  * @param {boolean} onlyComplete
@@ -574,14 +573,16 @@ function DownloadTask (cos, name, params, option = {}) {
         reject(err)
         return
       }
-      this.file.fileSize = parseInt(result['content-length'])
+      this.file.fileSize = parseInt(result.headers['content-length'])
+      this.progress.total = this.file.fileSize
       resolve(this)
     })
   })
 }
 
 DownloadTask.prototype.start = function () {
-  this.params.Output = fs.createWriteStream(this.file.fileName)
+  this.cancel = false
+  this.params.Output = fs.createWriteStream(this.file.fileName + '.tmp')
 
   this.params.Output.on('drain', () => {
     this.progress.loaded = this.params.Output.bytesWritten
@@ -595,6 +596,12 @@ DownloadTask.prototype.start = function () {
     this.cos.getObject(this.params, (err, result) => {
       err ? reject(err) : resolve(result)
     })
+  }).then(() => {
+    fs.renameSync(this.file.fileName + '.tmp', this.file.fileName)
+    return Promise.resolve()
+  }, (err) => {
+    fs.unlinkSync(this.file.fileName + '.tmp')
+    throw err
   })
 }
 

@@ -31,36 +31,23 @@ App.prototype.init = async function () {
 
   let cos
 
-  ipcMain.on('LoginCheck', (event) => {
-    event.returnValue = !!config.cos
+  ipcMain.on('SetConfig', (event, cfg) => {
+    config = cfg
+    cos = new Cos(cfg.cos)
   })
 
-  ipcMain.on('Login', (event, arg) => {
-    switch (arg.action) {
-      case 'check':
-        if (arg.form.password !== config.password) {
-          event.returnValue = {message: 'password mismatch'}
-          return
-        }
-        cos = new Cos(config.cos)
-        break
-      case 'new':
-        config.cos = {
-          SecretId: arg.form.SecretId,
-          SecretKey: arg.form.SecretKey
-        }
-        config.password = arg.form.password
-        cos = new Cos(config.cos)
-        break
-      case 'clear':
-        // 只能在GetUploadTasks调用前调用
-        config = {}
-        uploads = null
-        downloads = null
-        clear()
-        break
+  ipcMain.on('GetConfig', (event) => {
+    if (config.cos) {
+      cos = new Cos(config.cos)
     }
-    event.returnValue = null
+    event.returnValue = config
+  })
+
+  ipcMain.on('ClearAll', () => {
+    config = {}
+    uploads = null
+    downloads = null
+    clear()
   })
 
   ipcMain.on('ListBucket', (event) => {
@@ -86,57 +73,6 @@ App.prototype.init = async function () {
     })
   })
 
-  /**
-   * 创建 Bucket，并初始化访问权限
-   * @param  {object}   arg     参数对象，必须
-   *     @param  {string}   arg.Bucket     Bucket名称，必须
-   *     @param  {string}   arg.Region     地域名称，必须
-   *     @param  {string}   arg.ACL        用户自定义文件权限，可以设置：private，public-read；默认值：private，非必须
-   *     @param  {string}   arg.GrantRead     赋予被授权者读的权限，格式x-cos-grant-read: uin=" ",uin=" "，非必须
-   *     @param  {string}   arg.GrantWrite     赋予被授权者写的权限，格式x-cos-grant-write: uin=" ",uin=" "，非必须
-   *     @param  {string}   arg.GrantFullControl     赋予被授权者读写权限，格式x-cos-grant-full-control: uin=" ",uin=" "，非必须
-   * @param  {function}   callback      回调函数，必须
-   * @return  {object}    err     请求失败的错误，如果请求成功，则为空。
-   * @return  {object}    data  返回的数据
-   *     @return  {string}    data.Location  操作地址
-   */
-  ipcMain.on('HeadBucket', (event, arg) => {
-    cos.headBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('HeadBucket-error', err)
-      }
-      event.sender.send('HeadBucket-data', data)
-    })
-  })
-
-  ipcMain.on('PutBucket', (event, arg) => {
-    cos.putBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('PutBucket-error', err)
-      }
-      event.sender.send('PutBucket-data', data)
-    })
-  })
-
-  /**
-   * 删除 Bucket
-   * @param  {object}   arg     参数对象，必须
-   *     @param  {string}   arg.Bucket     Bucket名称，必须
-   *     @param  {string}   arg.Region     地域名称，必须
-   * @param  {function}   callback      回调函数，必须
-   * @return  {object}    err     请求失败的错误，如果请求成功，则为空。
-   * @return  {object}    data  返回的数据
-   *     @return  {string}    data.Location  操作地址
-   */
-  ipcMain.on('DeleteBucket', (event, arg) => {
-    cos.deleteBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('DeleteBucket-error', err)
-      }
-      event.sender.send('DeleteBucket-data', data)
-    })
-  })
-
   ipcMain.on('ListObject', (event, arg) => {
     /**
      * @param  {object}   arg
@@ -150,15 +86,6 @@ App.prototype.init = async function () {
     )
   })
 
-  ipcMain.on('HeadObject', (event, arg) => {
-    cos.headObject(arg, (err, data) => {
-      if (err) {
-        event.sender.send('HeadObject-error', err)
-      }
-      event.sender.send('HeadObject-data', data)
-    })
-  })
-
   ipcMain.on('DeleteObject', (event, arg) => {
     cos.deleteObject(arg, (err, data) => {
       if (err) {
@@ -168,49 +95,111 @@ App.prototype.init = async function () {
     })
   })
 
-  ipcMain.on('CopyObject', (event, arg) => {
-    cos.putObjectCopy(arg, (err, data) => {
-      if (err) {
-        event.sender.send('DeleteObject-error', err)
+  ipcMain.on('CopyObjects', async (event, arg) => {
+    /**
+     * @param  {object}    arg
+     * @param  {object}    arg.src
+     * @param  {string}    arg.src.Bucket
+     * @param  {string}    arg.src.Region
+     * @param  {string}    arg.src.Prefix
+     * @param  {object}    arg.dst
+     * @param  {string}    arg.dst.Bucket
+     * @param  {string}    arg.dst.Region
+     * @param  {string}    arg.dst.Prefix
+     * @param  {string[]}  [arg.Keys]     文件复制
+     * @param  {string[]}  [arg.Dirs]     文件夹复制
+     */
+
+    if (arg.dst.Prefix !== '') {
+      arg.dst.Prefix = arg.dst.Prefix.substr(-1) === '/' ? arg.dst.Prefix : arg.dst.Prefix + '/'
+    }
+
+    async function fn (contents) {
+      for (let item of copyGenerator(arg.src.Prefix, contents)) {
+        try {
+          await putObjectCopy(cos, {
+            Bucket: arg.dst.Bucket,
+            Region: arg.dst.Region,
+            Key: arg.dst.Prefix + item,
+            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
+          })
+        } catch (err) {
+          console.log(err)
+        }
       }
-      event.sender.send('DeleteObject-data', data)
-    })
+    }
+
+    if (arg.Keys) {
+      await fn(arg.Keys.map(k => ({Key: k, Size: '1'})))
+    }
+
+    let params = {
+      Bucket: arg.src.Bucket,
+      Region: arg.src.Region
+    }
+
+    for (let dir of arg.Dirs) {
+      params.Prefix = dir
+      let result
+      do {
+        result = await getBucket(cos, params)
+        await fn(result.Contents)
+        params.Marker = result.NextMarker
+      } while (result.IsTruncated === 'true')
+    }
   })
 
   ipcMain.on('GetUploadTasks', async (event) => {
     if (uploads) {
-      uploads.refresher.event = event
-      uploads.refresh(true)
+      uploads.removeAllListeners('refresh')
+      uploads.on('refresh', (data) => {
+        try {
+          event.sender.send('GetUploadTasks-data', data)
+        } catch (err) {
+          console.warn(err)
+          uploads.removeAllListeners('refresh')
+        }
+      })
+      uploads.refresh()
       return
     }
     uploads = new Tasks(3)
-    uploads.setRefresher(event, 'GetUploadTasks-data')
+
+    uploads.on('done', (task, result) => {
+      task.progress.loaded = task.progress.total
+      console.log('task done', task.id)
+    })
+
+    uploads.on('cancel', (task, result) => {
+      console.log('cancel', task.id)
+    })
+
+    uploads.on('error', (task, err) => {
+      console.error(err)
+    })
+
+    uploads.on('refresh', (data) => {
+      try {
+        event.sender.send('GetUploadTasks-data', data)
+      } catch (err) {
+        console.warn(err)
+        uploads.removeAllListeners('refresh')
+      }
+    })
+
     let tasks = await init.upload()
     for (let t of tasks) {
       try {
         let task = await new UploadTask(cos, t.name, t.params, t.option)
-        uploads.newTask(task).then(
-          () => {
-            task.modify = true
-            task.progress.loaded = task.progress.total
-            uploads.refresh()
-          },
-          err => {
-            task.modify = true
-            if (err.message !== 'cancel') {
-              console.log('task error', err)
-            }
-            uploads.refresh()
-          })
+        uploads.newTask(task)
         task.progress.loaded = t.loaded
         task.progress.total = t.total
         task.status = t.status
-        uploads.refresh()
       } catch (e) {
         console.log(e)
       }
     }
-    uploads.refresh(true)
+    uploads.refresh()
   })
 
   ipcMain.on('NewUploadTasks', async (event, arg) => {
@@ -232,29 +221,14 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
-          // newTask.then 在整个上传完成后调用
-          uploads.newTask(task).then(
-            () => {
-              task.modify = true
-              task.progress.loaded = task.progress.total
-              uploads.refresh()
-              console.log('task done', task.id)
-            },
-            err => {
-              task.modify = true
-              if (err.message !== 'cancel') {
-                console.log('task error', err)
-              }
-              uploads.refresh()
-            })
+          uploads.newTask(task)
         } catch (e) {
           console.log(e)
         }
         uploads.next()
-        uploads.refresh() // newTask, next 都有更新逻辑
       }
     }
-    uploads.refresh(true)
+    uploads.refresh()
   })
 
   ipcMain.on('PauseUploadTasks', (event, arg) => {
@@ -289,38 +263,49 @@ App.prototype.init = async function () {
 
   ipcMain.on('GetDownloadTasks', async (event) => {
     if (downloads) {
-      downloads.refresher.event = event
-      downloads.refresh(true)
+      downloads.removeAllListeners('refresh')
+      downloads.on('refresh', (data) => {
+        try {
+          event.sender.send('GetDownloadTasks-data', data)
+        } catch (e) {
+          console.error(e)
+        }
+      })
+      downloads.refresh()
       return
     }
     downloads = new Tasks(3)
-    downloads.setRefresher(event, 'GetDownloadTasks-data')
+
+    downloads.on('done', (task, result) => {
+      task.progress.loaded = task.progress.total
+      console.log('task done', task.id)
+    })
+
+    downloads.on('error', (task, err) => {
+      console.error(err)
+    })
+
+    downloads.on('refresh', (data) => {
+      try {
+        event.sender.send('GetDownloadTasks-data', data)
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
     let tasks = await init.download()
     for (let t of tasks) {
       try {
         let task = await new DownloadTask(cos, t.name, t.params, t.option)
-        downloads.newTask(task).then(
-          () => {
-            task.modify = true
-            task.progress.loaded = task.progress.total
-            downloads.refresh()
-          },
-          err => {
-            task.modify = true
-            if (err.message !== 'cancel') {
-              console.log('task error', err)
-            }
-            downloads.refresh()
-          })
+        downloads.newTask(task)
         task.progress.loaded = t.loaded
         task.progress.total = t.total
         task.status = t.status
-        downloads.refresh()
       } catch (e) {
         console.log(e)
       }
     }
-    downloads.refresh(true)
+    downloads.refresh()
   })
 
   ipcMain.on('NewDownloadTasks', async (event, arg) => {
@@ -328,10 +313,10 @@ App.prototype.init = async function () {
      * @param  {object}    arg
      * @param  {string}    arg.Bucket
      * @param  {string}    arg.Region
-     * @param  {string}    arg.Path       本地路径
-     * @param  {string}    arg.Prefix     远程路径
-     * @param  {string[]}  [arg.Keys]     文件下载
-     * @param  {string[]}  [arg.Dirs] 文件夹下载
+     * @param  {string}    arg.Path     本地路径
+     * @param  {string}    arg.Prefix   远程路径
+     * @param  {string[]}  [arg.Keys]   文件下载
+     * @param  {string[]}  [arg.Dirs]   文件夹下载
      */
 
     // todo 同源不同目标
@@ -350,20 +335,8 @@ App.prototype.init = async function () {
             Region: arg.Region,
             Key: item.key
           })
-          downloads.newTask(task).then(
-            result => {
-              task.modify = true
-              console.log('task done')
-              downloads.refresh()
-            },
-            err => {
-              task.modify = true
-              if (err.message !== 'cancel') console.log(err)
-              downloads.refresh()
-            }
-          )
+          downloads.newTask(task)
           downloads.next()
-          downloads.refresh()
         } catch (err) {
           console.log(err)
         }
@@ -381,9 +354,9 @@ App.prototype.init = async function () {
         result = await getBucket(cos, params)
         await fn(result.Contents)
         params.Marker = result.NextMarker
-      } while (result.IsTruncated)
+      } while (result.IsTruncated === 'true')
     }
-    downloads.refresh(true)
+    downloads.refresh()
   })
 
   ipcMain.on('PauseDownloadTasks', (event, arg) => {
@@ -497,9 +470,28 @@ function* downloadGenerator (downloadPath, prefix, contents) {
   }
 }
 
+function* copyGenerator (src, contents) {
+  if (src !== '') {
+    src = src.substr(-1) === '/' ? src : src + '/'
+  }
+  let slen = src.length
+  for (let content of contents) {
+    if (content.Size === '0') continue
+    yield content.Key.substr(slen)
+  }
+}
+
 function getBucket (cos, params) {
   return new Promise((resolve, reject) => {
     cos.getBucket(params, (err, data) => {
+      err ? reject(err) : resolve(data)
+    })
+  })
+}
+
+function putObjectCopy (cos, params) {
+  return new Promise((resolve, reject) => {
+    cos.putObjectCopy(params, (err, data) => {
       err ? reject(err) : resolve(data)
     })
   })
