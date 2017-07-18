@@ -9,7 +9,6 @@
     name: 'gk-cos-client',
     created () {
       this.$store.dispatch('getConfig')
-      console.log(this.$store.state.config)
       if (this.$store.state.config.cos) {
         this.$router.replace('/locked')
       } else {
