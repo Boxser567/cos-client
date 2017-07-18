@@ -32,17 +32,19 @@
                         </el-button>
                         <el-button size="small" :plain="true" :disabled="eableBtn()">复制
                         </el-button>
-                        <el-button size="small" :plain="true" @click="menuObj().deleteObj()" :disabled="eableBtn()">删除
+                        <el-button size="small" :plain="true" @click="deleteObj" :disabled="eableBtn()">删除
+                        </el-button>
+                        <el-button size="small" :plain="true" @click="dialogFileLimit =true" :disabled="eableBtn()">设置权限
                         </el-button>
                     </div>
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true" @click="menuObj().getFileUrl()"
+                        <el-button size="small" :plain="true" @click="dialogFileAdress = true"
                                    :disabled="eableBtn1('adress')">
                             获取地址
                         </el-button>
                     </div>
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true" @click="menuObj().dialogSetHttpFn()"
+                        <el-button size="small" :plain="true" @click="dialogSetHttpHead = true"
                                    :disabled="eableBtn1()">设置HTTP头
                         </el-button>
                     </div>
@@ -53,96 +55,26 @@
 
         <file-list :options="options"></file-list>
 
-        <el-dialog title="获取Object地址"
-                   custom-class="dialog-http"
-                   :visible.sync="dialogGetHttp.isShow"
-                   :close-on-click-modal="false"
-                   :close-on-press-escape="false"
-                   :show-close="false"
-                   size="small">
-            <el-row>
-                <el-col :span="8">文件名:</el-col>
-                <el-col :span="16">{{dialogGetHttp.bucket}}</el-col>
-            </el-row>
-            <el-row>
-                <el-col :span="8">地址:</el-col>
-                <el-col :span="16">
-                    <p id="myEle">{{dialogGetHttp.url}}</p>
-                    <el-button type="primary" size="small" @click="menuObj().selectText()">复制</el-button>
-                </el-col>
-            </el-row>
-            <div slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="menuObj().dialogHttpHideFn()">确 定</el-button>
-            </div>
-        </el-dialog>
+        <file-limit :isShow="dialogFileLimit" @closeDialog="dialogFileLimit = false"></file-limit>
 
+        <file-adress :isShow="dialogFileAdress" @closeDialog="dialogFileAdress = false"></file-adress>
 
-        <!--设置Http头-->
-        <el-dialog
-                title="设置header"
-                custom-class="dialog-header"
-                :visible.sync="fileHeaderInfo.isShow"
-                :close-on-click-modal="false"
-                :close-on-press-escape="false"
-                :show-close="false"
-                size="small">
-            <table class="my-el-table" cellpadding="0" cellspacing="0">
-                <thead>
-                <tr>
-                    <td>参数</td>
-                    <td>值</td>
-                    <td>操作</td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="(list,$index) in fileHeaderInfo.data">
-                    <td>
-                        <el-select v-model="list.date" @change="menuObj().selectHttpChange(list,$index)"
-                                   placeholder="选择项目" size="small">
-                            <el-option
-                                    v-for="item in list.date"
-                                    :key="item.value"
-                                    :label="item.label"
-                                    :value="item.value">
-                            </el-option>
-                        </el-select>
-                    </td>
-                    <td>
-                        <el-input size="small"></el-input>
-                    </td>
-                    <td>
-                        <a class="text" @click="menuObj().deleteHttpDom($index)">删除</a>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-
-
-            <el-button type="text" @click="menuObj().addElemHeader()"><i class="el-icon-plus"></i>添加参数</el-button>
-            <div slot="footer" class="dialog-footer">
-                <el-button @click="menuObj().dialogSetHttpFn('cancel')">取 消</el-button>
-                <el-button type="primary" @click="menuObj().dialogSetHttpFn()">确 定</el-button>
-            </div>
-        </el-dialog>
+        <set-http-head :isShow="dialogSetHttpHead" @closeDialog="dialogSetHttpHead = false"></set-http-head>
 
     </div>
 </template>
 
 <script>
-  import filelist from './file-list.vue'
+  import fileList from './file-list.vue'
+  import fileAdress from  './file-adress'
+  import fileLimit from './file-limit.vue'
+  import setHttpHead from './set-http-head.vue'
   import store from '../../store'
   import { mutations, mapState, actions } from 'vuex'
+  import bord from 'clipboard'
   export default {
     name: 'filepage',
-    components: {'file-list': filelist},
-//    beforeRouteEnter(to, from, next){
-//      console.log('beforeRouteEnter',arguments)
-//      //路由变动控制左侧菜单
-//      let menuName = to.path.split('/')
-//      menuName = menuName.pop()
-//      store.commit('bucket/bucketActive', menuName)
-//      next()
-//    },
+    components: {fileList, fileAdress, fileLimit, setHttpHead},
     beforeRouteUpdate (to, from, next) {
       this.options.bucket = to.params.bucket || to.query.bucket
       this.options.region = to.params.region || to.query.region
@@ -174,9 +106,11 @@
           keyWord: null
         },
         navOptions: [],
+        inputFocus: false,
         currentFolder: null,
-
-        inputFocus: false
+        dialogSetHttpHead: false,
+        dialogFileAdress: false,
+        dialogFileLimit: false
       }
     },
     methods: {
@@ -260,54 +194,27 @@
       searchCancelFn(){
         this.options.keyWord = null
       },
-      menuObj() {
-        let _self = this
-        let parmsObj = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
-        }
-        return {
-          getFileUrl(){  //获取文件url地址
-            _self.$store.commit('menulist/getFileHttp', parmsObj)
-          },
-          dialogHttpHideFn(){
-            _self.$store.commit('menulist/setFileHttpHidden')
-          },
-          selectText(e){
-            _self.$message('功能没做...')
-          },
-          dialogSetHttpFn(type){
-            _self.$store.commit('menulist/setHttp', type)
-          },
-          selectHttpChange(list, index){
-            console.log(list, index)
-//            _self.$store.commit('menulist/selectHttpChange', {list: list, index: index})
-          },
-          addElemHeader(){
-            _self.$store.commit('menulist/addHttpDom')
-          },
-          deleteHttpDom(index){
-            _self.$store.commit('menulist/deleteHttpDom', index)
-          },
-          deleteObj(){
-            _self.$confirm('确定要删除?', '提示', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'warning'
-            }).then(() => {
-              let parmas = Object.assign(parmsObj, {Key: _self.selectFile.dir ? _self.selectFile.Prefix : _self.selectFile.Key})
-              _self.$store.dispatch('menulist/deleteFile', {pms: parmas}).then(function (resp) {
-                console.log('this-delete', arguments)
-                if (resp.DeleteObjectSuccess) {
-                  _self.fetchFilelist()
-                } else {
-                  _self.$message({type: 'error', message: resp.error})
-                }
-              })
-            }).catch(() => {
-            })
+      deleteObj(){
+        this.$confirm('确定要删除?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          let parmas = {
+            Bucket: this.options.bucket,
+            Region: this.options.region,
+            Key: this.selectFile.dir ? this.selectFile.Prefix : this.selectFile.Key
           }
-        }
+          this.$store.dispatch('menulist/deleteFile', {pms: parmas}).then((resp) => {
+            console.log('this-delete', arguments)
+            if (resp.DeleteObjectSuccess) {
+              this.fetchFilelist()
+            } else {
+              this.$message({type: 'error', message: resp.error})
+            }
+          })
+        }).catch(() => {
+        })
       },
       fileEvents(types){
         let pms = {

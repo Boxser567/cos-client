@@ -22,31 +22,33 @@
     }
   }
 }
-.bucket-group{
+
+.bucket-group {
   position: absolute;
-  top:77px;
+  top: 77px;
   bottom: 0;
   left: 0;
-  right:0;
+  right: 0;
   overflow: auto;
-  &.active{
+  &.active {
     height: 45px;
     overflow: hidden;
   }
-  .bucket-tl{
+  .bucket-tl {
     display: block;
     color: #eaeaea;
     height: 32px;
     line-height: 32px;
     padding-left: 20px;
-    background: rgba(255,255,255,.1);
+    background: rgba(255, 255, 255, .1);
     margin-top: 10px;
     text-indent: 3px;
     font-size: 15px;
     font-weight: bold;
-    user-select:initial
+    user-select: initial
   }
 }
+
 .bucket-item {
   margin: 11px 0;
   position: relative;
@@ -159,11 +161,22 @@
         padding: 10px;
       }
     }
-    .text{
+    .text {
       color: $activebg2;
-      &:hover{
+      &:hover {
         text-decoration: underline;
       }
     }
+  }
+}
+
+.dialog-file-limit {
+  width: 700px;
+  top: 5%;
+  h2 {
+    margin-bottom: 12px;
+  }
+  .user-limit {
+    margin-top: 20px;
   }
 }
