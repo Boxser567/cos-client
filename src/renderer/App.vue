@@ -5,11 +5,17 @@
 </template>
 
 <script>
+  import { ipcRenderer } from 'electron'
   export default {
     name: 'gk-cos-client',
     created () {
       this.$store.dispatch('getConfig')
-      console.log(this.$store.state.config)
+      ipcRenderer.on('error', (event, error) => {
+        this.$notify.error({
+          title: 'Error',
+          message: `无法${error.src}，因为${error.message}`
+        })
+      })
       if (this.$store.state.config.cos) {
         this.$router.replace('/locked')
       } else {
