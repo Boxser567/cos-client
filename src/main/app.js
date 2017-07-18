@@ -31,36 +31,23 @@ App.prototype.init = async function () {
 
   let cos
 
-  ipcMain.on('LoginCheck', (event) => {
-    event.returnValue = !!config.cos
+  ipcMain.on('SetConfig', (event, cfg) => {
+    config = cfg
+    cos = new Cos(cfg.cos)
   })
 
-  ipcMain.on('Login', (event, arg) => {
-    switch (arg.action) {
-      case 'check':
-        if (arg.form.password !== config.password) {
-          event.returnValue = {message: 'password mismatch'}
-          return
-        }
-        cos = new Cos(config.cos)
-        break
-      case 'new':
-        config.cos = {
-          SecretId: arg.form.SecretId,
-          SecretKey: arg.form.SecretKey
-        }
-        config.password = arg.form.password
-        cos = new Cos(config.cos)
-        break
-      case 'clear':
-        // 只能在GetUploadTasks调用前调用
-        config = {}
-        uploads = null
-        downloads = null
-        clear()
-        break
+  ipcMain.on('GetConfig', (event) => {
+    if (config.cos) {
+      cos = new Cos(config.cos)
     }
-    event.returnValue = null
+    event.returnValue = config
+  })
+
+  ipcMain.on('ClearAll', () => {
+    config = {}
+    uploads = null
+    downloads = null
+    clear()
   })
 
   ipcMain.on('ListBucket', (event) => {
@@ -86,75 +73,6 @@ App.prototype.init = async function () {
     })
   })
 
-  ipcMain.on('HeadBucket', (event, arg) => {
-    cos.headBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('HeadBucket-error', err)
-      }
-      event.sender.send('HeadBucket-data', data)
-    })
-  })
-
-  /**
-   * 创建 Bucket，并初始化访问权限
-   * @param  {object}   arg     参数对象，必须
-   *     @param  {string}   arg.Bucket     Bucket名称，必须
-   *     @param  {string}   arg.Region     地域名称，必须
-   *     @param  {string}   arg.ACL        用户自定义文件权限，可以设置：private，public-read；默认值：private，非必须
-   *     @param  {string}   arg.GrantRead     赋予被授权者读的权限，格式x-cos-grant-read: uin=" ",uin=" "，非必须
-   *     @param  {string}   arg.GrantWrite     赋予被授权者写的权限，格式x-cos-grant-write: uin=" ",uin=" "，非必须
-   *     @param  {string}   arg.GrantFullControl     赋予被授权者读写权限，格式x-cos-grant-full-control: uin=" ",uin=" "，非必须
-   * @param  {function}   callback      回调函数，必须
-   * @return  {object}    err     请求失败的错误，如果请求成功，则为空。
-   * @return  {object}    data  返回的数据
-   *     @return  {string}    data.Location  操作地址
-   */
-  ipcMain.on('PutBucket', (event, arg) => {
-    cos.putBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('PutBucket-error', err)
-      }
-      event.sender.send('PutBucket-data', data)
-    })
-  })
-
-  ipcMain.on('GetBucketAcl', (event, arg) => {
-    cos.getBucketAcl(arg, (err, data) => {
-      if (err) {
-        event.sender.send('GetBucketAcl-error', err)
-      }
-      event.sender.send('GetBucketAcl-data', data)
-    })
-  })
-
-  ipcMain.on('PutBucketAcl', (event, arg) => {
-    cos.putBucketAcl(arg, (err, data) => {
-      if (err) {
-        event.sender.send('PutBucketAcl-error', err)
-      }
-      event.sender.send('PutBucketAcl-data', data)
-    })
-  })
-
-  /**
-   * 删除 Bucket
-   * @param  {object}   arg     参数对象，必须
-   *     @param  {string}   arg.Bucket     Bucket名称，必须
-   *     @param  {string}   arg.Region     地域名称，必须
-   * @param  {function}   callback      回调函数，必须
-   * @return  {object}    err     请求失败的错误，如果请求成功，则为空。
-   * @return  {object}    data  返回的数据
-   *     @return  {string}    data.Location  操作地址
-   */
-  ipcMain.on('DeleteBucket', (event, arg) => {
-    cos.deleteBucket(arg, (err, data) => {
-      if (err) {
-        event.sender.send('DeleteBucket-error', err)
-      }
-      event.sender.send('DeleteBucket-data', data)
-    })
-  })
-
   ipcMain.on('ListObject', (event, arg) => {
     /**
      * @param  {object}   arg
@@ -166,37 +84,6 @@ App.prototype.init = async function () {
       data => (event.sender.send('ListObject-data', data)),
       err => (event.sender.send('ListObject-error', err))
     )
-  })
-
-  ipcMain.on('HeadObject', (event, arg) => {
-    cos.headObject(arg, (err, data) => {
-      if (err) {
-        event.sender.send('HeadObject-error', err)
-      }
-      event.sender.send('HeadObject-data', data)
-    })
-  })
-
-  ipcMain.on('GetObjectAcl', (event, arg) => {
-    cos.putObjectCopy(arg, (err, data) => {
-      if (err) {
-        event.sender.send('GetObjectAcl-error', err)
-      }
-      event.sender.send('GetObjectAcl-data', data)
-    })
-  })
-
-  ipcMain.on('PutObjectAcl', (event, arg) => {
-    cos.putObjectCopy(arg, (err, data) => {
-      if (err) {
-        event.sender.send('PutObjectAcl-error', err)
-      }
-      event.sender.send('PutObjectAcl-data', data)
-    })
-  })
-
-  ipcMain.on('GetObjectUrl', (event, arg) => {
-    event.returnValue = `${arg.Bucket}-${cos.options.AppId}.${arg.Region}.myqcloud.com/${arg.Key}?Authorization=${cos.getAuth(arg)}`
   })
 
   ipcMain.on('DeleteObject', (event, arg) => {

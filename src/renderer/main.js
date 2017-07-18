@@ -12,9 +12,9 @@ import VueVirtualScroller from 'vue-virtual-scroller'
 Vue.use(VueVirtualScroller)
 
 Vue.use(ElementUI)
-Vue.use(elem)     //饿了么组件引用
+Vue.use(elem) // 饿了么组件引用
 
-if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
+Vue.use(require('vue-electron'))
 Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 
