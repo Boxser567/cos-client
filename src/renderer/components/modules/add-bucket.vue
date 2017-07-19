@@ -1,5 +1,5 @@
 <template>
-    <el-dialog title="添加bucket" custom-class="dilog-addbucket" :visible.sync="dialogAddVisible"
+    <el-dialog title="创建存储桶" custom-class="dilog-addbucket" :visible.sync="dialogAddVisible"
                :before-close="closeDialog">
         <el-form :model="myform">
             <el-form-item label="Bucket名称">
@@ -7,6 +7,7 @@
                     <el-col :span="15">
                         <el-input v-model="myform.bucketName" placeholder="请输入Bucket名称"></el-input>
                     </el-col>
+                    <el-col :span="5" style="text-align: left"> -{{appid}} </el-col>
                     <el-col :span="4">
                         <el-tooltip content="仅支持小写字母、数字的组合，不能超过40字符" placement="bottom">
                             <span class="el-icon-warning"></span>
@@ -39,7 +40,7 @@
                 <el-radio class="radio" v-model="myform.limit" label="private">私有读写</el-radio>
             </el-form-item>
             <el-form-item label="请求域名">
-                {{myform.bucketName ? myform.bucketName : "Bucket"}}-{{appid}}.{{myform.areaDef}}.myqcloud.com
+                {{myform.bucketName ? myform.bucketName : "名称"}}-{{appid}}.{{myform.areaDef}}.myqcloud.com
             </el-form-item>
 
             <!--<el-form-item label="CDN加速">-->
@@ -95,7 +96,11 @@
         for (let key in this.bucketList) {
           this.appid = key
         }
-
+      },
+      renderData(){
+        this.myform.bucketName = ''
+        this.myform.limit = 'public-read'
+        this.myform.areaDef = 'cn-south'
       },
       submitForm(){
         if (this.myform.bucketName.length > 40) {
@@ -113,6 +118,7 @@
         }
         this.$store.dispatch('bucket/putBucket', {pms: params}).then(() => {
           this.$emit('freshBucket')
+          this.renderData()
           this.$emit('closeBucket')
         })
       },

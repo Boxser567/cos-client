@@ -1,32 +1,40 @@
 <template>
-    <el-dialog title="添加bucket" custom-class="dilog-setting" :visible.sync="dialogSettingVisible"
+    <el-dialog title="设置" custom-class="dilog-setting" :visible.sync="dialogSettingVisible"
                :before-close="closeDialog">
         <div class="setting-form">
-            <!--<el-form-item label="Bucket名称">-->
-                <!--<el-input v-model="myform.bucketName" placeholder="请输入Bucket名称"></el-input>-->
-            <!--</el-form-item>-->
-            <!--<el-form-item label="所属地域">-->
-                <!--<el-select v-model="myform.areaDef" placeholder="请选择">-->
-                    <!--<el-option-->
-                            <!--v-for="item in myform.areaList"-->
-                            <!--:key="item.value"-->
-                            <!--:label="item.label"-->
-                            <!--:value="item.value">-->
-                    <!--</el-option>-->
-                <!--</el-select>-->
-            <!--</el-form-item>-->
-            <!--<el-form-item label="访问权限">-->
-                <!--<el-radio class="radio" v-model="myform.limit" label="public-read">公有读私有写</el-radio>-->
-                <!--<el-radio class="radio" v-model="myform.limit" label="private">私有读写</el-radio>-->
-            <!--</el-form-item>-->
-            <!--<el-form-item label="CDN加速">-->
-                <!--<el-radio class="radio" v-model="myform.cdnSpeed" label="open">开启</el-radio>-->
-                <!--<el-radio class="radio" v-model="myform.cdnSpeed" label="close">关闭</el-radio>-->
-            <!--</el-form-item>-->
 
+            <div class="upload">
+                <h2>上传设置</h2>
+                <el-row>
+                    <el-col :span="9">同时任务数:</el-col>
+                    <el-col :span="15">
+                        <el-input-number v-model="num1" size="small" :min="1" :max="10"></el-input-number>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="9">单任务线程数:</el-col>
+                    <el-col :span="15">
+                        <el-input-number size="small" v-model="num2" :min="1" :max="10"></el-input-number>
+                    </el-col>
+                </el-row>
+            </div>
 
-            <h1>各种数据的设置</h1>
-
+            <div class="download">
+                <h2>下载设置</h2>
+                <el-row>
+                    <el-col :span="9">同时任务数:</el-col>
+                    <el-col :span="15">
+                        <el-input-number v-model="num1" size="small" :min="1" :max="10"></el-input-number>
+                    </el-col>
+                </el-row>
+                <!--<el-row>-->
+                    <!--<el-col :span="9">单任务线程数:</el-col>-->
+                    <!--<el-col :span="15">-->
+                        <!--<el-input-number size="small" v-model="num2" :min="1" :max="10"></el-input-number>-->
+                    <!--</el-col>-->
+                <!--</el-row>-->
+            </div>
+            <div>{{config}}</div>
         </div>
         <div slot="footer" class="dialog-footer">
             <el-button @click="closeDialog">取 消</el-button>
@@ -36,16 +44,30 @@
 </template>
 
 <script>
+  //  import Vue from  'vue'
+  //  import iptNum from 'element-ui/lib/input-number'
+  //  Vue.use(iptNum)
 
   export default{
     name: 'setting',
     props: ['dialogSettingVisible'],
+    computed:{
+      config(){
+        return this.$store.state.config
+      }
+    },
     data(){
-      return {}
+      return {
+        num1: 5,
+        num2: 5
+      }
     },
     methods: {
       submitForm(){
 
+      },
+      handleChange(val){
+        console.log(val)
       },
       closeDialog(){
         this.$emit('closeDiolog')
