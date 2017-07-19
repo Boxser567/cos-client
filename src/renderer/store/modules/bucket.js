@@ -36,6 +36,19 @@ const mutations = {
 }
 
 const actions = {
+  // cosSetting({commit, rootGetters}, params){
+  //   return new Promise((resolve, reject) => {
+  //     rootGetters.cos.putBucket(params.pms, function (err, data) {
+  //       if (err) {
+  //         // cos.bus.$emit('globleError', err)
+  //         return
+  //       } else {
+  //         resolve(data)
+  //       }
+  //     })
+  //   })
+  // },
+
   getService ({commit, rootGetters, rootState}) {
     return new Promise((resolve, reject) => {
       console.log('rootGetter', rootGetters, rootState)
@@ -49,7 +62,7 @@ const actions = {
 
     })
   },
-  putBucket ({commit,rootGetters}, params) {
+  putBucket ({commit, rootGetters}, params) {
     return new Promise((resolve, reject) => {
 
       rootGetters.cos.putBucket(params.pms, function (err, data) {

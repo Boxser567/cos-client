@@ -8,13 +8,13 @@
                 <el-row>
                     <el-col :span="9">同时任务数:</el-col>
                     <el-col :span="15">
-                        <el-input-number v-model="num1" size="small" :min="1" :max="10"></el-input-number>
+                        <el-input-number v-model="upMax" size="small" :min="1" :max="10"></el-input-number>
                     </el-col>
                 </el-row>
                 <el-row>
                     <el-col :span="9">单任务线程数:</el-col>
                     <el-col :span="15">
-                        <el-input-number size="small" v-model="num2" :min="1" :max="10"></el-input-number>
+                        <el-input-number size="small" v-model="upAsy" :min="1" :max="10"></el-input-number>
                     </el-col>
                 </el-row>
             </div>
@@ -24,17 +24,16 @@
                 <el-row>
                     <el-col :span="9">同时任务数:</el-col>
                     <el-col :span="15">
-                        <el-input-number v-model="num1" size="small" :min="1" :max="10"></el-input-number>
+                        <el-input-number v-model="downMax" size="small" :min="1" :max="10"></el-input-number>
                     </el-col>
                 </el-row>
                 <!--<el-row>-->
-                    <!--<el-col :span="9">单任务线程数:</el-col>-->
-                    <!--<el-col :span="15">-->
-                        <!--<el-input-number size="small" v-model="num2" :min="1" :max="10"></el-input-number>-->
-                    <!--</el-col>-->
+                <!--<el-col :span="9">单任务线程数:</el-col>-->
+                <!--<el-col :span="15">-->
+                <!--<el-input-number size="small" v-model="num2" :min="1" :max="10"></el-input-number>-->
+                <!--</el-col>-->
                 <!--</el-row>-->
             </div>
-            <div>{{config}}</div>
         </div>
         <div slot="footer" class="dialog-footer">
             <el-button @click="closeDialog">取 消</el-button>
@@ -44,30 +43,42 @@
 </template>
 
 <script>
-  //  import Vue from  'vue'
-  //  import iptNum from 'element-ui/lib/input-number'
-  //  Vue.use(iptNum)
-
   export default{
     name: 'setting',
     props: ['dialogSettingVisible'],
-    computed:{
+    computed: {
       config(){
         return this.$store.state.config
       }
     },
     data(){
       return {
-        num1: 5,
-        num2: 5
+        upMax: 0,
+        upAsy: 0,
+        downMax: 0
       }
     },
+    created(){
+      this.fetchData()
+    },
     methods: {
-      submitForm(){
-
+      fetchData(){
+        this.upMax = this.config.upload.maxActivity
+        this.upAsy = this.config.upload.asyncLim
+        this.downMax = this.config.download.maxActivity
       },
-      handleChange(val){
-        console.log(val)
+      submitForm(){
+        let parms = {
+          upload: {
+            maxActivity: this.upMax,
+            asyncLim: this.upAsy
+          },
+          download: {
+            maxActivity: this.downMax
+          }
+        }
+        console.log('-----------', this.$store.actions)
+        this.$store.actions.dispatch('setConfig', parms)
       },
       closeDialog(){
         this.$emit('closeDiolog')

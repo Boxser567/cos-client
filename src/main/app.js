@@ -5,9 +5,13 @@
 import fs from 'fs'
 import path from 'path'
 import { ipcMain } from 'electron'
+import log from 'electron-log'
 import Cos from 'cos-nodejs-sdk-v5'
 import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks } from './task'
 import { clear, init, save } from './db'
+
+log.transports.console.level = 'info'
+log.transports.file.level = 'info'
 
 let app
 
@@ -28,19 +32,32 @@ App.prototype.init = async function () {
   let downloads
 
   let config = await init.config()
+  config.upload = config.upload || {maxActivity: 3, asyncLim: 2}
+  config.download = config.download || {maxActivity: 3}
 
   let cos
-
-  ipcMain.on('SetConfig', (event, cfg) => {
-    config = cfg
-    cos = new Cos(cfg.cos)
-  })
 
   ipcMain.on('GetConfig', (event) => {
     if (config.cos) {
       cos = new Cos(config.cos)
     }
     event.returnValue = config
+  })
+
+  ipcMain.on('SetConfig', (event, cfg) => {
+    /**
+     * @param {object}  cfg
+     * @param {object}  cfg.cos
+     * @param {object}  cfg.upload
+     * @param {int}     cfg.upload.maxActivity
+     * @param {int}     cfg.upload.asyncLim
+     * @param {object}  cfg.download
+     * @param {int}     cfg.download.maxActivity
+     */
+    config = cfg
+    cos = new Cos(cfg.cos)
+    if (uploads && cfg.upload) uploads.maxLim(cfg.upload.maxActivity)
+    if (downloads && cfg.download) downloads.maxLim(cfg.upload.maxActivity)
   })
 
   ipcMain.on('ClearAll', () => {
@@ -53,7 +70,11 @@ App.prototype.init = async function () {
   ipcMain.on('ListBucket', (event) => {
     cos.getService((err, data) => {
       if (err) {
-        event.sender.send('ListBucket-error', err)
+        try {
+          event.sender.send('error', normalizeError(err, 'ListBucket'))
+        } catch (err) {
+          log.warn(err)
+        }
         return
       }
       let result = {}
@@ -69,7 +90,11 @@ App.prototype.init = async function () {
           result[v.AppId] = [v]
         }
       })
-      event.sender.send('ListBucket-data', result)
+      try {
+        event.sender.send('ListBucket-data', result)
+      } catch (err) {
+        log.warn(err)
+      }
     })
   })
 
@@ -81,18 +106,60 @@ App.prototype.init = async function () {
      * @param  {string}   [arg.Prefix]
      */
     listDir(cos, arg).then(
-      data => (event.sender.send('ListObject-data', data)),
-      err => (event.sender.send('ListObject-error', err))
-    )
+      data => event.sender.send('ListObject-data', data),
+      err => {
+        log.error(err)
+        event.sender.send('error', normalizeError(err, 'ListObject'))
+      }
+    ).catch(err => { log.warn(err) })
   })
 
-  ipcMain.on('DeleteObject', (event, arg) => {
-    cos.deleteObject(arg, (err, data) => {
-      if (err) {
-        event.sender.send('DeleteObject-error', err)
+  ipcMain.on('DeleteObject', async (event, arg) => {
+    /**
+     * @param  {object}    arg
+     * @param  {string}    arg.Bucket
+     * @param  {string}    arg.Region
+     * @param  {string[]}  [arg.Keys]  文件删除
+     * @param  {string[]}  [arg.Dirs]  文件夹删除
+     */
+
+    let params = {
+      Bucket: arg.Bucket,
+      Region: arg.Region
+    }
+
+    async function fn (contents) {
+      for (let item of contents) {
+        try {
+          await deleteObject(cos, {
+            Bucket: arg.Bucket,
+            Region: arg.Region,
+            Key: item.Key
+          })
+        } catch (err) {
+          try {
+            log.error(err)
+            event.sender.send('error', normalizeError(err, 'DeleteObject'))
+          } catch (err) {
+            log.warn(err)
+          }
+        }
       }
-      event.sender.send('DeleteObject-data', data)
-    })
+    }
+
+    if (arg.Keys) {
+      await fn(arg.Keys.map(k => ({Key: k})))
+    }
+
+    for (let dir of arg.Dirs) {
+      params.Prefix = dir
+      let result
+      do {
+        result = await getBucket(cos, params)
+        await fn(result.Contents)
+        params.Marker = result.NextMarker
+      } while (result.IsTruncated === 'true')
+    }
   })
 
   ipcMain.on('CopyObjects', async (event, arg) => {
@@ -124,7 +191,12 @@ App.prototype.init = async function () {
             CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
           })
         } catch (err) {
-          console.log(err)
+          try {
+            log.error(err)
+            event.sender.send('error', normalizeError(err, 'CopyObjects'))
+          } catch (err) {
+            log.warn(err)
+          }
         }
       }
     }
@@ -156,33 +228,33 @@ App.prototype.init = async function () {
         try {
           event.sender.send('GetUploadTasks-data', data)
         } catch (err) {
-          console.warn(err)
+          log.warn(err)
           uploads.removeAllListeners('refresh')
         }
       })
       uploads.refresh()
       return
     }
-    uploads = new Tasks(3)
+    uploads = new Tasks(config.upload.maxActivity)
 
     uploads.on('done', (task, result) => {
       task.progress.loaded = task.progress.total
-      console.log('task done', task.id)
+      log.info(`upload ${task.params.Bucket}/${task.params.Key} done`)
     })
 
     uploads.on('cancel', (task, result) => {
-      console.log('cancel', task.id)
+      log.info(`upload ${task.params.Bucket}/${task.params.Key} cancel`)
     })
 
     uploads.on('error', (task, err) => {
-      console.error(err)
+      log.error(`upload ${task.params.Bucket}/${task.params.Key} error`, err)
     })
 
     uploads.on('refresh', (data) => {
       try {
         event.sender.send('GetUploadTasks-data', data)
       } catch (err) {
-        console.warn(err)
+        log.warn(err)
         uploads.removeAllListeners('refresh')
       }
     })
@@ -195,8 +267,8 @@ App.prototype.init = async function () {
         task.progress.loaded = t.loaded
         task.progress.total = t.total
         task.status = t.status
-      } catch (e) {
-        console.log(e)
+      } catch (err) {
+        log.error(err)
       }
     }
     uploads.refresh()
@@ -210,9 +282,6 @@ App.prototype.init = async function () {
      * @param  {string}   arg.Prefix
      * @param  {string[]} arg.FileNames
      */
-    // todo 同源不同目标
-    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
-
     for (let name of arg.FileNames) {
       for (let item of uploadGenerator(name, arg.Prefix)) {
         try {
@@ -220,10 +289,10 @@ App.prototype.init = async function () {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
-          })
+          }, {asyncLim: config.upload.asyncLim})
           uploads.newTask(task)
-        } catch (e) {
-          console.log(e)
+        } catch (err) {
+          log.error(err)
         }
         uploads.next()
       }
@@ -268,28 +337,32 @@ App.prototype.init = async function () {
         try {
           event.sender.send('GetDownloadTasks-data', data)
         } catch (e) {
-          console.error(e)
+          log.warn(e)
         }
       })
       downloads.refresh()
       return
     }
-    downloads = new Tasks(3)
+    downloads = new Tasks(config.download.maxActivity)
 
     downloads.on('done', (task, result) => {
       task.progress.loaded = task.progress.total
-      console.log('task done', task.id)
+      log.info(`download done ${task.params.Bucket}/${task.params.Key}`)
+    })
+
+    downloads.on('cancel', (task, result) => {
+      log.info(`download cancel ${task.params.Bucket}/${task.params.Key}`)
     })
 
     downloads.on('error', (task, err) => {
-      console.error(err)
+      log.info(`download error ${task.params.Bucket}/${task.params.Key} `, err)
     })
 
     downloads.on('refresh', (data) => {
       try {
         event.sender.send('GetDownloadTasks-data', data)
       } catch (e) {
-        console.error(e)
+        log.warn(e)
       }
     })
 
@@ -302,7 +375,7 @@ App.prototype.init = async function () {
         task.progress.total = t.total
         task.status = t.status
       } catch (e) {
-        console.log(e)
+        log.error(e)
       }
     }
     downloads.refresh()
@@ -318,10 +391,6 @@ App.prototype.init = async function () {
      * @param  {string[]}  [arg.Keys]   文件下载
      * @param  {string[]}  [arg.Dirs]   文件夹下载
      */
-
-    // todo 同源不同目标
-    // if (uploads.tasks.find(t => t && t.file.fileName === arg.FileName)) return
-
     let params = {
       Bucket: arg.Bucket,
       Region: arg.Region
@@ -338,7 +407,7 @@ App.prototype.init = async function () {
           downloads.newTask(task)
           downloads.next()
         } catch (err) {
-          console.log(err)
+          log.error(err)
         }
       }
     }
@@ -389,8 +458,10 @@ App.prototype.init = async function () {
     downloads.delete(arg.tasks, arg.all, arg.onlyComplete, arg.onlyNotComplete)
   })
 
-  this.save = function () {
+  this.close = function () {
     if (!uploads || !downloads) return Promise.resolve()
+    uploads.pause([], true)
+    downloads.pause([], true)
     return Promise.all([
       save.config(config),
       save.upload(uploads.tasks),
@@ -495,6 +566,24 @@ function putObjectCopy (cos, params) {
       err ? reject(err) : resolve(data)
     })
   })
+}
+
+function deleteObject (cos, params) {
+  return new Promise((resolve, reject) => {
+    cos.deleteObject(params, (err, data) => {
+      err ? reject(err) : resolve(data)
+    })
+  })
+}
+
+function normalizeError (error, src) {
+  if (error.error) {
+    return {message: error.error.Message, src, error}
+  }
+  if (error.message) {
+    return {message: error.message, src, error}
+  }
+  return {message: 'unknown', src, error}
 }
 
 export { App }

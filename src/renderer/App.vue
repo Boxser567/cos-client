@@ -5,7 +5,7 @@
 </template>
 
 <script>
-//  import { cos } from  './cos'
+  import { ipcRenderer } from 'electron'
   export default {
     name: 'gk-cos-client',
     computed: {
@@ -18,16 +18,14 @@
         console.log('busArgument',arguments)
       }
     },
-
     created () {
-//      cos.bus.$on('globleError', (error) => {
-//        this.$notify({
-//          title: '提示',
-//          message: error.message,
-//          duration: 0
-//        })
-//      })
       this.$store.dispatch('getConfig')
+      ipcRenderer.on('error', (event, error) => {
+        this.$notify.error({
+          title: 'Error',
+          message: `无法${error.src}，因为${error.message}`
+        })
+      })
       if (this.$store.state.config.cos) {
         this.$router.replace('/locked')
       } else {
