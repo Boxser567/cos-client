@@ -46,7 +46,7 @@ function Tasks (max) {
   this.maxLim = (val) => {
     if (typeof val === 'number' && val) {
       if (val > maxActivity) {
-        let c = maxActivity - val
+        let c = val - maxActivity
         maxActivity = val
         while (c--) {
           this.next()
@@ -452,8 +452,8 @@ UploadTask.prototype.stop = function () {
   this.cancel = true
 }
 
-function getSliceMD5 (fileName, index, start, end) {
-  let md5 = crypto.createHash('md5')
+function getSliceHash (fileName, index, start, end) {
+  let hash = crypto.createHash('sha1')
 
   let readStream = fs.createReadStream(fileName, {
     start: start,
@@ -461,13 +461,13 @@ function getSliceMD5 (fileName, index, start, end) {
   })
 
   return new Promise((resolve, reject) => {
-    readStream.on('data', chunk => md5.update(chunk))
+    readStream.on('data', chunk => hash.update(chunk))
 
     readStream.on('error', reject)
 
     readStream.on('end', () => resolve({
       index,
-      hash: md5.digest('hex'),
+      hash: hash.digest('hex'),
       length: end - start + 1,
       body: fs.createReadStream(fileName, {
         start: start,
@@ -490,13 +490,13 @@ function* getSliceIterator (file) {
   let index = 1
 
   while (end < file.fileSize - 1) {
-    yield getSliceMD5(file.fileName, index, start, end)
+    yield getSliceHash(file.fileName, index, start, end)
     index++
     start = end + 1
     end += file.sliceSize
   }
 
-  yield getSliceMD5(file.fileName, index, start, file.fileSize - 1)
+  yield getSliceHash(file.fileName, index, start, file.fileSize - 1)
 }
 
 /**

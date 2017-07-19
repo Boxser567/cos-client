@@ -2,7 +2,11 @@
  * Created by michael on 2017/7/6.
  */
 import sqlite3 from 'sqlite3'
-let db = new (sqlite3.verbose()).Database('gk.sqlite')
+import { app } from 'electron'
+import path from 'path'
+
+const dbname = process.env.NODE_ENV === 'development' ? 'gk.sqlite' : path.join(app.getPath('userData'), 'db.dat')
+let db = new (sqlite3.verbose()).Database(dbname)
 
 let init = {}
 
