@@ -239,15 +239,15 @@ App.prototype.init = async function () {
 
     uploads.on('done', (task, result) => {
       task.progress.loaded = task.progress.total
-      log.info('task done', task.params.Key)
+      log.info(`upload ${task.params.Bucket}/${task.params.Key} done`)
     })
 
     uploads.on('cancel', (task, result) => {
-      log.info('task cancel', task.params.Key)
+      log.info(`upload ${task.params.Bucket}/${task.params.Key} cancel`)
     })
 
     uploads.on('error', (task, err) => {
-      log.error(err)
+      log.error(`upload ${task.params.Bucket}/${task.params.Key} error`, err)
     })
 
     uploads.on('refresh', (data) => {
@@ -347,15 +347,15 @@ App.prototype.init = async function () {
 
     downloads.on('done', (task, result) => {
       task.progress.loaded = task.progress.total
-      log.info('task done', task.params.Key)
+      log.info(`download done ${task.params.Bucket}/${task.params.Key}`)
     })
 
     downloads.on('cancel', (task, result) => {
-      log.info('task cancel', task.params.Key)
+      log.info(`download cancel ${task.params.Bucket}/${task.params.Key}`)
     })
 
     downloads.on('error', (task, err) => {
-      log.error(err)
+      log.info(`download error ${task.params.Bucket}/${task.params.Key} `, err)
     })
 
     downloads.on('refresh', (data) => {

@@ -5,6 +5,7 @@
 import fs from 'fs'
 import crypto from 'crypto'
 import events from 'events'
+import log from 'electron-log'
 
 const CHECK_ETAG = true // 是否检查分片上传每片返回的ETag
 /**
@@ -338,7 +339,7 @@ UploadTask.prototype.multipartInit = function () {
     this.cos.multipartInit(this.params, (err, result) => {
       if (err) { return reject(err) }
       if (!result.UploadId) { return reject(new Error('null UploadId')) }
-      console.info('sliceUploadFile: 创建新上传任务成功，UploadId: ', result.UploadId)
+      log.debug('sliceUploadFile: 创建新上传任务成功，UploadId: ', result.UploadId)
       this.params.UploadId = result.UploadId
       resolve()
     })
@@ -391,7 +392,7 @@ UploadTask.prototype.upload = function () {
 
     if (this.params.Parts[result.index - 1] &&
       this.params.Parts[result.index - 1].ETag === `"${result.hash}"`) {
-      console.info('upload: 秒传', result.index, result.hash)
+      log.debug('upload: 秒传', result.index, result.hash)
       pg.loaded = pg.total
       this.progress.On()
       return this.upload()
@@ -423,7 +424,7 @@ UploadTask.prototype.upload = function () {
             reject(e)
             return
           }
-          console.error(e)
+          log.warn(e)
         }
         if (this.cancel) {
           reject(new Error('cancel'))
