@@ -32,19 +32,32 @@ App.prototype.init = async function () {
   let downloads
 
   let config = await init.config()
+  config.upload = config.upload || {maxActivity: 3, asyncLim: 2}
+  config.download = config.download || {maxActivity: 3}
 
   let cos
-
-  ipcMain.on('SetConfig', (event, cfg) => {
-    config = cfg
-    cos = new Cos(cfg.cos)
-  })
 
   ipcMain.on('GetConfig', (event) => {
     if (config.cos) {
       cos = new Cos(config.cos)
     }
     event.returnValue = config
+  })
+
+  ipcMain.on('SetConfig', (event, cfg) => {
+    /**
+     * @param {object}  cfg
+     * @param {object}  cfg.cos
+     * @param {object}  cfg.upload
+     * @param {int}     cfg.upload.maxActivity
+     * @param {int}     cfg.upload.asyncLim
+     * @param {object}  cfg.download
+     * @param {int}     cfg.download.maxActivity
+     */
+    config = cfg
+    cos = new Cos(cfg.cos)
+    if (uploads && cfg.upload) uploads.maxLim(cfg.upload.maxActivity)
+    if (downloads && cfg.download) downloads.maxLim(cfg.upload.maxActivity)
   })
 
   ipcMain.on('ClearAll', () => {
@@ -222,7 +235,7 @@ App.prototype.init = async function () {
       uploads.refresh()
       return
     }
-    uploads = new Tasks(3)
+    uploads = new Tasks(config.upload.maxActivity)
 
     uploads.on('done', (task, result) => {
       task.progress.loaded = task.progress.total
@@ -276,7 +289,7 @@ App.prototype.init = async function () {
             Bucket: arg.Bucket,
             Region: arg.Region,
             Key: item.key
-          })
+          }, {asyncLim: config.upload.asyncLim})
           uploads.newTask(task)
         } catch (err) {
           log.error(err)
@@ -330,7 +343,7 @@ App.prototype.init = async function () {
       downloads.refresh()
       return
     }
-    downloads = new Tasks(3)
+    downloads = new Tasks(config.download.maxActivity)
 
     downloads.on('done', (task, result) => {
       task.progress.loaded = task.progress.total

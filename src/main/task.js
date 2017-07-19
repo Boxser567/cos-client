@@ -6,6 +6,7 @@ import fs from 'fs'
 import crypto from 'crypto'
 import events from 'events'
 
+const CHECK_ETAG = true // 是否检查分片上传每片返回的ETag
 /**
  * Enum for task status.
  * @readonly
@@ -27,7 +28,7 @@ function Tasks (max) {
   this.tasks = []
   this.getId = () => nextId++
   this.add = () => {
-    if (activity <= maxActivity) {
+    if (activity < maxActivity) {
       activity++
       return true
     }
@@ -41,6 +42,21 @@ function Tasks (max) {
     throw new Error('broken task status')
   }
   this.full = () => activity >= max
+  this.maxLim = (val) => {
+    if (typeof val === 'number' && val) {
+      if (val > maxActivity) {
+        let c = maxActivity - val
+        maxActivity = val
+        while (c--) {
+          this.next()
+        }
+        return maxActivity
+      }
+      maxActivity = val
+      return maxActivity
+    }
+    return maxActivity
+  }
   this.empty = () => activity === 0
   this.initRefresh()
 }
@@ -66,26 +82,28 @@ Tasks.prototype.deleteTask = function (id) {
 }
 
 Tasks.prototype.next = async function () {
-  for (let task of this.tasks) {
-    if (this.full()) return
-    if (!task || task.status !== TaskStatus.WAIT) continue
-    this.add()
-
-    task.status = TaskStatus.RUN
-    try {
-      let result = await task.start()
-      task.status = TaskStatus.COMPLETE
-      this.emit('done', task, result)
-    } catch (err) {
-      if (err.message === 'cancel') {
-        task.status = TaskStatus.PAUSE
-        this.emit('cancel', task)
-      } else {
-        task.status = TaskStatus.ERROR
-        this.emit('error', task, err)
+  if (!this.add()) return
+  // 保证emit不会产生异常导致done丢失
+  try {
+    for (let task of this.tasks) {
+      if (!task || task.status !== TaskStatus.WAIT) continue
+      task.status = TaskStatus.RUN
+      try {
+        let result = await task.start()
+        task.status = TaskStatus.COMPLETE
+        this.emit('done', task, result)
+      } catch (err) {
+        if (err.message === 'cancel') {
+          task.status = TaskStatus.PAUSE
+          this.emit('cancel', task)
+        } else {
+          task.status = TaskStatus.ERROR
+          this.emit('error', task, err)
+        }
       }
+      task.modify = true
     }
-    task.modify = true
+  } finally {
     this.done()
   }
 }
@@ -396,11 +414,16 @@ UploadTask.prototype.upload = function () {
           reject(err)
           return
         }
-        // todo do data need be check?
-        if (data.ETag === `"${result.hash}"`) {
-          console.info('upload: 分片完成', result.index, result.hash, data)
-        } else {
-          console.warn('upload: 分片ETag不一致', result.index, result.hash, data)
+        if (data.ETag !== `"${result.hash}"`) {
+          let e = new Error('ETag mismatch')
+          e.PartNumber = result.index
+          e.SrcMD5 = result.hash
+          e.DstData = data
+          if (CHECK_ETAG) {
+            reject(e)
+            return
+          }
+          console.error(e)
         }
         if (this.cancel) {
           reject(new Error('cancel'))

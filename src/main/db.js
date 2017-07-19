@@ -118,7 +118,8 @@ save.upload = async function (tasks) {
       option: {
         asyncLim: t.asyncLim,
         sliceSize: t.file.sliceSize
-      }})
+      }
+    })
     values.push(`(${t.id},'${j}')`)
   }
   if (values.length === 0) return Promise.resolve()
@@ -158,25 +159,4 @@ let clear = function () {
   db.run(`DELETE FROM upload`)
 }
 
-export {init, save, clear, db}
-// let stmt = db.prepare('INSERT INTO lorem VALUES (?)')
-// for (let i = 0; i < 10; i++) {
-//   stmt.run('Ipsum ' + i)
-// }
-// stmt.finalize()
-//
-// db.each('SELECT rowid AS id, info FROM lorem', function (err, row) {
-//   console.log(row.id + ': ' + row.info)
-// })
-
-// db.close()
-
-// function promiseful (fn, self, arg) {
-//   return function () {
-//     return new Promise((resolve, reject) => {
-//       fn.call(self, arg, (err, result) => {
-//         err ? reject(err) : resolve(result)
-//       })
-//     })
-//   }
-// }
+export { init, save, clear, db }
