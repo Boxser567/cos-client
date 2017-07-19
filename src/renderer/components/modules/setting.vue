@@ -77,8 +77,9 @@
             maxActivity: this.downMax
           }
         }
-        console.log('-----------', this.$store.actions)
-        this.$store.actions.dispatch('setConfig', parms)
+        this.$store.dispatch('setConfig', parms)
+        console.log(this.$store.state.config)
+        this.closeDialog()
       },
       closeDialog(){
         this.$emit('closeDiolog')

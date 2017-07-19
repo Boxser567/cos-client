@@ -46,11 +46,13 @@ export const actions = {
     commit('config', ipcRenderer.sendSync('GetConfig'))
   },
   setConfig ({commit, state}, config) {
-    console.log('config=====', config)
     commit('config', config)
     ipcRenderer.send('SetConfig', state.config)
   }
 }
+
+
+
 
 
 
