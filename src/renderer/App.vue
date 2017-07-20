@@ -2,7 +2,7 @@
     <div id="app">
         <router-view></router-view>
         <delete-error :isShow.sync="deleteError" :errorMsg="errorMsg"></delete-error>
-        <delete-content :isShow.sync="deleteContent" :errorMsg="errorContent"></delete-content>
+        <delete-content :isShow.sync="deleteContent" :errorContent="errorContent"></delete-content>
     </div>
 </template>
 
@@ -34,6 +34,13 @@
           this.deleteError = true
         }
       })
+      this.$store.getters.bus.$on('confirm', (resp) => {
+        if (resp) {
+          console.log(7777, resp)
+          this.errorContent = resp
+          this.deleteContent = true
+        }
+      })
     }
     ,
     data(){
@@ -45,8 +52,7 @@
       }
     },
     components: {deleteError, deleteContent},
-    methods: {
-    }
+    methods: {}
   }
 </script>
 

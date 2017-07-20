@@ -3,6 +3,7 @@
         <div class="welcometo">
             欢迎初始化页面
         </div>
+        <button @click="clicks">点我咯</button>
     </div>
 </template>
 
@@ -12,6 +13,11 @@
     data () {
       return {
         input1: ''
+      }
+    },
+    methods: {
+      clicks(){
+        this.$store.dispatch('debug')
       }
     }
   }

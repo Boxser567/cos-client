@@ -1,14 +1,25 @@
 <template>
     <div>
         <el-dialog
-                title="错误内容提示"
+                title="错误提示"
                 :visible.sync="isShow"
                 :before-close="close"
+                :close-on-click-modal="false"
+                :close-on-press-escape="false"
+                :show-close="false"
+                custom-class="delete-content"
                 size="tiny">
-            <!--<div slot="footer" class="dialog-footer">-->
-            <!--<el-button @click="dialogVisible = false">取 消</el-button>-->
-            <!--<el-button type="primary" @click="dialogVisible = false">确 定</el-button>-->
-            <!--</div>-->
+
+            <div class="file">
+                文件〖 xxxx.zip 〗删除异常
+            </div>
+
+
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="stops">终止后续删除</el-button>
+                <el-button type="primary" @click="retry">重试</el-button>
+                <el-button @click="ignore">忽略</el-button>
+            </div>
         </el-dialog>
     </div>
 
@@ -22,8 +33,7 @@
 
     props: ['isShow', 'errorContent'],
     data(){
-      return {
-      }
+      return {}
     },
     created(){
 
@@ -31,6 +41,18 @@
     computed: {},
     methods: {
       close(){
+        this.$emit('update:isShow', false)
+      },
+      ignore(){
+        this.errorContent.ignore()
+        this.$emit('update:isShow', false)
+      },
+      stops(){
+        this.errorContent.stop()
+        this.$emit('update:isShow', false)
+      },
+      retry(){
+        this.errorContent.retry()
         this.$emit('update:isShow', false)
       }
     }

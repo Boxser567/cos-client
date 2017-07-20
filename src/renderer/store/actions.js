@@ -47,13 +47,13 @@ export const actions = {
     ipcRenderer.send('SetConfig', state.config)
   },
   deleteObjects ({commit}, arg) {
-    batch('', 'delete')
-  },
-  debug () {
     bus.$emit('batch', {
       type: 'aa',
       action: 'open'
     })
+  },
+  debug () {
+    batch('', 'delete')
   }
 }
 

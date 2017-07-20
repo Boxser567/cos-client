@@ -1,15 +1,22 @@
 <template>
     <div>
         <el-dialog
-                title="提示"
+                title="文件删除"
                 :visible.sync="isShow"
                 :before-close="close"
+                :close-on-click-modal="false"
+                :close-on-press-escape="false"
+                :show-close="false"
+                custom-class="delete-error"
                 size="large">
-            <span>这是一段信息 {{errorMsg}} </span>
-            <!--<div slot="footer" class="dialog-footer">-->
-            <!--<el-button @click="dialogVisible = false">取 消</el-button>-->
-            <!--<el-button type="primary" @click="dialogVisible = false">确 定</el-button>-->
-            <!--</div>-->
+            <!--<span>这是一段信息 {{errorMsg}} </span>-->
+            <div class="tl">
+                删除进度: {{errorMsg ? errorMsg.data.done : '' }}/{{errorMsg ? errorMsg.data.total : ''  }}
+            </div>
+            <el-progress :percentage="100" :stroke-width="8"></el-progress>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="cancel" type="primary">取 消</el-button>
+            </div>
         </el-dialog>
     </div>
 
@@ -27,11 +34,12 @@
         contentShow: false
       }
     },
-    created(){
-    },
     computed: {},
     methods: {
       close(){
+        this.$emit('update:isShow', false)
+      },
+      cancel(){
         this.$emit('update:isShow', false)
       }
     }
