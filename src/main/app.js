@@ -56,10 +56,12 @@ App.prototype.init = async function () {
      */
     config = cfg
     cos = new Cos(cfg.cos)
+    // 修改最大并行任务数，当任务数增加时会自动启动新任务，减少时不会立即停止当前运行的任务，而是在当前任务完成后调整
     if (uploads && cfg.upload) uploads.maxLim(cfg.upload.maxActivity)
     if (downloads && cfg.download) downloads.maxLim(cfg.upload.maxActivity)
   })
 
+  // 只能在绑定推送前调用
   ipcMain.on('ClearAll', () => {
     config = {}
     uploads = null
