@@ -86,14 +86,32 @@
     components: {'file-progress': fileProgress},
 
     computed: {
-      ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'isShowFileProgress'])
+      ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles', 'isShowFileProgress'])
     },
     created(){
       this.fetchData()
     },
 
     watch: {
-      $route: 'fetchData'
+      $route: 'fetchData',
+      copyFiles: function (val) {
+        let exst = this.menu.files.indexOf('paste_file') > -1
+        if (val && val.length) {
+          if (!exst) {
+            this.menu.files.push('paste_file')
+            this.menu.folders.push('paste_file')
+            this.menu.blanks.push('paste_file')
+            this.menu.groupFile.push('paste_file')
+          }
+        } else {
+          if (exst) {
+            this.menu.files.splice(this.menu.files.length - 1, 1)
+            this.menu.folders.splice(this.menu.folders.length - 1, 1)
+            this.menu.blanks.splice(this.menu.blanks.length - 1, 1)
+            this.menu.groupFile.splice(this.menu.groupFile.length - 1, 1)
+          }
+        }
+      }
     },
 
     methods: {
@@ -106,8 +124,9 @@
           Region: rg,
           Key: folder
         }
-        this.$store.dispatch('bucket/putObject', {pms: parms}).then(() => {
-          this.fetchData()
+        this.$store.dispatch('bucket/putObject', parms).then((res) => {
+          console.log('new-folder', res)
+//          this.fetchData()
           this.$store.commit('menulist/newFolder', false)
           this.folderName = '新建文件夹'
         })
@@ -163,8 +182,8 @@
       //创建并显示右键菜单
       openFileMenu(e){
         let currentDom = e.target
+        this.$store.commit('menulist/unSelectFile')
         if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
-          this.$store.commit('menulist/unSelectFile')
           this.menu.list = this.fileRightList.filter((m) => {
             if (this.menu.blanks.includes(m.key)) {
               return m
@@ -263,16 +282,23 @@
             this.$store.commit('menulist/downloadFile', pms)
             break
           case 'copy_file':
+            this.$store.commit('menulist/copyFiles')
             break
           case 'delete_file':
+            this.$store.dispatch('menulist/deleteFile', pms).then(() => {
+              console.log('mineArgument', arguments)
+              this.$store.dispatch('menulist/getFileList', pms)
+            })
             break
           case 'get_address':
             break
           case 'set_http':
             break
           case 'paste_file':
+            this.$store.commit('menulist/pasteFiles')
             break
           case 'download_list':
+            console.log(this.copyFiles)
             break
           default:
             this.$message('请重启客户端后重试！')

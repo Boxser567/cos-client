@@ -30,7 +30,7 @@
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="fileEvents('download')" :disabled="eableBtn()">下载
                         </el-button>
-                        <el-button size="small" :plain="true" :disabled="eableBtn()">复制
+                        <el-button size="small" :plain="true" @click="copyObj" :disabled="eableBtn()">复制
                         </el-button>
                         <el-button size="small" :plain="true" @click="deleteObj" :disabled="eableBtn()">删除
                         </el-button>
@@ -142,7 +142,6 @@
           return true
         }
       },
-
       goFilePath(index){
         if (!this.navOptions.length) return
         if (index === this.navOptions.length - 1) return
@@ -215,6 +214,9 @@
           })
         }).catch(() => {
         })
+      },
+      copyObj(){
+         this.$store.commit('menulist/copyFiles')
       },
       fileEvents(types){
         let pms = {

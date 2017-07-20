@@ -11,17 +11,15 @@
             <el-col :span="16">{{currentBucket.Region}}</el-col>
         </el-row>
         <el-row>
-            <el-col :span="8">访问权限:</el-col>
+            <el-col :span="8">创建时间:</el-col>
             <el-col :span="16">
-                <el-radio class="radio" v-model="limit" label="public-read">公有读私有写</el-radio>
-                <el-radio class="radio" v-model="limit" label="private">私有读写</el-radio>
+                {{currentBucket.createTime | getDate }}
             </el-col>
         </el-row>
 
         <div slot="footer" class="dialog-footer">
             <el-button type="danger" @click="deleteBucket">删除 Bucket</el-button>
-            <el-button type="primary" @click="submitForm">确 定</el-button>
-            <el-button @click="closeDialog">取 消</el-button>
+            <el-button @click="closeDialog">关 闭</el-button>
         </div>
     </el-dialog>
 
@@ -32,26 +30,28 @@
   export default{
     props: ['dialogManageVisible', 'currentBucket'],
     data(){
-      return {
-        limit: 'public-read'
-      }
+      return {}
     },
-    created(){
-      this.list()
+    watch: {
+      'dialogManageVisible': function (val) {
+        if (val)
+          this.list()
+      }
     },
 
     methods: {
       list(){
-        console.log(this.currentBucket, 'currentBucket')
+        if (!this.currentBucket) return
+        this.$store.dispatch('bucket/getBucketACL', this.currentBucket).then(() => {})
       },
+
       closeDialog(){
         this.$emit('closeManage')
       },
-      submitForm(){
 
-      },
       deleteBucket: function () {
-        this.$store.dispatch('bucket/deleteBucket').then(() => {
+        if (!this.currentBucket) return
+        this.$store.dispatch('bucket/deleteBucket', this.currentBucket).then(() => {
           this.$emit('freshBucket')
           this.$emit('closeManage')
         })

@@ -4,10 +4,7 @@ import Vuex from 'vuex'
 import modules from './modules'
 import { actions, state, mutations ,getters } from './actions'
 
-
-
 Vue.use(Vuex)
-
 
 export default new Vuex.Store({
   actions,

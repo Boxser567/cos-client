@@ -23,6 +23,7 @@
                              :class="{ 'active':b.active }"
                              :bucketName="b.Name"
                              :bucketRegion="b.Location"
+                             :createDate="b.CreateDate"
                         >
                             <a>{{b.Name}} <i class="el-icon-arrow-down"></i></a>
                         </div>
@@ -47,7 +48,7 @@
                     @freshBucket="fetchData"></add-bucket>
 
         <!--属性管理-->
-        <proto-manage :dialogManageVisible="dialogManageVisible" :currentBucket="currentBucket"
+        <proto-manage :dialogManageVisible="dialogManageVisible" :currentBucket="rightChooseBucket"
                       @freshBucket="fetchData" @closeManage="dialogManageVisible=false"></proto-manage>
         <!--设置-->
         <setting :dialogSettingVisible="dialogSettingVisible" @closeDiolog="dialogSettingVisible = false"></setting>
@@ -74,12 +75,12 @@
           top: '0px',
           left: '0px',
           list: [
-            {name: '属性管理', func: this.getProperty},
-            {name: '回调设置', func: this.getCallbackSet},
-            {name: '碎片管理', func: this.getPieceManage},
-            {name: 'Bucket下载', func: this.getTotalBucket}
+            {name: '基本信息', func: this.getProperty},
+            {name: '跨域访问CORS设置', func: this.setCors},
+            {name: '权限管理', func: this.setLimit},
           ]
         },
+        rightChooseBucket: null,
         dialogAddVisible: false,
         dialogManageVisible: false,
         dialogSettingVisible: false,
@@ -148,10 +149,15 @@
         if (e.target.tagName === 'I') {
           doms = doms.parentNode
         }
-        this.$store.commit('bucket/currentBucket', {
+        this.rightChooseBucket = {
           Bucket: doms.getAttribute('bucketName'),
-          Region: doms.getAttribute('bucketRegion')
-        })
+          Region: doms.getAttribute('bucketRegion'),
+          createTime:doms.getAttribute('createDate')
+        }
+//        this.$store.commit('bucket/currentBucket', {
+//          Bucket: doms.getAttribute('bucketName'),
+//          Region: doms.getAttribute('bucketRegion')
+//        })
         this.bucketMenu.viewMenu = true
         this.$nextTick(() => {
           this.$refs.right.focus()
@@ -164,21 +170,11 @@
         this.bucketMenu.viewMenu = false
         this.dialogManageVisible = true
       },
-      getCallbackSet: function () {
+      setCors: function () {
+
       },
-      getPieceManage: function () {
-      },
-      getTotalBucket: function () {
-        this.$confirm('确定要下载整个Bucket吗?', '请确认', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          this.$message({
-            type: 'success',
-            message: '下载中，请稍后!'
-          })
-        }).catch(() => {})
+      setLimit: function () {
+
       }
     }
   }

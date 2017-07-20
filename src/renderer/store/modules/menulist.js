@@ -4,6 +4,8 @@
 
 import  { remote, ipcRenderer } from  'electron'
 
+import Vue from 'vue'
+
 const state = {
   filelist: null,
 
@@ -91,6 +93,8 @@ const state = {
   ],
 
   newFolder: false, //新建文件夹
+
+  copyFiles: null
 }
 
 const mutations = {
@@ -219,6 +223,7 @@ const mutations = {
         state.filelist.forEach(function (item, index) {
           if (index <= val.index) {
             item.active = true
+            state.selectFile.push(item)
           }
         })
       }
@@ -244,10 +249,12 @@ const mutations = {
 
   unSelectFile(state){      //取消选中文件
     if (!state.selectFile) return
+    if (state.selectFile.length === 0 || state.filelist.length === 0) return
     state.selectFile.forEach(function (item) {
-      let x = state.filelist.findIndex((n) => n.Name === item.Name)
-      if (state.filelist[x] !== undefined) {
+      let x = state.filelist.findIndex(n => n.Name === item.Name)
+      if (x !== undefined) {
         state.filelist[x].active = false
+        // Vue.set(state.filelist[x], 'active', false)
       }
     })
     state.selectFile = []
@@ -614,6 +621,13 @@ const mutations = {
 
     }
 
+  },
+
+  copyFiles(state){
+    state.copyFiles = state.selectFile
+  },
+  pasteFiles(state){
+    state.copyFiles = []
   }
 
 }
@@ -634,24 +648,38 @@ const actions = {
         }
         resolve(data)
       })
-      ipcRenderer.once('ListObject-error', function (event, err) {
-        reject(err)
-      })
 
     })
 
   },
-  deleteFile({commit}, params){
-
+  deleteFile({commit, state}, params){
     return new Promise((resolve, reject) => {
-      ipcRenderer.send('DeleteObject', params.pms)
+      if (state.selectFile.length < 1) return
+      params.Dirs = []
+      params.Keys = []
+      remote.dialog.showMessageBox({
+        type: 'warning',
+        message: '你确定要删除吗？',
+        buttons: ['确定', '取消']
+      }, (n) => {
+        if (!n) {
+          console.log('888888', params)
+          state.selectFile.forEach(n => {
+            if (n.dir) {
+              params.Dirs.push(n.Prefix)
+            } else {
+              params.Keys.push(n.Key)
+            }
+          })
+          ipcRenderer.send('DeleteObject', params)
+          ipcRenderer.once('DeleteObject-data', function (event, data) {
+            state.selectFile = []
+            console.log('minedata', data)
+            resolve(data)
+          })
+        }
+      })
 
-      ipcRenderer.once('DeleteObject-data', function (event, data) {
-        resolve(data)
-      })
-      ipcRenderer.once('DeleteObject-error', function (event, err) {
-        reject(err)
-      })
     })
   }
 

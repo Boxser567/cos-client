@@ -29,7 +29,6 @@ export const getters = {
 
 export const mutations = {
   config({config}, cfg){
-    console.log('showcfg', cfg)
     for (let k in cfg) {
       if (cfg.hasOwnProperty(k)) {
         Vue.set(config, k, cfg[k])
@@ -38,7 +37,10 @@ export const mutations = {
         }
       }
     }
-  }
+  },
+  // changeBus(state, val){
+  //   state.bus = val
+  // }
 }
 
 export const actions = {
@@ -48,6 +50,12 @@ export const actions = {
   setConfig ({commit, state}, config) {
     commit('config', config)
     ipcRenderer.send('SetConfig', state.config)
+  },
+  debug () {
+    bus.$emit('batch', {
+      type: 'aa',
+      action: 'open'
+    })
   }
 }
 

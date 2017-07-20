@@ -1,23 +1,17 @@
 <template>
     <div id="app">
         <router-view></router-view>
+        <delete-error :isShow.sync="deleteError" :errorMsg="errorMsg"></delete-error>
+        <delete-content :isShow.sync="deleteContent" :errorMsg="errorContent"></delete-content>
     </div>
 </template>
 
 <script>
   import { ipcRenderer } from 'electron'
+  import deleteError from './components/modules/dialog/deleteError.vue'
+  import deleteContent from './components/modules/dialog/deleteContent.vue'
   export default {
     name: 'gk-cos-client',
-    computed: {
-      bus () {
-        return this.$store.getters.bus
-      }
-    },
-    watch:{
-      'bus':function () {
-        console.log('busArgument',arguments)
-      }
-    },
     created () {
       this.$store.dispatch('getConfig')
       ipcRenderer.on('error', (event, error) => {
@@ -31,6 +25,27 @@
       } else {
         this.$router.replace('/login')
       }
+    },
+
+    mounted() {
+      this.$store.getters.bus.$on('batch', (resp) => {
+        if (resp) {
+          this.errorMsg = resp
+          this.deleteError = true
+        }
+      })
+    }
+    ,
+    data(){
+      return {
+        deleteError: false,
+        errorMsg: null,
+        deleteContent: false,
+        errorContent: ''
+      }
+    },
+    components: {deleteError, deleteContent},
+    methods: {
     }
   }
 </script>

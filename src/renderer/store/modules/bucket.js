@@ -49,9 +49,10 @@ const actions = {
   //   })
   // },
 
-  getService ({commit, rootGetters, rootState}) {
+  getService ({commit}) {
     return new Promise((resolve, reject) => {
-      console.log('rootGetter', rootGetters, rootState)
+      // rootState.bus={type:'error',msg:'出错'}
+
 
       ipcRenderer.send('ListBucket')
 
@@ -64,7 +65,6 @@ const actions = {
   },
   putBucket ({commit, rootGetters}, params) {
     return new Promise((resolve, reject) => {
-
       rootGetters.cos.putBucket(params.pms, function (err, data) {
         if (err) {
           // cos.bus.$emit('globleError', err)
@@ -73,42 +73,46 @@ const actions = {
           resolve(data)
         }
       })
-      // ipcRenderer.send('PutBucket', params.pms)
-      //
-      // ipcRenderer.once('PutBucket-data', function (event, data) {
-      //   resolve(data)
-      // })
-      //
-      // ipcRenderer.once('PutBucket-error', function (event, err) {
-      //   reject(err)
-      // })
     })
   },
-  deleteBucket ({state}) {
+
+  deleteBucket ({state, rootGetters}, parms) {
     return new Promise((resolve, reject) => {
-      rootGetters.cos.deleteBucket(state.currentBucket, function (err, data) {
+      rootGetters.cos.deleteBucket(parms, function (err, data) {
         if (err) {
-          cos.bug.$emit('globleError', err)
+          //cos.bug.$emit('globleError', err)
           return
         } else {
           resolve(data)
         }
       })
-
-      // ipcRenderer.send('DeleteBucket', state.currentBucket)
-      //
-      // ipcRenderer.once('DeleteBucket-data', function (event, data) {
-      //   resolve(data)
-      // })
-      //
-      // ipcRenderer.once('DeleteBucket-error', function (event, err) {
-      //   reject(err)
-      // })
     })
   },
-  headObject ({commit}, params) {
-    return new Promise((resolve, reject) => {
 
+  getBucketACL ({rootGetters}, params) {
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.getBucketACL(params, function (err, data) {
+        if (err) {
+          // cos.bus.$emit('globleError', err)
+          return
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
+
+  putObject({rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.putObject(params, function (err, data) {
+        if (err) {
+          // cos.bus.$emit('globleError', err)
+          reject(err)
+          return
+        } else {
+          resolve(data)
+        }
+      })
     })
   }
 }
