@@ -47,21 +47,87 @@ export const actions = {
     ipcRenderer.send('SetConfig', state.config)
   },
   deleteObjects ({commit}, arg) {
-    batch('', 'delete')
+    batch(arg, 'delete', ({Key}) => {
+      return () => {
+        return new Promise((resolve, reject) => {
+          let params = {
+            Bucket: arg.Bucket,
+            Region: arg.Region,
+            Key
+          }
+          cos.deleteObject(params, (err, data) => {
+            err ? reject(Object.assign(err, {params})) : resolve(data)
+          })
+        })
+      }
+    })
   },
-  debug () {
-    bus.$emit('batch', {
-      type: 'aa',
-      action: 'open'
+  copyObjects ({commit}, arg) {
+    // let slen = 0
+    // if (arg.src.Prefix !== '') {
+    //   slen = arg.src.Prefix.substr(-1) === '/' ? arg.src.Prefix.length : arg.src.Prefix.length + 1
+    // }
+    batch(arg, 'copy', ({Key}) => {
+      let item = Key.substr(arg.src.Prefix.length)
+      return () => {
+        return new Promise((resolve, reject) => {
+          let params = {
+            Bucket: arg.Bucket,
+            Region: arg.Region,
+            Key: arg.dst.Prefix + item,
+            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
+          }
+          cos.putObjectCopy(params, (err, data) => {
+            err ? reject(Object.assign(err, {params})) : resolve(data)
+          })
+        })
+      }
+    })
+  },
+  changeObjectsAcl ({commit}, arg) {
+    // todo
+    batch(arg, 'acl', ({Key}) => {
+      return () => {
+        return new Promise((resolve, reject) => {
+          let params = {}
+
+          cos.deleteObject(params, (err, data) => {
+            err ? reject(Object.assign(err, {params})) : resolve(data)
+          })
+        })
+      }
+    })
+  },
+  debug ({commit}, arg) {
+    batch({}, 'debug', ({Key}) => {
+      return () => {
+        return new Promise((resolve, reject) => {
+          if (Math.random() > 0.5) {
+            setTimeout(resolve, 700)
+            return
+          }
+          setTimeout(() => {
+            let err = new Error(Key + ' error')
+            err.params = arg
+            err.params.Key = Key
+            reject(err)
+          }, 700)
+        })
+      }
     })
   }
 }
 
-async function batch (arg, type) {
-  bus.$emit('batch', {
+async function batch (arg, type, fn) {
+  let cancel = false
+  let msg = {
     type,
-    action: 'open'
-  })
+    action: 'open',
+    cancel () {
+      cancel = true
+    }
+  }
+  bus.$emit('batch', msg)
 
   // 获取列表
   // let contents = await getContents({
@@ -70,78 +136,27 @@ async function batch (arg, type) {
   // }, arg.Keys, arg.Dirs)
   let contents = [0, 1, 2, 3, 4, 5]
 
-  let done = 0
+  msg.action = 'data'
+  msg.data = {
+    done: 0,
+    total: contents.length
+  }
 
-  bus.$emit('batch', {
-    type,
-    action: 'data',
-    data: {
-      done,
-      total: contents.length
-    }
-  })
+  bus.$emit('batch', msg)
 
   for (let content of contents) {
+    if (cancel) break
     try {
-      // await deleteObject(cos, {
-      //   Bucket: arg.Bucket,
-      //   Region: arg.Region,
-      //   Key: content.Key
-      // })
-      await task(test(content))
-      done++
-      bus.$emit('batch', {
-        type,
-        action: 'data',
-        data: {
-          done,
-          total: contents.length
-        }
-      })
+      await task(fn(content))
+      msg.data.done++
+      bus.$emit('batch', msg)
     } catch (err) {
       // todo 用户选择终止
+      break
     }
   }
-
-  bus.$emit('batch', {
-    type,
-    action: 'finish',
-    data: {
-      done,
-      total: contents.length
-    }
-  })
-}
-
-// deleteObject(cos, {
-//   Bucket: arg.Bucket,
-//   Region: arg.Region,
-//   Key: content.Key
-// })
-//
-// function deleteObject (cos, params) {
-//   return () => {
-//     return new Promise((resolve, reject) => {
-//       cos.deleteObject(params, (err, data) => {
-//         err ? reject(err) : resolve(data)
-//       })
-//     })
-//   }
-// }
-
-function test (content) {
-  return () => {
-    return new Promise((resolve, reject) => {
-      if (Math.random() > 0.5) {
-        setTimeout(resolve, 700)
-        return
-      }
-      setTimeout(() => {
-        let err = new Error(content + ' error')
-        reject(err)
-      }, 700)
-    })
-  }
+  msg.action = 'finish'
+  bus.$emit('batch', msg)
 }
 
 async function task (fn) {
@@ -176,12 +191,19 @@ async function getContents (params, keys, dirs) {
     params.Prefix = dir
     let result
     do {
-      result = await
-        getBucket(cos, params)
+      result = await getBucket(cos, params)
       contents.concat(result.Contents)
       params.Marker = result.NextMarker
     } while (result.IsTruncated === 'true')
     params.Marker = ''
   }
   return contents
+}
+
+function getBucket (cos, params) {
+  return new Promise((resolve, reject) => {
+    cos.getBucket(params, (err, data) => {
+      err ? reject(err) : resolve(data)
+    })
+  })
 }
