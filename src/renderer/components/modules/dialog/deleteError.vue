@@ -1,20 +1,19 @@
 <template>
     <div>
         <el-dialog
-                title="文件删除"
                 :visible.sync="isShow"
                 :close-on-click-modal="false"
                 :close-on-press-escape="false"
                 :show-close="false"
                 custom-class="delete-error"
                 size="large">
+            <span slot="title">{{ title }}</span>
             <!--<span>这是一段信息 {{errorMsg}} </span>-->
             <div class="tl">
                 删除进度: {{errorMsg ? errorMsg.data.done : '' }}/{{errorMsg ? errorMsg.data.total : '' }}
                 {{errorMsg}}
             </div>
-            <el-progress :percentage="getProgress"
-                         :stroke-width="8"></el-progress>
+            <el-progress v-if="getProgress" :percentage="getProgress" :stroke-width="8"></el-progress>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="cancel" v-if="errorMsg? errorMsg.action==='finish'?false:true : true" type="danger">
                     取 消
@@ -40,9 +39,12 @@
       }
     },
     computed: {
+      title(){
+        return this.errorMsg ? this.errorMsg.type === 'delete' ? '文件删除' : '文件复制' : '文件'
+      },
       getProgress(){
         if (!this.errorMsg) return 0
-        return Math.floor(this.errorMsg.data.done / this.errorMsg.data.total * 100)
+        return Math.floor((this.errorMsg.data.done / this.errorMsg.data.total) * 100)
       }
     },
     methods: {

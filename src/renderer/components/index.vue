@@ -1,19 +1,18 @@
 <template>
     <div class="index">
         <div class="slide-left">
-            <div class="logo">Oss</div>
+            <div class="bucket-tl"><span>AppID：</span> {{getKey}}</div>
+
             <div class="bucket-opt">
                 <ul>
                     <li><a @click="dialogAddVisible = true"><i class="el-icon-plus"></i>新建</a></li>
                     <li><a @click="dialogSettingVisible=true"><i class="el-icon-setting"></i>设置</a></li>
-                    <li><a @click="fetchData"><i class="el-icon-star-on"></i>刷新</a></li>
+                    <li><a @click="fetchData"><i class="fresh"></i>刷新</a></li>
                 </ul>
             </div>
             <div class="bucket">
 
                 <div class="bucket-group" v-for="(value,key) in bucketList" :class="{ active:false }">
-
-                    <a class="bucket-tl"> <span>AppID：</span> {{ key }} </a>
 
                     <div class="bucket-item" @contextmenu="openMenu($event)">
                         <div class="item"
@@ -91,7 +90,12 @@
     components: {addBucket, protoManage, setting},
 
     computed: {
-      ...mapState('bucket', ['bucketList', 'currentBucket'])
+      ...mapState('bucket', ['bucketList', 'currentBucket']),
+      getKey(){
+        for (let key in this.bucketList) {
+          return key
+        }
+      }
     },
 
     created(){
@@ -152,7 +156,7 @@
         this.rightChooseBucket = {
           Bucket: doms.getAttribute('bucketName'),
           Region: doms.getAttribute('bucketRegion'),
-          createTime:doms.getAttribute('createDate')
+          createTime: doms.getAttribute('createDate')
         }
 //        this.$store.commit('bucket/currentBucket', {
 //          Bucket: doms.getAttribute('bucketName'),

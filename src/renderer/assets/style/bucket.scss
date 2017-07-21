@@ -1,6 +1,21 @@
 
+.bucket-tl {
+  display: block;
+  color: #000;
+  height: 32px;
+  line-height: 32px;
+  padding-left: 20px;
+  background: rgba(255, 255, 255, .1);
+  margin-top: 10px;
+  text-indent: 3px;
+  font-size: 16px;
+  user-select: initial
+}
+
 .bucket-opt {
-  background: $otherBackgrund;
+  margin: 0 20px;
+  margin-top: 8px;
+  border-bottom: 1px solid #ddd;
   ul {
     margin: 0 auto;
     text-align: center;
@@ -9,7 +24,14 @@
     display: inline-block;
     i {
       margin-right: 5px;
-      color: $activebg2;
+      color: #2277da;
+      &.fresh{
+        width: 14px;
+        height: 14px;
+        display: inline-block;
+        vertical-align: middle;
+        background: url("~/static/images/fresh.png") no-repeat center center;
+      }
     }
     a {
       color: $fontColor;
@@ -18,7 +40,7 @@
       font-size: 14px;
     }
     a:hover {
-      color: #fff;
+      color: #333;
     }
   }
 }
@@ -34,26 +56,14 @@
     height: 45px;
     overflow: hidden;
   }
-  .bucket-tl {
-    display: block;
-    color: #eaeaea;
-    height: 32px;
-    line-height: 32px;
-    padding-left: 20px;
-    background: rgba(255, 255, 255, .1);
-    margin-top: 10px;
-    text-indent: 3px;
-    font-size: 15px;
-    font-weight: bold;
-    user-select: initial
-  }
+
 }
 
 .bucket-item {
   margin: 11px 0;
   position: relative;
   .item {
-    border-left: 3px solid $leftSidebarBgColor;
+
     position: relative;
     color: $fontColor;
     margin-bottom: 5px;
@@ -71,15 +81,14 @@
       }
     }
     &.active {
-      background: $activebg;
-      border-left: 3px solid $activebg2;
+      background: $activebg !important;
       color: #fff;
       i {
         display: inline-block;
       }
     }
     &:hover {
-      background: $activebg;
+      background: #d5e2ef;
       i {
         display: inline-block;
       }
@@ -193,15 +202,16 @@
   }
 }
 
-.delete-error{
+.delete-error {
   width: 600px;
-  .tl{
+  .tl {
     margin-bottom: 12px;
   }
 }
-.delete-content{
+
+.delete-content {
   width: 610px;
-  .file{
+  .file {
     height: 60px;
   }
 }
