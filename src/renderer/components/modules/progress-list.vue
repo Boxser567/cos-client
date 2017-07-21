@@ -24,8 +24,7 @@
                     <el-row>
                         <el-col :span="12">
                             <p class="tl">{{props.item.Key}}</p>
-                            <el-progress
-                                    :percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>
+                            <el-progress stroke-width="2" :percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>
                         </el-col>
                         <el-col :span="4">
                             {{props.item.size | bitSize}}

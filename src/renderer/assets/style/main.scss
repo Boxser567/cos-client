@@ -198,7 +198,6 @@
   top: 76px;
   bottom: 0;
   overflow: hidden;
-  position: relative;
   .list {
     padding: 0 20px;
     font-size: 14px;
@@ -399,6 +398,9 @@
         top: 4px;
         left: 20px;
       }
+      .el-progress__text {
+        margin-left: 15px;
+      }
       .tl {
         width: 100%;
         overflow: hidden;
@@ -418,16 +420,16 @@
           width: 24px;
           height: 24px;
         }
-        .close{
+        .close {
           background: url("~/static/images/cancel.png") no-repeat center center;
         }
-        .error{
+        .error {
           background: url("~/static/images/error.png") no-repeat center center;
         }
-        .pause{
+        .pause {
           background: url("~/static/images/stop.png") no-repeat center center;
         }
-        .begin{
+        .begin {
           background: url("~/static/images/begin.png") no-repeat center center;
         }
       }
