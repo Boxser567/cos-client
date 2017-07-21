@@ -15,9 +15,6 @@ export const state = {
 
 export const getters = {
   cos: state => {
-    cos.options.AppId = state.config.cos.AppId
-    cos.options.SecretId = state.config.cos.SecretId
-    cos.options.SecretKey = state.config.cos.SecretKey
     return cos
   },
   bus: state => {
@@ -27,13 +24,11 @@ export const getters = {
 
 export const mutations = {
   config ({config}, cfg) {
-    for (let k in cfg) {
-      if (cfg.hasOwnProperty(k)) {
-        Vue.set(config, k, cfg[k])
-        if (k === 'cos') {
-          cos.options = cfg[k]
-        }
-      }
+    config = Object.assign(config, cfg)
+    if (cfg.cos) {
+      cos.options.AppId = cfg.cos.AppId
+      cos.options.SecretId = cfg.cos.SecretId
+      cos.options.SecretKey = cfg.cos.SecretKey
     }
   }
 }
@@ -201,7 +196,6 @@ async function confirm (error) {
 }
 
 async function getContents (params, keys, dirs) {
-  console.log(111111, arguments)
   let contents = []
   if (keys) {
     contents = contents.concat(keys.map(k => ({Key: k})))
