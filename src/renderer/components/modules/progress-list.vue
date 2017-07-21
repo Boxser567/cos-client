@@ -38,14 +38,10 @@
                             <span v-if="props.item.status=='error'">出错</span>
                         </el-col>
                         <el-col :span="4">
-                            <i v-if="props.item.status == 'pause'" class="el-icon-caret-right"
-                               @click="send('begin', 'one', props.item.id)"></i>
-                            <i v-if="props.item.status == 'run'"
-                               @click="send('pause', 'one', props.item.id)"> || </i>
-                            <i v-if="props.item.status == 'error'" class="el-icon-warning"
-                               @click="send('begin', 'one', props.item.id)"></i>
-                            <i class="el-icon-close"
-                               @click="send('delete', 'one', props.item.id)"></i>
+                            <i v-if="props.item.status == 'pause'" class="begin" @click="send('begin', 'one', props.item.id)"></i>
+                            <i v-if="props.item.status == 'run'" class="pause" @click="send('pause', 'one', props.item.id)"></i>
+                            <i v-if="props.item.status == 'error'" class="error" @click="send('begin', 'one', props.item.id)"></i>
+                            <i class="close" @click="send('delete', 'one', props.item.id)"></i>
                         </el-col>
                     </el-row>
                 </div>

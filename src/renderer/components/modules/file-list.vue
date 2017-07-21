@@ -281,9 +281,6 @@
           case 'download_file':
             this.$store.commit('menulist/downloadFile', pms)
             break
-          case 'copy_file':
-            this.$store.commit('menulist/copyFiles')
-            break
           case 'delete_file':
             this.$emit('deleteObj')
             break
@@ -291,8 +288,11 @@
             break
           case 'set_http':
             break
-          case 'paste_file':
-            this.$store.commit('menulist/pasteFiles')
+          case 'copy_file':         //复制
+            this.$store.commit('menulist/copyFiles')
+            break
+          case 'paste_file':        //粘贴
+            this.$store.dispatch('menulist/pasteFiles', pms)
             break
           case 'download_list':
             console.log(this.copyFiles)

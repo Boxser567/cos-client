@@ -9,7 +9,6 @@
                 :show-close="false"
                 custom-class="delete-content"
                 size="tiny">
-
             <div class="file">
                 文件〖 xxxx.zip 〗删除异常
                 {{errorContent }}

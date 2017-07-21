@@ -625,9 +625,6 @@ const mutations = {
 
   copyFiles(state){
     state.copyFiles = state.selectFile
-  },
-  pasteFiles(state){
-    state.copyFiles = []
   }
 
 }
@@ -667,11 +664,24 @@ const actions = {
     })
 
     return dispatch('deleteObjects', params, {root: true})
-    // ipcRenderer.send('DeleteObject', params)
-    // ipcRenderer.once('DeleteObject-data', function (event, data) {
-    //   state.selectFile = []
-    //   resolve(data)
-    // })
+
+  },
+
+  pasteFiles({commit, dispatch, state}, params){
+    if (state.copyFiles.length < 1) return Promise.resolve()
+
+    params.Dirs = []
+    params.Keys = []
+    state.copyFiles.forEach(n => {
+      if (n.dir) {
+        params.Dirs.push(n.Prefix)
+      } else {
+        params.Keys.push(n.Key)
+      }
+    })
+
+    return dispatch('copyObjects', params, {root: true})
+
   }
 
 }

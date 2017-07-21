@@ -29,12 +29,14 @@
 
     mounted() {
       this.$store.getters.bus.$on('batch', (resp) => {
+        console.log('this-batch', resp)
         if (resp) {
           this.errorMsg = resp
           this.deleteError = true
         }
       })
       this.$store.getters.bus.$on('confirm', (resp) => {
+        console.log('this-confirm', resp)
         if (resp) {
           this.errorContent = resp
           this.deleteContent = true

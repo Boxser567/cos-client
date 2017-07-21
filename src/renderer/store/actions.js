@@ -80,10 +80,7 @@ export const actions = {
     })
   },
   copyObjects ({commit}, arg) {
-    // let slen = 0
-    // if (arg.src.Prefix !== '') {
-    //   slen = arg.src.Prefix.substr(-1) === '/' ? arg.src.Prefix.length : arg.src.Prefix.length + 1
-    // }
+    console.log('copy-args', arg)
     batch(arg, 'copy', ({Key}) => {
       let item = Key.substr(arg.src.Prefix.length)
       return () => {

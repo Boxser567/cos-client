@@ -24,7 +24,9 @@
             <div class="bottom-row">
                 <div class="file-opts">
                     <div class="el-button-group">
-                        <el-button size="small" @click="fileEvents('upload')">点击上传</el-button>
+                        <el-button size="small" class="upload" @click="fileEvents('upload')"> <span class="el-icon-plus"></span> 点击上传</el-button>
+                    </div>
+                    <div class="el-button-group">
                         <el-button size="small" @click="fileEvents('newFolder')">新建文件夹</el-button>
                     </div>
                     <div class="el-button-group">
