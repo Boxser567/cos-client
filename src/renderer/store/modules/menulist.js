@@ -193,7 +193,7 @@ const mutations = {
   },
 
   downloadProgress(state, data){   //初始化下载文件列表
-                                   // if (!state.downloadProgress.status) {
+    // if (!state.downloadProgress.status) {
     state.downloadProgress.list = data
     // state.downloadProgress.status = true
     // state.downloadProgress.push()
@@ -652,35 +652,26 @@ const actions = {
     })
 
   },
-  deleteFile({commit, state}, params){
-    return new Promise((resolve, reject) => {
-      if (state.selectFile.length < 1) return
-      params.Dirs = []
-      params.Keys = []
-      remote.dialog.showMessageBox({
-        type: 'warning',
-        message: '你确定要删除吗？',
-        buttons: ['确定', '取消']
-      }, (n) => {
-        if (!n) {
-          console.log('888888', params)
-          state.selectFile.forEach(n => {
-            if (n.dir) {
-              params.Dirs.push(n.Prefix)
-            } else {
-              params.Keys.push(n.Key)
-            }
-          })
-          ipcRenderer.send('DeleteObject', params)
-          ipcRenderer.once('DeleteObject-data', function (event, data) {
-            state.selectFile = []
-            console.log('minedata', data)
-            resolve(data)
-          })
-        }
-      })
+  deleteFile({commit, dispatch, state}, params){
 
+    if (state.selectFile.length < 1) return Promise.resolve()
+    params.Dirs = []
+    params.Keys = []
+    console.log('888888', params)
+    state.selectFile.forEach(n => {
+      if (n.dir) {
+        params.Dirs.push(n.Prefix)
+      } else {
+        params.Keys.push(n.Key)
+      }
     })
+
+    return dispatch('deleteObjects', params, {root: true})
+    // ipcRenderer.send('DeleteObject', params)
+    // ipcRenderer.once('DeleteObject-data', function (event, data) {
+    //   state.selectFile = []
+    //   resolve(data)
+    // })
   }
 
 }

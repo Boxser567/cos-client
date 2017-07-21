@@ -285,10 +285,7 @@
             this.$store.commit('menulist/copyFiles')
             break
           case 'delete_file':
-            this.$store.dispatch('menulist/deleteFile', pms).then(() => {
-              console.log('mineArgument', arguments)
-              this.$store.dispatch('menulist/getFileList', pms)
-            })
+            this.$emit('deleteObj')
             break
           case 'get_address':
             break

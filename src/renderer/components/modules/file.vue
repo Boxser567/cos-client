@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <file-list :options="options"></file-list>
+        <file-list :options="options" @deleteObj="deleteObj"></file-list>
 
         <file-limit :isShow="dialogFileLimit" @closeDialog="dialogFileLimit = false"></file-limit>
 
@@ -193,7 +193,7 @@
       searchCancelFn(){
         this.options.keyWord = null
       },
-      deleteObj(){
+      deleteObj() {
         this.$confirm('确定要删除?', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
@@ -204,19 +204,14 @@
             Region: this.options.region,
             Key: this.selectFile.dir ? this.selectFile.Prefix : this.selectFile.Key
           }
-          this.$store.dispatch('menulist/deleteFile', {pms: parmas}).then((resp) => {
-            console.log('this-delete', arguments)
-            if (resp.DeleteObjectSuccess) {
+          this.$store.dispatch('menulist/deleteFile', parmas).then((resp) => {
               this.fetchFilelist()
-            } else {
-              this.$message({type: 'error', message: resp.error})
-            }
           })
         }).catch(() => {
         })
       },
       copyObj(){
-         this.$store.commit('menulist/copyFiles')
+        this.$store.commit('menulist/copyFiles')
       },
       fileEvents(types){
         let pms = {

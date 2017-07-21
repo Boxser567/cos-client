@@ -12,6 +12,7 @@
 
             <div class="file">
                 文件〖 xxxx.zip 〗删除异常
+                {{errorContent }}
             </div>
 
 
