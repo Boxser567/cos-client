@@ -252,7 +252,7 @@ const mutations = {
     if (state.selectFile.length === 0 || state.filelist.length === 0) return
     state.selectFile.forEach(function (item) {
       let x = state.filelist.findIndex(n => n.Name === item.Name)
-      if (x !== undefined) {
+      if (state.filelist[x]) {
         state.filelist[x].active = false
         // Vue.set(state.filelist[x], 'active', false)
       }

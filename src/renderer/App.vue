@@ -30,7 +30,6 @@
     mounted() {
       this.$store.getters.bus.$on('batch', (resp) => {
         if (resp) {
-          console.log(566666, resp)
           this.errorMsg = resp
           this.deleteError = true
         }

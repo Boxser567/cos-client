@@ -205,7 +205,21 @@
             Key: this.selectFile.dir ? this.selectFile.Prefix : this.selectFile.Key
           }
           this.$store.dispatch('menulist/deleteFile', parmas).then((resp) => {
-              this.fetchFilelist()
+
+            //删除完成后刷新文件列表
+            let bk = this.options.bucket, rg = this.options.region
+            this.$store.commit('menulist/fileloading', {loading: true})
+            if (bk && rg) {
+              let params = {Bucket: bk, Region: rg}
+              if (this.options.folders && this.options.folders.length) {
+                params.Prefix = this.options.folders
+              }
+              this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => {
+                this.$store.commit('menulist/fileloading', {loading: false})
+                this.$store.commit('menulist/unSelectFile')
+              })
+            }
+
           })
         }).catch(() => {
         })

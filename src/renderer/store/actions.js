@@ -47,6 +47,23 @@ export const actions = {
     ipcRenderer.send('SetConfig', state.config)
   },
   deleteObjects ({commit}, arg) {
+    if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
+      let Key = arg.Keys[0]
+      return task(() => {
+          return new Promise((resolve, reject) => {
+            let params = {
+              Bucket: arg.Bucket,
+              Region: arg.Region,
+              Key
+            }
+            cos.deleteObject(params, (err, data) => {
+              err ? reject(Object.assign(err, {params})) : resolve(data)
+            })
+          })
+        }
+      )
+    }
+
     return batch(arg, 'delete', ({Key}) => {
       return () => {
         return new Promise((resolve, reject) => {
