@@ -65,7 +65,7 @@
     },
     components: {progressList},
     computed: {
-      ...mapState('menulist', ['uploadSpeed', 'downloadSpeed', 'downloadProgress', 'uploadProgress', 'isShowFileProgress'])
+      ...mapState('menulist', ['uploadSpeed', 'downloadSpeed', 'isShowFileProgress'])
     },
     methods: {
       showFileProgress () {
@@ -74,19 +74,6 @@
       tabFn (item) {
         this.tabList.forEach(tab => { tab.iscur = false })
         item.iscur = true
-      },
-      selectLoadFile (e, types, upFile) {
-        e.preventDefault()
-        let Arr = {
-          upFile: upFile,
-          key: false
-        }
-        if (e.shiftKey) {
-          Arr.key = true
-        }
-        if (types === 'download') {
-          this.$store.commit('menulist/selectDownloadFile', Arr)
-        }
       }
     }
   }

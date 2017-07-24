@@ -1,7 +1,8 @@
 <template>
-    <div class="login-bg" >
-<button @click="debug">debug</button>
+    <div class="login-bg">
+        <button @click="debug">debug</button>
         <el-form class="login-form">
+            <img src="../../../static/images/logo.png" alt="">
             <el-form-item>
                 <el-input type="text" v-model="AppId" size="large" placeholder="App ID"></el-input>
             </el-form-item>
@@ -9,12 +10,12 @@
                 <el-input type="text" v-model="SecretId" size="large" placeholder="Access Key ID"></el-input>
             </el-form-item>
             <el-form-item>
-                <el-input type="password" v-model="SecretKey" size="large" placeholder="Access Key Secret"></el-input>
+                <el-input type="text" v-model="SecretKey" size="large" placeholder="Access Key Secret"></el-input>
             </el-form-item>
             <el-form-item>
-                <el-checkbox >本机是cos云主机</el-checkbox>
+                <el-checkbox>本机是cos云主机</el-checkbox>
 
-                <el-select  popper-class="login-select-area" v-model="areaDef" placeholder="请选择">
+                <el-select popper-class="login-select-area" v-model="areaDef" placeholder="请选择">
                     <el-option
                             v-for="item in areaList"
                             :key="item.value"
@@ -28,7 +29,7 @@
             <!--<el-input type="password" v-model="password2" placeholder="password2"></el-input>-->
             <!--</el-form-item>-->
             <el-form-item>
-                <el-button type="primary" @click="save">登  录</el-button>
+                <el-button type="primary" @click="save">登 录</el-button>
             </el-form-item>
         </el-form>
     </div>
