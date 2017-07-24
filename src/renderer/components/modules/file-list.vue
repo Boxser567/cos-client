@@ -3,7 +3,7 @@
         <div class="list header">
             <div class="name">文件名</div>
             <div class="size">大小</div>
-            <div class="time">创建时间</div>
+            <div class="time">更新时间</div>
         </div>
         <div class="list-info" id="menuinfo" @click="fileContentClick($event)" :class="{ active:isShowFileProgress }"
              @contextmenu="openFileMenu($event)">
@@ -94,23 +94,26 @@
 
     watch: {
       $route: 'fetchData',
-      copyFiles: function (val) {
-        let exst = this.menu.files.indexOf('paste_file') > -1
-        if (val && val.length) {
-          if (!exst) {
-            this.menu.files.push('paste_file')
-            this.menu.folders.push('paste_file')
-            this.menu.blanks.push('paste_file')
-            this.menu.groupFile.push('paste_file')
+      copyFiles: {
+        handler: function (val) {
+          let exst = this.menu.files.indexOf('paste_file') > -1
+          if (val && val.list.length) {
+            if (!exst) {
+              this.menu.files.push('paste_file')
+              this.menu.folders.push('paste_file')
+              this.menu.blanks.push('paste_file')
+              this.menu.groupFile.push('paste_file')
+            }
+          } else {
+            if (exst) {
+              this.menu.files.splice(this.menu.files.length - 1, 1)
+              this.menu.folders.splice(this.menu.folders.length - 1, 1)
+              this.menu.blanks.splice(this.menu.blanks.length - 1, 1)
+              this.menu.groupFile.splice(this.menu.groupFile.length - 1, 1)
+            }
           }
-        } else {
-          if (exst) {
-            this.menu.files.splice(this.menu.files.length - 1, 1)
-            this.menu.folders.splice(this.menu.folders.length - 1, 1)
-            this.menu.blanks.splice(this.menu.blanks.length - 1, 1)
-            this.menu.groupFile.splice(this.menu.groupFile.length - 1, 1)
-          }
-        }
+        },
+        deep: true
       }
     },
 
@@ -118,7 +121,7 @@
       addFolderFn: function () {   //新建文件夹
         let bk = this.options.bucket
         let rg = this.options.region
-        let folder = this.options.folders ? this.options.folders + this.folderName : this.folderName + '/'
+        let folder = this.options.folders ? this.options.folders + this.folderName + '/' : this.folderName + '/'
         let parms = {
           Bucket: bk,
           Region: rg,
@@ -289,13 +292,12 @@
           case 'set_http':
             break
           case 'copy_file':         //复制
-            this.$store.commit('menulist/copyFiles')
+            this.$store.commit('menulist/copyFiles', pms)
             break
           case 'paste_file':        //粘贴
             this.$store.dispatch('menulist/pasteFiles', pms)
             break
           case 'download_list':
-            console.log(this.copyFiles)
             break
           default:
             this.$message('请重启客户端后重试！')

@@ -76,13 +76,14 @@ export const actions = {
   },
   copyObjects ({commit}, arg) {
     console.log('copy-args', arg)
+    Object.assign(arg,arg.src)
     batch(arg, 'copy', ({Key}) => {
       let item = Key.substr(arg.src.Prefix.length)
       return () => {
         return new Promise((resolve, reject) => {
           let params = {
-            Bucket: arg.Bucket,
-            Region: arg.Region,
+            Bucket: arg.dst.Bucket,
+            Region: arg.dst.Region,
             Key: arg.dst.Prefix + item,
             CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
           }
@@ -144,8 +145,6 @@ async function batch (arg, type, fn) {
     Bucket: arg.Bucket,
     Region: arg.Region
   }, arg.Keys, arg.Dirs)
-  console.log(22222, contents)
-  // let contents = [0, 1, 2, 3, 4, 5]
 
   msg.action = 'data'
   msg.data = {
@@ -202,6 +201,7 @@ async function getContents (params, keys, dirs) {
     params.Prefix = dir
     let result
     do {
+      console.log('params',params)
       result = await getBucket(cos, params)
       contents = contents.concat(result.Contents)
       params.Marker = result.NextMarker

@@ -13,9 +13,16 @@
   width: 320px;
   padding: 40px;
   position: absolute;
-  top: 20%;
   left: 50%;
+  top: 50%;
+  margin-top: -225.5px;
   margin-left: -200px;
+  text-align: center;
+  padding: 0 40px;
+  img {
+    margin-bottom: 15px;
+    width: 124px;
+  }
   input {
     border: 1px solid #fff;
     color: #000;
@@ -26,12 +33,12 @@
   }
   button {
     width: 100%;
-    background: #96CC4D;
+    background: rgb(150, 204, 77);
     font-weight: 500;
     font-size: 15px;
     border-color: #96CC4D;
   }
-  .el-button--primary:focus, .el-button--primary:hover{
+  .el-button--primary:focus, .el-button--primary:hover {
     background: #aee64f;
     border-color: #96CC4D;
   }

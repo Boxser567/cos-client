@@ -12,12 +12,12 @@
     bottom: 0;
     background: $leftSidebarBgColor;
     width: 224.5px;
-
+    border-right: 1px solid #ddd;
   }
   .slide-right {
     position: absolute;
     top: 0;
-    left: 235px;
+    left: 225px;
     bottom: 0;
     right: 0;
     overflow: hidden;
@@ -248,7 +248,7 @@
     .list {
       height: 40px;
       line-height: 40px;
-      color: #666;
+      color: $fontColor;
       &.active {
         background: $fileActive !important;
       }
@@ -421,16 +421,16 @@
           height: 24px;
         }
         .close {
-          //background: url("static/images/cancel.png") no-repeat center center;
+          background: url("../../static/images/cancel.png") no-repeat center center;
         }
         .error {
-          //background: url("static/images/error.png") no-repeat center center;
+          background: url("../../static/images/error.png") no-repeat center center;
         }
         .pause {
-          //background: url("static/images/stop.png") no-repeat center center;
+          background: url("../../static/images/stop.png") no-repeat center center;
         }
         .begin {
-          //background: url("static/images/begin.png") no-repeat center center;
+          background: url("../../static/images/begin.png") no-repeat center center;
         }
       }
     }

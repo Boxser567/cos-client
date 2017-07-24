@@ -24,10 +24,12 @@
             <div class="bottom-row">
                 <div class="file-opts">
                     <div class="el-button-group">
-                        <el-button size="small" class="upload" @click="fileEvents('upload')"> <span class="el-icon-plus"></span> 点击上传</el-button>
+                        <el-button size="small" class="upload" @click="fileEvents('upload')"><span
+                                class="el-icon-plus"></span> 上传文件
+                        </el-button>
                     </div>
                     <div class="el-button-group">
-                        <el-button size="small" @click="fileEvents('newFolder')">新建文件夹</el-button>
+                        <el-button size="small" @click="fileEvents('newFolder')">创建文件夹</el-button>
                     </div>
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="fileEvents('download')" :disabled="eableBtn()">下载
@@ -227,7 +229,12 @@
         })
       },
       copyObj(){
-        this.$store.commit('menulist/copyFiles')
+        let pms = {
+          Bucket: this.options.bucket,
+          Region: this.options.region,
+          Prefix: (this.options.folders && this.options.folders.length > 0) ? this.options.folders : ''
+        }
+        this.$store.commit('menulist/copyFiles', pms)
       },
       fileEvents(types){
         let pms = {

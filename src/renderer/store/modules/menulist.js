@@ -38,13 +38,13 @@ const state = {
   fileRightList: [
     {
       key: 'upload_file',
-      name: '点击上传',
+      name: '上传文件',
       index: 1,
       isActive: false
     },
     {
       key: 'new_folder',
-      name: '新建文件夹',
+      name: '创建文件夹',
       index: 2,
       isActive: false
     },
@@ -94,7 +94,10 @@ const state = {
 
   newFolder: false, //新建文件夹
 
-  copyFiles: null
+  copyFiles: {
+    list: [],
+    src: null
+  }
 }
 
 const mutations = {
@@ -193,7 +196,7 @@ const mutations = {
   },
 
   downloadProgress(state, data){   //初始化下载文件列表
-    // if (!state.downloadProgress.status) {
+                                   // if (!state.downloadProgress.status) {
     state.downloadProgress.list = data
     // state.downloadProgress.status = true
     // state.downloadProgress.push()
@@ -623,8 +626,9 @@ const mutations = {
 
   },
 
-  copyFiles(state){
-    state.copyFiles = state.selectFile
+  copyFiles(state, pms){
+    state.copyFiles.src = pms
+    state.copyFiles.list = state.selectFile
   }
 
 }
@@ -668,19 +672,28 @@ const actions = {
   },
 
   pasteFiles({commit, dispatch, state}, params){
-    if (state.copyFiles.length < 1) return Promise.resolve()
-
-    params.Dirs = []
-    params.Keys = []
-    state.copyFiles.forEach(n => {
+    if (state.copyFiles.list.length < 1) return Promise.resolve()
+    let parms = {
+      dst: {
+        Bucket: params.Bucket,
+        Region: params.Region,
+        Prefix: params.Prefix
+      },
+      Dirs: [],
+      Keys: []
+    }
+    parms.src = state.copyFiles.src
+    state.copyFiles.list.forEach(n => {
       if (n.dir) {
-        params.Dirs.push(n.Prefix)
+        parms.Dirs.push(n.Prefix)
       } else {
-        params.Keys.push(n.Key)
+        parms.Keys.push(n.Key)
       }
     })
 
-    return dispatch('copyObjects', params, {root: true})
+    console.log('this.pasteFiles', parms)
+
+    return dispatch('copyObjects', parms, {root: true})
 
   }
 

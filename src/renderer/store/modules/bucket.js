@@ -2,6 +2,7 @@
  * Created by gokuai on 17/6/26.
  */
 import { ipcRenderer } from 'electron'
+import {Buffer} from 'buffer'
 
 const state = {
   bucketList: null,
@@ -53,7 +54,6 @@ const actions = {
     return new Promise((resolve, reject) => {
       // rootState.bus={type:'error',msg:'出错'}
 
-
       ipcRenderer.send('ListBucket')
 
       ipcRenderer.once('ListBucket-data', function (event, data) {
@@ -104,7 +104,11 @@ const actions = {
 
   putObject({rootGetters}, params){
     return new Promise((resolve, reject) => {
+      // params.ContentLength = 0
+      params.Body = new Buffer('')
       rootGetters.cos.putObject(params, function (err, data) {
+        console.log(params, err)
+
         if (err) {
           // cos.bus.$emit('globleError', err)
           reject(err)

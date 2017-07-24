@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow ,Tray} from 'electron'
 import { App } from './app'
 /**
  * Set `__static` path to static files in production
@@ -8,6 +8,7 @@ import { App } from './app'
  */
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+
 }
 
 let mainWindow
@@ -20,6 +21,10 @@ function createWindow () {
   /**
    * Initial window options
    */
+  // const appIcon = new Tray('/Users/somebody/images/icon.png')
+  // let win = new BrowserWindow({icon: '/Users/somebody/images/window.png'})
+  // console.log(appIcon, win)
+
   mainWindow = new BrowserWindow({
     height: 540,
     minHeight: 540,
@@ -29,6 +34,8 @@ function createWindow () {
   })
 
   mainWindow.loadURL(winURL)
+  console.debug(__dirname,'this-static', __static)
+
 
   mainWindow.on('closed', () => {
     mainWindow = null
@@ -38,6 +45,7 @@ function createWindow () {
 
 app.on('ready', () => {
   createWindow()
+
 })
 
 app.on('window-all-closed', () => {
