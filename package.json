@@ -54,9 +54,7 @@
       "icon": "build/icons"
     },
     "compression": "store",
-    "copyright": "Copyright © 2017 ${author}",
-    "publish": {
-    }
+    "copyright": "Copyright © 2017 ${author}"
   },
   "dependencies": {
     "axios": "^0.16.1",

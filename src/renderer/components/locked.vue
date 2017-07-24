@@ -1,16 +1,18 @@
 <template>
-    <div class="locked-form">
-        <el-form>
-            <el-form-item>
-                <el-input type="password" size="large" v-model="password" placeholder="password"></el-input>
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="login">登录</el-button>
-            </el-form-item>
-            <el-form-item>
-                <el-button @click="clear">清除</el-button>
-            </el-form-item>
-        </el-form>
+    <div class="login-bg">
+        <div class="locked-form">
+            <el-form>
+                <el-form-item>
+                    <el-input type="password" size="large" v-model="password" placeholder="password"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="login">登录</el-button>
+                </el-form-item>
+                <el-form-item>
+                    <el-button @click="clear">清除</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
     </div>
 </template>
 

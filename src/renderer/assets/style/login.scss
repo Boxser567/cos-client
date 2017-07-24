@@ -1,4 +1,15 @@
-.login-form ,.locked-form{
+
+.login-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("../../static/images/bg-login.png") no-repeat center center;
+  background-size: cover;
+}
+
+.login-form, .locked-form {
   width: 320px;
   padding: 40px;
   position: absolute;
@@ -6,19 +17,61 @@
   left: 50%;
   margin-left: -200px;
   input {
-    border: none;
-    color: #fff;
+    border: 1px solid #fff;
+    color: #000;
     background: rgba(255, 255, 255, .1);
+    &::-webkit-input-placeholder {
+      color: #fff;
+    }
   }
+  button {
+    width: 100%;
+    background: #96CC4D;
+    font-weight: 500;
+    font-size: 15px;
+    border-color: #96CC4D;
+  }
+  .el-button--primary:focus, .el-button--primary:hover{
+    background: #aee64f;
+    border-color: #96CC4D;
+  }
+  .el-checkbox {
+    display: inline-block;
+    color: #fff;
+    .el-checkbox__input.is-checked .el-checkbox__inner {
+      background-color: #96CC4D;
+      border-color: #96CC4D;
+    }
+  }
+  .el-select {
+    display: inline-block;
+    width: 120px;
+    margin-left: 66px;
+    color: #fff;
+
+    .el-input__icon {
+      color: #fff;
+    }
+    input {
+      color: #fff;
+      //&:focus {
+      //  border-color: #96CC4D;
+      //}
+    }
+  }
+
 }
 
-.login-form button {
-  width: 43%;
-  &:nth-child(2) {
-    margin-left: 12.3333%;
+.login-select-area {
+  .el-select-dropdown__item.selected {
+    background-color: #96CC4D;
   }
+  .el-select-dropdown__item.selected.hover {
+    background-color: #96CC4D;
+  }
+
 }
 
-.locked-form button{
+.locked-form button {
   width: 100%;
 }

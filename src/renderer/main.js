@@ -23,6 +23,10 @@ Object.keys(myfilte).forEach(function (key) {
   Vue.filter(key, myfilte[key])
 })
 
+// if (process.env.NODE_ENV === 'development') {
+//   global.__static = './static'
+// }
+
 /* eslint-disable no-new */
 new Vue({
   components: {App},
