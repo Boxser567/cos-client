@@ -3,10 +3,20 @@
  */
 import sqlite3 from 'sqlite3'
 import { app } from 'electron'
+import fs from 'fs'
 import path from 'path'
 
-const dbname = process.env.NODE_ENV === 'development' ? 'gk.sqlite' : path.join(app.getPath('userData'), 'db.dat')
-let db = new (sqlite3.verbose()).Database(dbname)
+let userDir = app.getPath('userData')
+const dbname = process.env.NODE_ENV === 'development' ? 'gk.sqlite' : path.join(userDir, 'db.dat')
+
+let db
+if (process.env.NODE_ENV !== 'development') {
+  fs.mkdir(userDir, () => {
+    db = new (sqlite3.verbose()).Database(dbname)
+  })
+} else {
+  db = new (sqlite3.verbose()).Database(dbname)
+}
 
 let init = {}
 
