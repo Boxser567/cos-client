@@ -38,44 +38,26 @@
     </div>
 </template>
 
-</template>
 
 <script>
-  import { mapState } from 'vuex'
-
   export default {
     name: 'infinite-test',
     computed: {
-      uploadProgress(){
+      uploadProgress () {
         return this.$store.state.menulist.uploadProgress
       },
-      uploadItem(){
+      uploadItem () {
         return this.$store.state.menulist.uploadItem
       }
     },
     data () {
       return {}
-      itemHeight: 40
     },
     methods: {
-      toBottom () {
-        if (!this.uploadProgress.loading) {
-          console.log('下', this.uploadItem, this.uploadProgress)
-          this.$store.commit('menulist/uploadItemAdd')
-        }
-        if (e.shiftKey) {
-          Arr.key = true
-        }
-        if (types === 'upload')
-          this.$store.commit('menulist/selectLoadFile', Arr)
-        if (types === 'download') {
-          this.$store.commit('menulist/selectDownloadFile', Arr)
-        }
-      },
-      uploadFileCtrl(e, types, id) {
+      uploadFileCtrl (e, types, id) {
         e.preventDefault()
         this.$store.commit('menulist/uploadFileCtrl', {types: types, id: id})
-      },
+      }
     }
   }
 </script>

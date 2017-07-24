@@ -29,23 +29,22 @@
 <script>
   export default{
     props: ['dialogManageVisible', 'currentBucket'],
-    data(){
+    data () {
       return {}
     },
     watch: {
       'dialogManageVisible': function (val) {
-        if (val)
-          this.list()
+        if (val) { this.list() }
       }
     },
 
     methods: {
-      list(){
+      list () {
         if (!this.currentBucket) return
         this.$store.dispatch('bucket/getBucketACL', this.currentBucket).then(() => {})
       },
 
-      closeDialog(){
+      closeDialog () {
         this.$emit('closeManage')
       },
 
@@ -55,7 +54,7 @@
           this.$emit('freshBucket')
           this.$emit('closeManage')
         })
-      },
+      }
     }
 
   }

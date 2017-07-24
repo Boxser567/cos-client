@@ -28,35 +28,32 @@
 
 
 <script>
-  import { mutations, mapState, actions } from 'vuex'
-
   export default {
 
     props: ['isShow', 'errorMsg'],
-    data(){
+    data () {
       return {
         contentShow: false
       }
     },
     computed: {
-      title(){
+      title () {
         return this.errorMsg ? this.errorMsg.type === 'delete' ? '文件删除' : '文件复制' : '文件'
       },
-      getProgress(){
+      getProgress () {
         if (!this.errorMsg) return 0
         return Math.floor((this.errorMsg.data.done / this.errorMsg.data.total) * 100)
       }
     },
     methods: {
-      close(){
+      close () {
         this.$emit('update:isShow', false)
       },
-      cancel(){
+      cancel () {
         this.$emit('update:isShow', false)
-      },
+      }
 
     }
 
   }
-
 </script>

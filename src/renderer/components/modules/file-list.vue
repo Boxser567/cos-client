@@ -57,9 +57,7 @@
 </template>
 
 <script>
-  import { mutations, mapState, actions } from 'vuex'
-
-  import { remote, dialog } from 'electron'
+  import { mapState } from 'vuex'
 
   import fileProgress from './file-progress.vue'
 
@@ -67,9 +65,9 @@
     name: 'filelist-page',
     props: ['options'],
 
-    data() {
+    data () {
       return {
-        isShowList: false,   //右键菜单的显示
+        isShowList: false, // 右键菜单的显示
         folderName: '新建文件夹',
         menu: {
           list: null,
@@ -88,7 +86,7 @@
     computed: {
       ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles', 'isShowFileProgress'])
     },
-    created(){
+    created () {
       this.fetchData()
     },
 
@@ -118,7 +116,7 @@
     },
 
     methods: {
-      addFolderFn: function () {   //新建文件夹
+      addFolderFn: function () { // 新建文件夹
         let bk = this.options.bucket
         let rg = this.options.region
         let folder = this.options.folders ? this.options.folders + this.folderName + '/' : this.folderName + '/'
@@ -129,14 +127,15 @@
         }
         this.$store.dispatch('bucket/putObject', parms).then((res) => {
           console.log('new-folder', res)
-//          this.fetchData()
+          //          this.fetchData()
           this.$store.commit('menulist/newFolder', false)
           this.folderName = '新建文件夹'
         })
       },
 
-      fetchData() {   //渲染页面
-        let bk = this.options.bucket, rg = this.options.region
+      fetchData () { // 渲染页面
+        let bk = this.options.bucket
+        let rg = this.options.region
         this.$store.commit('menulist/fileloading', {loading: true})
         if (bk && rg) {
           let params = {Bucket: bk, Region: rg}
@@ -145,13 +144,13 @@
           }
           this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => {
             this.$store.commit('menulist/fileloading', {loading: false})
-//            this.$store.commit('menulist/unSelectFile')
+            //            this.$store.commit('menulist/unSelectFile')
           })
         }
       },
 
-      //文件选择
-      itemSelect(e, index, file) {
+      // 文件选择
+      itemSelect (e, index, file) {
         let array = {
           file: file,
           key: false,
@@ -163,27 +162,27 @@
         this.$store.commit('menulist/selectFile', array)
       },
 
-      //文件空白处单击
-      fileContentClick(e) {
+      // 文件空白处单击
+      fileContentClick (e) {
         if (e.target.classList.contains('list-info')) {
           this.$store.commit('menulist/unSelectFile')
         }
       },
-      //双击文件夹
-      goFolder(e, file){
+      // 双击文件夹
+      goFolder (e, file) {
         if (!file.dir) return
         this.options.folders = file.Prefix
         this.options.keyWord = null
         let pms = {bucket: this.options.bucket, region: this.options.region, folders: this.options.folders}
-//        this.$store.commit('menulist/unSelectFile')
+        //        this.$store.commit('menulist/unSelectFile')
         this.$router.push({
           path: '/file/' + this.options.bucket,
           query: pms
         })
       },
 
-      //创建并显示右键菜单
-      openFileMenu(e){
+      // 创建并显示右键菜单
+      openFileMenu (e) {
         let currentDom = e.target
         this.$store.commit('menulist/unSelectFile')
         if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
@@ -194,7 +193,7 @@
           })
         } else {
           if (this.selectFile && this.selectFile.length > 1) {
-            let array = this.selectFile.map(n => n.dir ? true : false)
+            let array = this.selectFile.map(n => !!n.dir)
 
             if (array.includes(false) && (!array.includes(true))) {
               this.menu.list = this.fileRightList.filter((m) => {
@@ -202,17 +201,16 @@
                   return m
                 }
               })
-            }
-            else {
+            } else {
               this.menu.list = this.fileRightList.filter((m) => {
                 if (this.menu.folders.includes(m.key)) {
                   return m
                 }
               })
             }
-
           } else {
-            let cfile = null, index = null
+            let cfile = null
+            let index = null
             for (let i = 0; i < 5; i++) {
               if (currentDom.classList.contains('file-list-info')) {
                 index = currentDom.getAttribute('index')
@@ -243,7 +241,8 @@
         }
         let _self = this
         this.$nextTick(function () {
-          let top = e.y - 90, left = e.x - 225
+          let top = e.y - 90
+          let left = e.x - 225
           let largestHeight = window.innerHeight - _self.$refs.fileRight.offsetHeight - 25
           let largestWidth = window.innerWidth - _self.$refs.fileRight.offsetWidth - 225
           if (top > largestHeight) top = largestHeight
@@ -256,14 +255,14 @@
         e.preventDefault()
       },
 
-      //关闭右键菜单
-      closeFileMenu() {
+      // 关闭右键菜单
+      closeFileMenu () {
         this.isShowList = false
         document.removeEventListener('click', this.closeFileMenu)
       },
 
-      //右键菜单点击事件
-      rightClickFn(item){
+      // 右键菜单点击事件
+      rightClickFn (item) {
         if (!item) return
         let pms = {
           Bucket: this.options.bucket,
@@ -272,10 +271,10 @@
         }
 
         switch (item) {
-          case 'upload_file' :      //上传文件
+          case 'upload_file' : // 上传文件
             this.$store.commit('menulist/uploadFile', pms)
             break
-          case 'new_folder':    //新建文件夹
+          case 'new_folder': // 新建文件夹
             this.$store.commit('menulist/newFolder', true)
             break
           case 'new_folder_cancel':
@@ -291,10 +290,10 @@
             break
           case 'set_http':
             break
-          case 'copy_file':         //复制
+          case 'copy_file': // 复制
             this.$store.commit('menulist/copyFiles', pms)
             break
-          case 'paste_file':        //粘贴
+          case 'paste_file': // 粘贴
             this.$store.dispatch('menulist/pasteFiles', pms)
             break
           case 'download_list':
@@ -303,7 +302,7 @@
             this.$message('请重启客户端后重试！')
             break
         }
-      },
+      }
     }
   }
 </script>

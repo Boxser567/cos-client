@@ -45,8 +45,7 @@ function bitSize (num, decimal) {
   }
 }
 
-
-function bitSpeed (num,decimal) {
+function bitSpeed (num, decimal) {
   if (!num) {
     return '-'
   }
@@ -76,10 +75,9 @@ function bitSpeed (num,decimal) {
     for (let i = 0; i < decimal; i++) {
       dec = dec * 10
     }
-    return Math.round(num * dec) / dec + type[j] +' /s'
+    return Math.round(num * dec) / dec + type[j] + ' /s'
   }
 }
-
 
 function getInteger (num) {
   if (!Number(num)) return 0
@@ -161,9 +159,9 @@ function getArea (i) {
 export default {
   getDate: getDate,
   bitSize: bitSize,
-  bitSpeed:bitSpeed,
+  bitSpeed: bitSpeed,
   getFileImg: getFileImg,
   getDirName: getDirName,
   getArea: getArea,
-  getInteger: getInteger,
+  getInteger: getInteger
 }

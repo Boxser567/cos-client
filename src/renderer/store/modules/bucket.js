@@ -2,7 +2,7 @@
  * Created by gokuai on 17/6/26.
  */
 import { ipcRenderer } from 'electron'
-import {Buffer} from 'buffer'
+import { Buffer } from 'buffer'
 
 const state = {
   bucketList: null,
@@ -13,7 +13,7 @@ const mutations = {
   getMuService (state, data) {
     console.log('bucket列表', data)
     for (let key in data) {
-      data[key].forEach(n => n.active = false)
+      data[key].forEach(n => { n.active = false })
     }
     state.bucketList = data
   },
@@ -30,7 +30,7 @@ const mutations = {
     }
   },
 
-  currentBucket(state, val) {
+  currentBucket (state, val) {
     state.currentBucket = val
   }
 
@@ -60,7 +60,6 @@ const actions = {
         commit('getMuService', data)
         resolve(data)
       })
-
     })
   },
   putBucket ({commit, rootGetters}, params) {
@@ -68,7 +67,7 @@ const actions = {
       rootGetters.cos.putBucket(params.pms, function (err, data) {
         if (err) {
           // cos.bus.$emit('globleError', err)
-          return
+
         } else {
           resolve(data)
         }
@@ -80,8 +79,8 @@ const actions = {
     return new Promise((resolve, reject) => {
       rootGetters.cos.deleteBucket(parms, function (err, data) {
         if (err) {
-          //cos.bug.$emit('globleError', err)
-          return
+          // cos.bug.$emit('globleError', err)
+
         } else {
           resolve(data)
         }
@@ -94,7 +93,7 @@ const actions = {
       rootGetters.cos.getBucketACL(params, function (err, data) {
         if (err) {
           // cos.bus.$emit('globleError', err)
-          return
+
         } else {
           resolve(data)
         }
@@ -102,17 +101,15 @@ const actions = {
     })
   },
 
-  putObject({rootGetters}, params){
+  putObject ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
-      // params.ContentLength = 0
-      params.Body = new Buffer('')
+      params.Body = Buffer.from('')
       rootGetters.cos.putObject(params, function (err, data) {
         console.log(params, err)
 
         if (err) {
           // cos.bus.$emit('globleError', err)
           reject(err)
-          return
         } else {
           resolve(data)
         }

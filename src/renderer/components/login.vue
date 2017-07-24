@@ -63,11 +63,6 @@
         password2: ''
       }
     },
-//    computed: {
-//      backgrounds(){
-//        return 'background:url("' + __static + '/images/bg-login.png")'
-//      }
-//    },
     created () {},
     methods: {
       save () {

@@ -27,7 +27,7 @@
       }
     },
 
-    mounted() {
+    mounted () {
       this.$store.getters.bus.$on('batch', (resp) => {
         console.log('this-batch', resp)
         if (resp) {
@@ -42,9 +42,8 @@
           this.deleteContent = true
         }
       })
-    }
-    ,
-    data(){
+    },
+    data () {
       return {
         deleteError: false,
         errorMsg: null,

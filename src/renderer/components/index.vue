@@ -56,16 +56,15 @@
 </template>
 
 <script>
-  import  { ipcRenderer } from  'electron'
+  import { ipcRenderer } from 'electron'
 
-  import { mutations, mapState } from 'vuex'
-  import setting from  './modules/setting.vue'
-  import addBucket from  './modules/add-bucket.vue'
-  import protoManage from  './modules/property-manager.vue'
+  import { mapState } from 'vuex'
+  import setting from './modules/setting.vue'
+  import addBucket from './modules/add-bucket.vue'
+  import protoManage from './modules/property-manager.vue'
 
   export default {
     name: 'index-page',
-
     data () {
       return {
         bloading: true,
@@ -76,14 +75,13 @@
           list: [
             {name: '基本信息', func: this.getProperty},
             {name: '跨域访问CORS设置', func: this.setCors},
-            {name: '权限管理', func: this.setLimit},
+            {name: '权限管理', func: this.setLimit}
           ]
         },
         rightChooseBucket: null,
         dialogAddVisible: false,
         dialogManageVisible: false,
-        dialogSettingVisible: false,
-        rightChooseBucket: null
+        dialogSettingVisible: false
       }
     },
 
@@ -91,26 +89,25 @@
 
     computed: {
       ...mapState('bucket', ['bucketList', 'currentBucket']),
-      getKey(){
+      getKey () {
         for (let key in this.bucketList) {
           return key
         }
       }
     },
 
-    created(){
-//      this.fetchData()
+    created () {
       this.fetchPost()
     },
 
     methods: {
-      fetchData(){
+      fetchData () {
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => {
           this.bloading = false
         })
       },
-      fetchPost(){
+      fetchPost () {
         ipcRenderer.send('GetUploadTasks')
 
         ipcRenderer.on('GetUploadTasks-data', (event, data) => {
@@ -158,10 +155,6 @@
           Region: doms.getAttribute('bucketRegion'),
           createTime: doms.getAttribute('createDate')
         }
-//        this.$store.commit('bucket/currentBucket', {
-//          Bucket: doms.getAttribute('bucketName'),
-//          Region: doms.getAttribute('bucketRegion')
-//        })
         this.bucketMenu.viewMenu = true
         this.$nextTick(() => {
           this.$refs.right.focus()

@@ -64,14 +64,10 @@
 </template>
 
 <script>
-  import { mutations, mapState, actions } from 'vuex'
   export default{
-//    computed: {
-//      ...mapState('menulist', ['fileHeaderInfo'])
-//    },
     props: ['isShow'],
 
-    data(){
+    data () {
       return {
         fileHeaderInfo: {
           list: [{
@@ -104,18 +100,18 @@
     },
 
     methods: {
-      selectHttpChange(list, index){
+      selectHttpChange (list, index) {
         console.log('----------', list)
-//        this.fileHeaderInfo.list.forEach(function (item, idx) {
-//          if (idx === parms.index) {
-//            item.select = parms.list.select
-//          }
-//        })
+      //        this.fileHeaderInfo.list.forEach(function (item, idx) {
+      //          if (idx === parms.index) {
+      //            item.select = parms.list.select
+      //          }
+      //        })
       },
       selectOpt: function (list) {
-        return list.select === '6' ? false : true
+        return list.select !== '6'
       },
-      addElemHeader(){
+      addElemHeader () {
         let initialData = [{
           value: '1',
           label: 'Cache-Control'
@@ -137,21 +133,18 @@
         }]
         this.fileHeaderInfo.list.push({data: initialData, value: '', select: '', cosMeta: ''})
       },
-      deleteHttpDom(index){
+      deleteHttpDom (index) {
         this.fileHeaderInfo.list.splice(index, 1)
       },
-      dialogSetHttpFn(){
-
+      dialogSetHttpFn () {
         console.log(this.fileHeaderInfo)
         this.$message('提交信息')
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('closeDialog')
-      },
+      }
 
     }
 
   }
-
-
 </script>

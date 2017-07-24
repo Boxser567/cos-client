@@ -8,20 +8,17 @@
 
 
 <script>
-  import { mutations, mapState, actions } from 'vuex'
-
   export default {
 
     props: [],
-    data(){
+    data () {
       return {}
     },
-    created(){
+    created () {
 
     },
     computed: {},
     methods: {}
 
   }
-
 </script>

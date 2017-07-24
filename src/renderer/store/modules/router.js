@@ -7,28 +7,28 @@ const state = {
     bucket: null,
     region: null,
     folders: null
-  },
+  }
 }
 const mutations = {
-  changeRoute(state, parms){
+  changeRoute (state, parms) {
     if (!parms) return
     state.options = parms
     // state.options.bucket  = parms.options.bucket
     // state.options.region =parms.options.region
     // state
   },
-  setFolder(state, val){
+  setFolder (state, val) {
     state.options.folders = val
   }
 }
 const actions = {
-  setFolder({commit}, val){
+  setFolder ({commit}, val) {
     if (!val) return
     commit('setFolder', val.val)
   },
-  changeRoute({commit},parms){
-    if(!parms) return
-    commit('changeRoute',parms)
+  changeRoute ({commit}, parms) {
+    if (!parms) return
+    commit('changeRoute', parms)
   }
 }
 

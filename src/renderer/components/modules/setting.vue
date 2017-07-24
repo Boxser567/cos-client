@@ -47,27 +47,27 @@
     name: 'setting',
     props: ['dialogSettingVisible'],
     computed: {
-      config(){
+      config () {
         return this.$store.state.config
       }
     },
-    data(){
+    data () {
       return {
         upMax: 0,
         upAsy: 0,
         downMax: 0
       }
     },
-    created(){
+    created () {
       this.fetchData()
     },
     methods: {
-      fetchData(){
+      fetchData () {
         this.upMax = this.config.upload.maxActivity
         this.upAsy = this.config.upload.asyncLim
         this.downMax = this.config.download.maxActivity
       },
-      submitForm(){
+      submitForm () {
         let parms = {
           upload: {
             maxActivity: this.upMax,
@@ -81,12 +81,10 @@
         console.log(this.$store.state.config)
         this.closeDialog()
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('closeDiolog')
       }
     }
 
   }
-
-
 </script>
