@@ -24,12 +24,12 @@
     i {
       margin-right: 5px;
       color: #2277da;
-      &.fresh{
+      &.fresh {
         width: 14px;
         height: 14px;
         display: inline-block;
         vertical-align: middle;
-        //background: url("static/images/fresh.png") no-repeat center center;
+        background: url("../../static/images/fresh.png") no-repeat center center;
       }
     }
     a {
@@ -67,6 +67,10 @@
     color: $fontColor;
     margin-bottom: 5px;
     a {
+      width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       padding: 8px 20px;
       display: block;
       font-size: 14px;

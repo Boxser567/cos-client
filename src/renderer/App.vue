@@ -33,14 +33,25 @@
     mounted () {
       this.$store.getters.bus.$on('batch', (resp) => {
 //        console.log('this-batch', resp)
-        if (resp) {
-          this.errorMsg = resp
-          this.deleteError = true
+        if (resp ) {
+          switch (resp.action ){
+            case 'open':
+              this.deleteError = true
+              this.errorMsg = resp
+              break
+            case 'data':
+              this.errorMsg = resp
+              break
+            case 'finish':
+              this.errorMsg = resp
+              break
+          }
+
         }
       })
       this.$store.getters.bus.$on('confirm', (resp) => {
         console.log('this-confirm', resp)
-        if (resp) {
+        if (resp && resp.action === 'open') {
           this.errorContent = resp
           this.deleteContent = true
         }

@@ -86,7 +86,7 @@ export const actions = {
             Bucket: arg.dst.Bucket,
             Region: arg.dst.Region,
             Key: arg.dst.Prefix + item,
-            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${ Key.split('/').map(s => encodeURIComponent(s)).join('/') }`
+            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${ arg.Keys[0].split('/').map(s => encodeURIComponent(s)).join('/') }`
           }
           cos.putObjectCopy(params, (err, data) => {
             err ? reject(Object.assign(err, {params})) : resolve(data)

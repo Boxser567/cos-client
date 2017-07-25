@@ -69,7 +69,10 @@
     },
     components: {progressList},
     computed: {
-      ...mapState('menulist', ['isShowFileProgress'])
+      ...mapState('menulist', ['isShowFileProgress']),
+      config(){
+        return this.$store.state.config
+      }
     },
     methods: {
       showFileProgress () {
@@ -81,10 +84,16 @@
       },
       oncomplete (v) {
         console.log(v)
+
       },
       openLog(){
-        shell.openExternal('https://github.com')
-//        shell.showItemInFolder('/Users/gokuai/Library/Logs/gk-cos-client')
+        if (!this.config && this.config.logPath) return
+        let flag = false
+        if (!flag) {
+          let log = this.config.logPath.indexOf('/') < 0 ? '' : this.config.logPath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '')
+          shell.showItemInFolder(log)
+          flag = true
+        }
       }
     }
   }

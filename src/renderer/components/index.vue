@@ -23,8 +23,9 @@
                              :bucketName="b.Name"
                              :bucketRegion="b.Location"
                              :createDate="b.CreateDate"
+                             :title="b.Name"
                         >
-                            <a>{{b.Name}} <i class="el-icon-arrow-down"></i></a>
+                            <a>{{b.Name}} <i class="el-icon-arrow-down" @click="openMenu($event)"></i></a>
                         </div>
                     </div>
                 </div>
@@ -130,6 +131,8 @@
       },
 
       openMenu: function (e) {
+        e.preventDefault()
+        e.stopPropagation()
         let doms = e.target.parentNode
         if (e.target.tagName === 'I') {
           doms = doms.parentNode
@@ -144,7 +147,6 @@
           this.$refs.right.focus()
           this.setMenu(e.y, e.x)
         })
-        e.preventDefault()
       },
 
       getProperty: function () {

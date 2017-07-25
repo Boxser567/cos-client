@@ -47,10 +47,10 @@
     },
     methods: {
       close () {
-        this.errorMsg.cancel()
         this.$emit('update:isShow', false)
       },
       cancel () {
+        this.errorMsg.cancel()
         this.$emit('update:isShow', false)
       }
 
