@@ -453,7 +453,7 @@ UploadTask.prototype.stop = function () {
 }
 
 function getSliceHash (fileName, index, start, end) {
-  let hash = crypto.createHash('sha1')
+  let hash = crypto.createHash('md5')
 
   let readStream = fs.createReadStream(fileName, {
     start: start,

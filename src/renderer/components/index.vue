@@ -1,7 +1,7 @@
 <template>
     <div class="index">
         <div class="slide-left">
-            <!--<div class="bucket-tl"><span>AppID：</span> {{getKey}}</div>-->
+            <div class="bucket-tl"><span>AppID：</span> {{getKey}}</div>
 
             <div class="bucket-opt">
                 <ul>

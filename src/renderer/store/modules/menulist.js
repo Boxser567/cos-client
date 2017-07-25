@@ -228,6 +228,11 @@ const mutations = {
   copyFiles (state, pms) {
     state.copyFiles.src = pms
     state.copyFiles.list = state.selectFile
+  },
+
+  copyFilesNone(state){
+    state.copyFiles.src = null
+    state.copyFiles.list = []
   }
 }
 

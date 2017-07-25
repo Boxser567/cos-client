@@ -81,6 +81,10 @@
       },
       oncomplete (v) {
         console.log(v)
+      },
+      openLog(){
+        shell.openExternal('https://github.com')
+//        shell.showItemInFolder('/Users/gokuai/Library/Logs/gk-cos-client')
       }
     }
   }

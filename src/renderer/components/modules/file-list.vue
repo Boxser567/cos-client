@@ -186,38 +186,65 @@
             }
           })
         } else {
-          if (this.selectFile && this.selectFile.length > 1) {
-            let array = this.selectFile.map(n => !!n.dir)
-
-            if (array.includes(false) && (!array.includes(true))) {
-              this.menu.list = this.fileRightList.filter((m) => {
-                if (this.menu.groupFile.includes(m.key)) {
-                  return m
-                }
-              })
-            } else {
-              this.menu.list = this.fileRightList.filter((m) => {
-                if (this.menu.folders.includes(m.key)) {
-                  return m
-                }
-              })
-            }
-          } else {
-            let cfile = null
-            let index = null
-            this.$store.commit('menulist/unSelectFile')
-            for (let i = 0; i < 5; i++) {
-              if (currentDom.classList.contains('file-list-info')) {
-                index = currentDom.getAttribute('index')
-                if (index !== undefined) {
-                  cfile = this.filelist[index]
-                  this.$store.commit('menulist/selectFile', {file: cfile, index: index})
-                }
-                break
+          let cfile = null
+          let index = null
+          for (let i = 0; i < 5; i++) {
+            if (currentDom.classList.contains('file-list-info')) {
+              index = currentDom.getAttribute('index')
+              if (index !== undefined) {
+                cfile = this.filelist[index]
               }
-              currentDom = currentDom.parentNode
+              break
             }
+            currentDom = currentDom.parentNode
+          }
+
+          if (this.selectFile && this.selectFile.length > 1) {
+            if (!(cfile && index)) return
+            let temper = false
+            this.selectFile.forEach((x) => {
+              if (x.Name === cfile.Name) temper = true
+            })
+            if (temper) {
+              let array = this.selectFile.map(n => !!n.dir)
+
+              if (array.includes(false) && (!array.includes(true))) {
+                this.menu.list = this.fileRightList.filter((m) => {
+                  if (this.menu.groupFile.includes(m.key)) {
+                    return m
+                  }
+                })
+              } else {
+                this.menu.list = this.fileRightList.filter((m) => {
+                  if (this.menu.folders.includes(m.key)) {
+                    return m
+                  }
+                })
+              }
+            } else {
+              this.$store.commit('menulist/unSelectFile')
+              this.$store.commit('menulist/selectFile', {file: cfile, index: index})
+
+              if (cfile.dir) {
+                this.menu.list = this.fileRightList.filter((m) => {
+                  if (this.menu.folders.includes(m.key)) {
+                    return m
+                  }
+                })
+              } else {
+                this.menu.list = this.fileRightList.filter((m) => {
+                  if (this.menu.files.includes(m.key)) {
+                    return m
+                  }
+                })
+              }
+            }
+
+          } else {
             if (cfile && index) {
+              this.$store.commit('menulist/unSelectFile')
+              this.$store.commit('menulist/selectFile', {file: cfile, index: index})
+
               if (cfile.dir) {
                 this.menu.list = this.fileRightList.filter((m) => {
                   if (this.menu.folders.includes(m.key)) {
@@ -289,13 +316,14 @@
             this.$store.commit('menulist/copyFiles', pms)
             break
           case 'paste_file': // 粘贴
-
             if (pms.Bucket === this.copyFiles.src.Bucket && pms.Prefix === this.copyFiles.src.Prefix) {
               this.$message('路径相同，不能操作')
               return
             }
-
-            this.$store.dispatch('menulist/pasteFiles', pms)
+            this.$store.dispatch('menulist/pasteFiles', pms).then(() => {
+              this.fetchData()
+              this.$store.commit('menulist/copyFilesNone')
+            })
             break
           case 'download_list':
             break
