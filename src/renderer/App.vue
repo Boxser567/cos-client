@@ -20,17 +20,19 @@
           message: `无法${error.src}，因为${error.message}`
         })
       })
-//      if (this.$store.state.config.cos) {
-//        this.$router.replace('/locked')
-//      } else {
-//      }
+      let formClose = false
+      window.onbeforeunload = (e) => {
+        if (confirm('确定要关闭吗？')) return
+        e.returnValue = false
+      }
+
       this.$router.replace('/login')
 
     },
 
     mounted () {
       this.$store.getters.bus.$on('batch', (resp) => {
-        console.log('this-batch', resp)
+//        console.log('this-batch', resp)
         if (resp) {
           this.errorMsg = resp
           this.deleteError = true

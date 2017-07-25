@@ -45,17 +45,17 @@ export const actions = {
     if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
       let Key = arg.Keys[0]
       return task(() => {
-        return new Promise((resolve, reject) => {
-          let params = {
-            Bucket: arg.Bucket,
-            Region: arg.Region,
-            Key
-          }
-          cos.deleteObject(params, (err, data) => {
-            err ? reject(Object.assign(err, {params})) : resolve(data)
+          return new Promise((resolve, reject) => {
+            let params = {
+              Bucket: arg.Bucket,
+              Region: arg.Region,
+              Key
+            }
+            cos.deleteObject(params, (err, data) => {
+              err ? reject(Object.assign(err, {params})) : resolve(data)
+            })
           })
-        })
-      }
+        }
       )
     }
 
@@ -77,7 +77,25 @@ export const actions = {
   copyObjects ({commit}, arg) {
     console.log('copy-args', arg)
     Object.assign(arg, arg.src)
-    batch(arg, 'copy', ({Key}) => {
+
+    if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
+      let item = arg.Keys[0].substr(arg.src.Prefix.length)
+      return task(() => {
+        return new Promise((resolve, reject) => {
+          let params = {
+            Bucket: arg.dst.Bucket,
+            Region: arg.dst.Region,
+            Key: arg.dst.Prefix + item,
+            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${ Key.split('/').map(s => encodeURIComponent(s)).join('/') }`
+          }
+          cos.putObjectCopy(params, (err, data) => {
+            err ? reject(Object.assign(err, {params})) : resolve(data)
+          })
+        })
+      })
+    }
+
+    return batch(arg, 'copy', ({Key}) => {
       let item = Key.substr(arg.src.Prefix.length)
       return () => {
         return new Promise((resolve, reject) => {
@@ -85,7 +103,7 @@ export const actions = {
             Bucket: arg.dst.Bucket,
             Region: arg.dst.Region,
             Key: arg.dst.Prefix + item,
-            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
+            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${Key.split('/').map(s => encodeURIComponent(s)).join('/')}`
           }
           cos.putObjectCopy(params, (err, data) => {
             err ? reject(Object.assign(err, {params})) : resolve(data)

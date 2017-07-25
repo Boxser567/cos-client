@@ -9,11 +9,10 @@
                 :show-close="false"
                 custom-class="delete-content"
                 size="tiny">
-            <div class="file">
-                文件〖 xxxx.zip 〗删除异常
+            <div class="file" v-if="errorContent">
+                文件〖 {{  errorContent.error.params.Key }} 〗操作异常
                 {{errorContent }}
             </div>
-
 
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary" @click="stops">终止后续删除</el-button>
