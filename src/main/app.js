@@ -116,113 +116,6 @@ App.prototype.init = async function () {
     ).catch(err => { log.warn(err) })
   })
 
-  ipcMain.on('DeleteObject', async (event, arg) => {
-    /**
-     * @param  {object}    arg
-     * @param  {string}    arg.Bucket
-     * @param  {string}    arg.Region
-     * @param  {string[]}  [arg.Keys]  文件删除
-     * @param  {string[]}  [arg.Dirs]  文件夹删除
-     */
-
-    let params = {
-      Bucket: arg.Bucket,
-      Region: arg.Region
-    }
-
-    async function fn (contents) {
-      for (let item of contents) {
-        try {
-          await deleteObject(cos, {
-            Bucket: arg.Bucket,
-            Region: arg.Region,
-            Key: item.Key
-          })
-        } catch (err) {
-          try {
-            log.error(err)
-            event.sender.send('error', normalizeError(err, 'DeleteObject'))
-          } catch (err) {
-            log.warn(err)
-          }
-        }
-      }
-    }
-
-    if (arg.Keys) {
-      await fn(arg.Keys.map(k => ({Key: k})))
-    }
-
-    for (let dir of arg.Dirs) {
-      params.Prefix = dir
-      let result
-      do {
-        result = await getBucket(cos, params)
-        await fn(result.Contents)
-        params.Marker = result.NextMarker
-      } while (result.IsTruncated === 'true')
-    }
-  })
-
-  ipcMain.on('CopyObjects', async (event, arg) => {
-    /**
-     * @param  {object}    arg
-     * @param  {object}    arg.src
-     * @param  {string}    arg.src.Bucket
-     * @param  {string}    arg.src.Region
-     * @param  {string}    arg.src.Prefix
-     * @param  {object}    arg.dst
-     * @param  {string}    arg.dst.Bucket
-     * @param  {string}    arg.dst.Region
-     * @param  {string}    arg.dst.Prefix
-     * @param  {string[]}  [arg.Keys]     文件复制
-     * @param  {string[]}  [arg.Dirs]     文件夹复制
-     */
-
-    if (arg.dst.Prefix !== '') {
-      arg.dst.Prefix = arg.dst.Prefix.substr(-1) === '/' ? arg.dst.Prefix : arg.dst.Prefix + '/'
-    }
-
-    async function fn (contents) {
-      for (let item of copyGenerator(arg.src.Prefix, contents)) {
-        try {
-          await putObjectCopy(cos, {
-            Bucket: arg.dst.Bucket,
-            Region: arg.dst.Region,
-            Key: arg.dst.Prefix + item,
-            CopySource: `${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.src.Prefix + item}`
-          })
-        } catch (err) {
-          try {
-            log.error(err)
-            event.sender.send('error', normalizeError(err, 'CopyObjects'))
-          } catch (err) {
-            log.warn(err)
-          }
-        }
-      }
-    }
-
-    if (arg.Keys) {
-      await fn(arg.Keys.map(k => ({Key: k, Size: '1'})))
-    }
-
-    let params = {
-      Bucket: arg.src.Bucket,
-      Region: arg.src.Region
-    }
-
-    for (let dir of arg.Dirs) {
-      params.Prefix = dir
-      let result
-      do {
-        result = await getBucket(cos, params)
-        await fn(result.Contents)
-        params.Marker = result.NextMarker
-      } while (result.IsTruncated === 'true')
-    }
-  })
-
   ipcMain.on('GetUploadTasks', async (event) => {
     if (uploads) {
       uploads.removeAllListeners('refresh')
@@ -543,36 +436,9 @@ function* downloadGenerator (downloadPath, prefix, contents) {
   }
 }
 
-function* copyGenerator (src, contents) {
-  if (src !== '') {
-    src = src.substr(-1) === '/' ? src : src + '/'
-  }
-  let slen = src.length
-  for (let content of contents) {
-    if (content.Size === '0') continue
-    yield content.Key.substr(slen)
-  }
-}
-
 function getBucket (cos, params) {
   return new Promise((resolve, reject) => {
     cos.getBucket(params, (err, data) => {
-      err ? reject(err) : resolve(data)
-    })
-  })
-}
-
-function putObjectCopy (cos, params) {
-  return new Promise((resolve, reject) => {
-    cos.putObjectCopy(params, (err, data) => {
-      err ? reject(err) : resolve(data)
-    })
-  })
-}
-
-function deleteObject (cos, params) {
-  return new Promise((resolve, reject) => {
-    cos.deleteObject(params, (err, data) => {
       err ? reject(err) : resolve(data)
     })
   })

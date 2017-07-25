@@ -1,33 +1,12 @@
 /**
  * Created by gokuai on 17/6/7.
  */
-
 import { ipcRenderer, remote } from 'electron'
 
 const state = {
   filelist: null,
 
   fileloading: true,
-
-  uploadProgress: {
-    list: [],
-    status: false,
-    loading: false,
-    count: 20,
-    page: 0
-  },
-
-  fileUploadSelect: [],
-
-  downloadProgress: {
-    list: null,
-    status: false
-  },
-  downloadSelect: [],
-
-  uploadSpeed: null,
-
-  downloadSpeed: null,
 
   isShowFileProgress: false,
 
@@ -105,96 +84,6 @@ const mutations = {
 
   showFileProgress (state) {
     state.isShowFileProgress = !state.isShowFileProgress
-  },
-
-  updataProgress (state, data) { // 初始化上传文件列表
-    console.log('data', data)
-    if (!state.uploadProgress.status) {
-      state.uploadProgress.list = data
-      state.uploadProgress.status = true
-    }
-
-    // data.forEach(function (item, index) {
-    //   if (state.fileUploadSelect && state.fileUploadSelect.length) {
-    //     if (item.id === state.fileUploadSelect[0].id) {
-    //       item.active = true
-    //       idx = index
-    //     }
-    //   }
-    //   item.active = false
-    // })
-    // myidx = data.findIndex(n => n.id === state.fileUploadSelect[0].id)
-    // state.uploadSpeed = dd
-    // fileUploadSelect
-    // if (state.fileUploadSelect && state.fileUploadSelect.length) {
-    //   state.fileUploadSelect.forEach(function (upfile) {
-    //     if (upfile) {
-    //       let idx = data.findIndex(n => n.id === upfile.id)
-    //       data[idx].active = true
-    //     }
-    //   })
-    // }
-
-    // console.log('总上传数量: ', data, '\n页面渲染列表: ')
-  },
-
-  uploadItemAdd (state) {
-    if (state.uploadProgress.list.length > state.uploadItem.length) {
-      state.uploadProgress.loading = true
-      if (state.uploadProgress.page === 0) {
-        state.uploadItem = []
-      }
-      let j = state.uploadProgress.page * state.uploadProgress.count
-      let len = j + 20// (state.uploadProgress.page + 1) * state.uploadProgress.count
-      for (; j < len; j++) {
-        if (state.uploadProgress.list[j]) { state.uploadItem.push(state.uploadProgress.list[j]) }
-      }
-      if (state.uploadItem.length > 40) {
-        let m = 0
-        let subLen = state.uploadItem.length - 40
-        for (; m < subLen; m++) {
-          state.uploadItem.splice(0, 1)
-        }
-      }
-      state.uploadProgress.page += 1
-      state.uploadProgress.loading = false
-    }
-  },
-
-  uploadItemSub (state) {
-    if (state.uploadProgress.page === 0) return
-    state.uploadProgress.loading = true
-    if (state.uploadProgress.page > 0) {
-      let j = (state.uploadProgress.page - 2) * state.uploadProgress.count
-      let len = j + 20
-      if (j >= 0) {
-        for (; len > j; len--) {
-          if (state.uploadProgress.list[len]) { state.uploadItem.unshift(state.uploadProgress.list[len]) }
-        }
-      }
-    }
-    if (state.uploadItem.length > 40) {
-      // 删除末尾20条数据
-      let n = (state.uploadProgress.page - 1) * state.uploadProgress.count
-      let dlen = n + 20
-      for (; n < dlen; n++) {
-        if (state.uploadItem[n]) { state.uploadItem.splice(n, 1) }
-      }
-    }
-    state.uploadProgress.loading = false
-    state.uploadProgress.page -= 1
-  },
-
-  uploadLoading (state, val) {
-    state.uploadProgress.loading = val
-  },
-
-  downloadProgress (state, data) { // 初始化下载文件列表
-    // if (!state.downloadProgress.status) {
-    state.downloadProgress.list = data
-    // state.downloadProgress.status = true
-    // state.downloadProgress.push()
-    // }
   },
 
   selectFile (state, val) { // 选择文件
@@ -290,55 +179,11 @@ const mutations = {
     }
     if (index !== null) data.objects.splice(index, 1)
     let Arr = data.objects.concat(data.dirs)
-    let serchlist = Arr.filter((n) => {
+    state.filelist = Arr.filter((n) => {
       if (n.Name.indexOf(data.keywords) > -1) {
         return n
       }
     })
-    state.filelist = serchlist
-  },
-
-  selectLoadFile (state, arr) { // 选中上传文件列表de文件
-    let listArr = [].concat(state.uploadProgress.list)
-    if (!listArr && listArr.length) return
-
-    if (state.uploadSelect.length === 0) {
-      state.uploadSelect.push(arr.upFile.id)
-    }
-    if (state.uploadSelect.length === 1) {
-      if (state.uploadSelect[0] === arr.upFile.id) {
-        state.uploadSelect = []
-      } else {
-        if (!arr.key) {
-          state.uploadSelect.splice(0, 1)
-          state.uploadSelect.push(arr.upFile.id)
-        } else {
-          let arr = [state.uploadSelect[0], arr.upFile.id]
-          for (let i = state.uploadSelect[0]; i < listArr.length; i++) {
-
-          }
-        }
-      }
-    }
-    if (state.uploadSelect.length > 1) {
-      state.uploadSelect = []
-      state.uploadSelect.push(arr.upFile.id)
-    }
-  },
-
-  selectDownloadFile (state, arr) {
-    // state.downloadSelect
-    if (!arr) return
-    if (!state.downloadProgress.list && state.downloadProgress.list.length) return
-    if (state.downloadSelect && state.downloadSelect.length) { // 干掉已选中的状态
-      state.downloadSelect.forEach(function (i) {
-        state.downloadProgress.list[i].active = false
-      })
-    }
-    // 增加现在选中的状态
-    state.downloadProgress.list[arr.upFile.id].active = true
-    state.downloadSelect.push(arr.upFile.id)
-    state.downloadProgress.list.push()
   },
 
   newFolder (state, val) {
@@ -350,10 +195,8 @@ const mutations = {
       filters: [{name: 'All Files', extensions: ['*']}],
       properties: ['openFile', 'openDirectory', 'multiSelections']
     }, function (fileArray) {
-      console.log(fileArray)
       if (!fileArray) return
       pms.FileNames = fileArray
-      console.log('this-pms', pms)
       ipcRenderer.send('NewUploadTasks', pms)
     })
   },
@@ -407,11 +250,11 @@ const actions = {
       })
     })
   },
+
   deleteFile ({commit, dispatch, state}, params) {
     if (state.selectFile.length < 1) return Promise.resolve()
     params.Dirs = []
     params.Keys = []
-    console.log('888888', params)
     state.selectFile.forEach(n => {
       if (n.dir) {
         params.Dirs.push(n.Prefix)
@@ -419,7 +262,6 @@ const actions = {
         params.Keys.push(n.Key)
       }
     })
-
     return dispatch('deleteObjects', params, {root: true})
   },
 
@@ -442,9 +284,6 @@ const actions = {
         parms.Keys.push(n.Key)
       }
     })
-
-    console.log('this.pasteFiles', parms)
-
     return dispatch('copyObjects', parms, {root: true})
   }
 }
