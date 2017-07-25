@@ -12,10 +12,10 @@
             <el-form-item>
                 <el-input type="text" v-model="SecretKey" size="large" placeholder="Access Key Secret"></el-input>
             </el-form-item>
+
             <el-form-item>
                 <el-checkbox v-model="isCVM">本机是CVM云主机</el-checkbox>
-
-                <el-select popper-class="login-select-area" v-model="areaDef" placeholder="请选择">
+                <el-select popper-class="login-select-area" v-model="areaDef" :disabled="!isCVM" placeholder="请选择">
                     <el-option
                             v-for="item in areaList"
                             :key="item.value"
@@ -23,11 +23,8 @@
                             :value="item.value">
                     </el-option>
                 </el-select>
-                <!--<el-input type="password" v-model="password1" placeholder="password1"></el-input>-->
             </el-form-item>
-            <!--<el-form-item>-->
-            <!--<el-input type="password" v-model="password2" placeholder="password2"></el-input>-->
-            <!--</el-form-item>-->
+
             <el-form-item>
                 <el-button type="primary" @click="save">登 录</el-button>
             </el-form-item>
@@ -36,7 +33,7 @@
 </template>
 
 <script>
-  import { ipcRenderer } from 'electron'
+  import { ipcRenderer, remote } from 'electron'
   export default {
     name: 'newPage',
     data () {
@@ -59,8 +56,7 @@
         areaDef: null,
         AppId: '',
         SecretId: '',
-        SecretKey: '',
-        password1: '',
+        SecretKey: ''
       }
     },
     created () {},
@@ -74,7 +70,6 @@
           },
           isCVM: this.isCVM,
           area: this.areaDef
-//          password: this.password1
         })
         this.$store.dispatch('bucket/getService').then(() => {
           this.$router.replace('/')
@@ -87,6 +82,7 @@
         this.AppId = '1253834952'
         this.SecretId = 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4'
         this.SecretKey = 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
+        remote.getCurrentWindow().openDevTools()
       }
     }
   }

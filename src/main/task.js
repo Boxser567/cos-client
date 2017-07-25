@@ -405,12 +405,13 @@ UploadTask.prototype.upload = function () {
         Body: result.body,
         onProgress: (data) => {
           pg.loaded = data.loaded
-          pg.speed = data.speed
+          pg.speed = ~~data.speed
           this.progress.On()
         }
         // todo 在sdk更新后换成 ContentMD5
         // ContentSha1: '"' + result.hash + '"'
       }, this.params), (err, data) => {
+        pg.speed = 0
         if (err) {
           reject(err)
           return

@@ -7,7 +7,7 @@ import path from 'path'
 import { ipcMain } from 'electron'
 import log from 'electron-log'
 import Cos from 'cos-nodejs-sdk-v5'
-import { MockDownloadTask as DownloadTask, MockUploadTask as UploadTask, Tasks } from './task'
+import { DownloadTask, UploadTask, Tasks } from './task'
 import { clear, init, save } from './db'
 
 log.transports.console.level = 'info'
@@ -332,8 +332,10 @@ App.prototype.init = async function () {
     if (!uploads || !downloads) return Promise.resolve()
     uploads.pause([], true)
     downloads.pause([], true)
+    let cfg = Object.assign({}, config)
+    delete cfg.cos
     return Promise.all([
-      save.config(config),
+      save.config(cfg),
       save.upload(uploads.tasks),
       save.download(downloads.tasks)
     ])
