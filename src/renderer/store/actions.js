@@ -45,17 +45,17 @@ export const actions = {
     if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
       let Key = arg.Keys[0]
       return task(() => {
-          return new Promise((resolve, reject) => {
-            let params = {
-              Bucket: arg.Bucket,
-              Region: arg.Region,
-              Key
-            }
-            cos.deleteObject(params, (err, data) => {
-              err ? reject(Object.assign(err, {params})) : resolve(data)
-            })
+        return new Promise((resolve, reject) => {
+          let params = {
+            Bucket: arg.Bucket,
+            Region: arg.Region,
+            Key
+          }
+          cos.deleteObject(params, (err, data) => {
+            err ? reject(Object.assign(err, {params})) : resolve(data)
           })
-        }
+        })
+      }
       )
     }
 
@@ -76,7 +76,7 @@ export const actions = {
   },
   copyObjects ({commit}, arg) {
     console.log('copy-args', arg)
-    Object.assign(arg,arg.src)
+    Object.assign(arg, arg.src)
     batch(arg, 'copy', ({Key}) => {
       let item = Key.substr(arg.src.Prefix.length)
       return () => {
@@ -201,7 +201,7 @@ async function getContents (params, keys, dirs) {
     params.Prefix = dir
     let result
     do {
-      console.log('params',params)
+      console.log('params', params)
       result = await getBucket(cos, params)
       contents = contents.concat(result.Contents)
       params.Marker = result.NextMarker

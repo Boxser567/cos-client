@@ -27,36 +27,33 @@
 
 
 <script>
-  import { mutations, mapState, actions } from 'vuex'
-
   export default {
 
     props: ['isShow', 'errorContent'],
-    data(){
+    data () {
       return {}
     },
-    created(){
+    created () {
 
     },
     computed: {},
     methods: {
-      close(){
+      close () {
         this.$emit('update:isShow', false)
       },
-      ignore(){
+      ignore () {
         this.errorContent.ignore()
         this.$emit('update:isShow', false)
       },
-      stops(){
+      stops () {
         this.errorContent.stop()
         this.$emit('update:isShow', false)
       },
-      retry(){
+      retry () {
         this.errorContent.retry()
         this.$emit('update:isShow', false)
       }
     }
 
   }
-
 </script>

@@ -28,13 +28,11 @@
     created () {},
     methods: {
       login () {
-//        if (this.password !== this.$store.state.config.password) {
-//          this.$message('密码不正确')
-//          return
-//        }
-        // 检查Secret同时获取数据
-
-        this.$store.dispatch('bucket/getService').then((res) => {
+        if (this.password !== this.$store.state.config.password) {
+          this.$message('密码不正确')
+          return
+        }
+        this.$store.dispatch('bucket/getService').then(() => {
           this.$router.replace('/')
         }, (err) => {
           console.error(err)

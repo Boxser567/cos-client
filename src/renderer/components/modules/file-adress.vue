@@ -27,28 +27,25 @@
 
 
 <script>
-  import { mutations, mapState, actions } from 'vuex'
-
   export default {
 
     props: ['isShow'],
-    data(){
+    data () {
       return {}
     },
-    created(){
+    created () {
 
     },
     computed: {},
     methods: {
-      selectText(){
+      selectText () {
 
       },
-//url: 'http://' + param.Bucket + '-1253834952.' + param.Region + '.myqcloud.com/' + state.selectFile.Key
-      closeDialog(){
+      // url: 'http://' + param.Bucket + '-1253834952.' + param.Region + '.myqcloud.com/' + state.selectFile.Key
+      closeDialog () {
         this.$emit('closeDialog')
       }
     }
 
   }
-
 </script>

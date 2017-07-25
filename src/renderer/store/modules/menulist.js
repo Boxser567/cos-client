@@ -2,9 +2,7 @@
  * Created by gokuai on 17/6/7.
  */
 
-import  { remote, ipcRenderer } from  'electron'
-
-import Vue from 'vue'
+import { ipcRenderer, remote } from 'electron'
 
 const state = {
   filelist: null,
@@ -89,10 +87,10 @@ const state = {
       name: '下载当前目录',
       index: 9,
       isActive: false
-    },
+    }
   ],
 
-  newFolder: false, //新建文件夹
+  newFolder: false, // 新建文件夹
 
   copyFiles: {
     list: [],
@@ -101,15 +99,15 @@ const state = {
 }
 
 const mutations = {
-  fileloading(state, val){    //文件加载
+  fileloading (state, val) { // 文件加载
     state.fileloading = val.loading
   },
 
-  showFileProgress(state){
+  showFileProgress (state) {
     state.isShowFileProgress = !state.isShowFileProgress
   },
 
-  updataProgress(state, data){    //初始化上传文件列表
+  updataProgress (state, data) { // 初始化上传文件列表
     console.log('data', data)
     if (!state.uploadProgress.status) {
       state.uploadProgress.list = data
@@ -138,23 +136,22 @@ const mutations = {
     // }
 
     // console.log('总上传数量: ', data, '\n页面渲染列表: ')
-
   },
 
-  uploadItemAdd(state){
+  uploadItemAdd (state) {
     if (state.uploadProgress.list.length > state.uploadItem.length) {
       state.uploadProgress.loading = true
       if (state.uploadProgress.page === 0) {
         state.uploadItem = []
       }
-      let j = state.uploadProgress.page * state.uploadProgress.count,
-        len = j + 20//(state.uploadProgress.page + 1) * state.uploadProgress.count
+      let j = state.uploadProgress.page * state.uploadProgress.count
+      let len = j + 20// (state.uploadProgress.page + 1) * state.uploadProgress.count
       for (; j < len; j++) {
-        if (state.uploadProgress.list[j])
-          state.uploadItem.push(state.uploadProgress.list[j])
+        if (state.uploadProgress.list[j]) { state.uploadItem.push(state.uploadProgress.list[j]) }
       }
       if (state.uploadItem.length > 40) {
-        let m = 0, subLen = state.uploadItem.length - 40
+        let m = 0
+        let subLen = state.uploadItem.length - 40
         for (; m < subLen; m++) {
           state.uploadItem.splice(0, 1)
         }
@@ -162,57 +159,54 @@ const mutations = {
       state.uploadProgress.page += 1
       state.uploadProgress.loading = false
     }
-
   },
 
-  uploadItemSub(state){
+  uploadItemSub (state) {
     if (state.uploadProgress.page === 0) return
     state.uploadProgress.loading = true
     if (state.uploadProgress.page > 0) {
-      let j = (state.uploadProgress.page - 2) * state.uploadProgress.count,
-        len = j + 20
+      let j = (state.uploadProgress.page - 2) * state.uploadProgress.count
+      let len = j + 20
       if (j >= 0) {
         for (; len > j; len--) {
-          if (state.uploadProgress.list[len])
-            state.uploadItem.unshift(state.uploadProgress.list[len])
+          if (state.uploadProgress.list[len]) { state.uploadItem.unshift(state.uploadProgress.list[len]) }
         }
       }
     }
     if (state.uploadItem.length > 40) {
-      //删除末尾20条数据
-      let n = (state.uploadProgress.page - 1) * state.uploadProgress.count,
-        dlen = n + 20
+      // 删除末尾20条数据
+      let n = (state.uploadProgress.page - 1) * state.uploadProgress.count
+      let dlen = n + 20
       for (; n < dlen; n++) {
-        if (state.uploadItem[n])
-          state.uploadItem.splice(n, 1)
+        if (state.uploadItem[n]) { state.uploadItem.splice(n, 1) }
       }
     }
     state.uploadProgress.loading = false
     state.uploadProgress.page -= 1
   },
 
-  uploadLoading(state, val){
+  uploadLoading (state, val) {
     state.uploadProgress.loading = val
   },
 
-  downloadProgress(state, data){   //初始化下载文件列表
-                                   // if (!state.downloadProgress.status) {
+  downloadProgress (state, data) { // 初始化下载文件列表
+    // if (!state.downloadProgress.status) {
     state.downloadProgress.list = data
     // state.downloadProgress.status = true
     // state.downloadProgress.push()
     // }
   },
 
-  selectFile(state, val) {       //选择文件
+  selectFile (state, val) { // 选择文件
     if (!state.filelist) return
 
-    if (val.key) {  //判断shiftkey
+    if (val.key) { // 判断shiftkey
       if (state.selectFile && state.selectFile.length > 1) {
-        //取最后一个的索引 和本次选择的索引组合
-      } else if (state.selectFile && state.selectFile.length == 1) {
+        // 取最后一个的索引 和本次选择的索引组合
+      } else if (state.selectFile && state.selectFile.length === 1) {
         let selectID = state.filelist.findIndex((n) => n.Name === state.selectFile[0].Name)
         let thisArr = [selectID, val.index]
-        if (selectID == val.index) return
+        if (selectID === val.index) return
         if (selectID > val.index) {
           thisArr.reverse()
         }
@@ -230,7 +224,6 @@ const mutations = {
           }
         })
       }
-
     } else {
       let chooseArr = []
       if (state.selectFile && state.selectFile.length) {
@@ -247,10 +240,9 @@ const mutations = {
       state.selectFile = []
       state.selectFile.push(val.file)
     }
-
   },
 
-  unSelectFile(state){      //取消选中文件
+  unSelectFile (state) { // 取消选中文件
     if (!state.selectFile) return
     if (state.selectFile.length === 0 || state.filelist.length === 0) return
     state.selectFile.forEach(function (item) {
@@ -263,12 +255,12 @@ const mutations = {
     state.selectFile = []
   },
 
-  getFileList(state, data){       //获取当前文件列表
+  getFileList (state, data) { // 获取当前文件列表
     // console.log('当前文件列表', data)
     let index = null
     if (data.objects.length) {
       data.objects.forEach(function (item, idx) {
-        if (item.Name == '') index = idx
+        if (item.Name === '') index = idx
         item.active = false
       })
     }
@@ -278,15 +270,15 @@ const mutations = {
         d.dir = true
       })
     }
-    if (index != null) data.objects.splice(index, 1)
+    if (index !== null) data.objects.splice(index, 1)
     state.filelist = data.objects.concat(data.dirs)
   },
 
-  searchFileList(state, data){    //搜索文件
+  searchFileList (state, data) { // 搜索文件
     let index = null
     if (data.objects.length) {
       data.objects.forEach(function (item, idx) {
-        if (item.Name == '') index = idx
+        if (item.Name === '') index = idx
         item.active = false
       })
     }
@@ -296,7 +288,7 @@ const mutations = {
         d.dir = true
       })
     }
-    if (index != null) data.objects.splice(index, 1)
+    if (index !== null) data.objects.splice(index, 1)
     let Arr = data.objects.concat(data.dirs)
     let serchlist = Arr.filter((n) => {
       if (n.Name.indexOf(data.keywords) > -1) {
@@ -306,7 +298,7 @@ const mutations = {
     state.filelist = serchlist
   },
 
-  selectLoadFile(state, arr){    //选中上传文件列表de文件
+  selectLoadFile (state, arr) { // 选中上传文件列表de文件
     let listArr = [].concat(state.uploadProgress.list)
     if (!listArr && listArr.length) return
 
@@ -354,26 +346,26 @@ const mutations = {
     // state.fileUploadSelect.push(arr.upFile)
   },
 
-  selectDownloadFile(state, arr){
+  selectDownloadFile (state, arr) {
     // state.downloadSelect
     if (!arr) return
     if (!state.downloadProgress.list && state.downloadProgress.list.length) return
-    if (state.downloadSelect && state.downloadSelect.length) {   //干掉已选中的状态
+    if (state.downloadSelect && state.downloadSelect.length) { // 干掉已选中的状态
       state.downloadSelect.forEach(function (i) {
         state.downloadProgress.list[i].active = false
       })
     }
-    //增加现在选中的状态
+    // 增加现在选中的状态
     state.downloadProgress.list[arr.upFile.id].active = true
     state.downloadSelect.push(arr.upFile.id)
     state.downloadProgress.list.push()
   },
 
-  newFolder(state, val){
+  newFolder (state, val) {
     state.newFolder = val
   },
 
-  uploadFile(state, pms){
+  uploadFile (state, pms) {
     remote.dialog.showOpenDialog({
       filters: [{name: 'All Files', extensions: ['*']}],
       properties: ['openFile', 'openDirectory', 'multiSelections']
@@ -394,110 +386,7 @@ const mutations = {
     })
   },
 
-  uploadFileCtrl(state, val){
-    if (!val)return
-    if (!state.uploadProgress.list) return
-    console.log('this-state.uploadProgress', state.uploadProgress)
-
-    switch (val.types) {
-      case 'begin':
-        let parmsBegin = {tasks: []}
-        if (val.id) {
-          parmsBegin.tasks.push(val.id)
-        } else {
-          state.uploadProgress.list.forEach(function (file) {
-            if (state.fileUploadSelect.indexOf(file.id) > -1) {
-              parmsBegin.tasks.push(file.id)
-            }
-          })
-        }
-        if (parmsBegin.tasks.length) {
-          ipcRenderer.send('ResumeUploadTask', parmsBegin)
-        }
-        break
-      case 'purse':
-        let parmsPurse = {tasks: []}
-        if (val.id) {
-          parmsPurse.tasks.push(val.id)
-        } else {
-          state.uploadProgress.list.forEach(function (file) {
-            if (state.fileUploadSelect.indexOf(file.id) > -1) {
-              parmsPurse.tasks.push(file.id)
-            }
-          })
-        }
-        if (parmsPurse.tasks.length) {
-          ipcRenderer.send('PauseUploadTasks', parmsPurse)
-        }
-        break
-      case 'cancel':      //取消
-        let parmsCancel = {tasks: []}
-        if (val.id) {
-          parmsCancel.tasks.push(val.id)
-        } else {
-          state.uploadProgress.list.forEach(function (file) {
-            if (state.fileUploadSelectID.indexOf(file.id) > -1) {
-              parmsCancel.tasks.push(file.id)
-            }
-          })
-        }
-        if (parmsCancel.tasks.length) {
-          ipcRenderer.send('DeleteUploadTasks', parmsCancel)
-        }
-        break
-      case 'allBegin':    //全部开始
-        let parmsAllBegin = {tasks: []}
-        state.uploadProgress.list.forEach(function (file) {
-          if (file.status === 'pause') {
-            parmsAllBegin.tasks.push(file.id)
-          }
-        })
-        if (parmsAllBegin.tasks.length) {
-          ipcRenderer.send('ResumeUploadTask', parmsAllBegin)
-        }
-        break
-      case 'allPurse':    //全部暂停
-        let parmsAllPurse = {tasks: []}
-        state.uploadProgress.list.forEach(function (file) {
-          if (['run', 'wait'].indexOf(file.status) > -1) {
-            parmsAllPurse.tasks.push(file.id)
-          }
-        })
-        if (parmsAllPurse.tasks.length) {
-          ipcRenderer.send('PauseUploadTasks', parmsAllPurse)
-        }
-        break
-      case 'allCancel':   //全部取消
-        let parmsAllCancel = {
-          tasks: []
-        }
-        state.uploadProgress.list.forEach(function (file) {
-          if (['wait', 'run', 'pause', 'error'].indexOf(file.status) > -1) {
-            parmsAllCancel.tasks.push(file.id)
-          }
-        })
-        if (parmsAllCancel.tasks.length) {
-          // ipcRenderer.send('PauseUploadTasks', parmsAllCancel)
-          ipcRenderer.send('DeleteUploadTasks', parmsAllCancel)
-        }
-        break
-      case 'clear':
-        let parms = {tasks: []}
-        state.uploadProgress.list.forEach(function (file) {
-          if (file.status === 'complete') {
-            parms.tasks.push(file.id)
-          }
-        })
-        if (parms.tasks.length) {
-          ipcRenderer.send('DeleteUploadTasks', parms)
-        }
-        break
-      default:
-        break
-    }
-  },
-
-  downloadFile(state, pms){
+  downloadFile (state, pms) {
     if (!state.selectFile) return
     remote.dialog.showOpenDialog({
       buttonLabel: '选择',
@@ -519,125 +408,17 @@ const mutations = {
       })
       ipcRenderer.send('NewDownloadTasks', parms)
     })
-
   },
 
-  downloadFileCtrl(state, val){
-    if (!val)return
-    if (!state.downloadProgress.list) return
-    console.log('this-state.downloadProgress', state.downloadProgress)
-
-    switch (val.types) {
-      case 'begin':
-        let parmsBegin = {tasks: []}
-        if (val.id) {
-          parmsBegin.tasks.push(val.id)
-        } else {
-          state.downloadProgress.list.forEach(function (file) {
-            if (state.downloadSelect.indexOf(file.id) > -1) {
-              parmsBegin.tasks.push(file.id)
-            }
-          })
-        }
-        if (parmsBegin.tasks.length) {
-          ipcRenderer.send('ResumeDownloadTask', parmsBegin)
-        }
-        break
-      case  'purse':
-        let parmsPurse = {tasks: []}
-        if (val.id) {
-          parmsPurse.tasks.push(val.id)
-        } else {
-          state.downloadProgress.list.forEach(function (file) {
-            if (state.downloadSelect.indexOf(file.id) > -1) {
-              parmsPurse.tasks.push(file.id)
-            }
-          })
-        }
-        if (parmsPurse.tasks.length) {
-          ipcRenderer.send('PauseDownloadTasks', parmsPurse)
-        }
-        break
-      case  'cancel':
-        let parmsCancel = {tasks: []}
-        if (val.id) {
-          parmsCancel.tasks.push(val.id)
-        } else {
-          state.downloadProgress.list.forEach(function (file) {
-            if (state.downloadSelect.indexOf(file.id) > -1) {
-              parmsCancel.tasks.push(file.id)
-            }
-          })
-        }
-        if (parmsCancel.tasks.length) {
-          ipcRenderer.send('DeleteDownloadTasks', parmsCancel)
-        }
-        break
-      case 'allBegin':    //全部开始
-        let parmsAllBegin = {tasks: []}
-        state.downloadProgress.list.forEach(function (file) {
-          if (file.status === 'pause') {
-            parmsAllBegin.tasks.push(file.id)
-          }
-        })
-        if (parmsAllBegin.tasks.length) {
-          ipcRenderer.send('ResumeDownloadTask', parmsAllBegin)
-        }
-        break
-      case 'allPurse':    //全部暂停
-        let parmsAllPurse = {tasks: []}
-        state.downloadProgress.list.forEach(function (file) {
-          if (['run', 'wait'].indexOf(file.status) > -1) {
-            parmsAllPurse.tasks.push(file.id)
-          }
-        })
-        if (parmsAllPurse.tasks.length) {
-          ipcRenderer.send('PauseDownloadTasks', parmsAllPurse)
-        }
-        break
-      case 'allCancel':   //全部取消
-        let parmsAllCancel = {
-          tasks: []
-        }
-        state.downloadProgress.list.forEach(function (file) {
-          if (['wait', 'run', 'pause', 'error'].indexOf(file.status) > -1) {
-            parmsAllCancel.tasks.push(file.id)
-          }
-        })
-        if (parmsAllCancel.tasks.length) {
-          ipcRenderer.send('DeleteDownloadTasks', parmsAllCancel)
-        }
-        break
-      case 'clear':
-        let parms = {tasks: []}
-        state.downloadProgress.list.forEach(function (file) {
-          if (file.status === 'complete') {
-            parms.tasks.push(file.id)
-          }
-        })
-        if (parms.tasks.length) {
-          ipcRenderer.send('DeleteDownloadTasks', parms)
-        }
-        break
-      default :
-        break
-
-    }
-
-  },
-
-  copyFiles(state, pms){
+  copyFiles (state, pms) {
     state.copyFiles.src = pms
     state.copyFiles.list = state.selectFile
   }
-
 }
 
 const actions = {
-  getFileList({commit}, params){
-
+  getFileList ({commit}, params) {
     return new Promise((resolve, reject) => {
-
       ipcRenderer.send('ListObject', params.pms)
 
       ipcRenderer.once('ListObject-data', function (event, data) {
@@ -649,12 +430,9 @@ const actions = {
         }
         resolve(data)
       })
-
     })
-
   },
-  deleteFile({commit, dispatch, state}, params){
-
+  deleteFile ({commit, dispatch, state}, params) {
     if (state.selectFile.length < 1) return Promise.resolve()
     params.Dirs = []
     params.Keys = []
@@ -668,10 +446,9 @@ const actions = {
     })
 
     return dispatch('deleteObjects', params, {root: true})
-
   },
 
-  pasteFiles({commit, dispatch, state}, params){
+  pasteFiles ({commit, dispatch, state}, params) {
     if (state.copyFiles.list.length < 1) return Promise.resolve()
     let parms = {
       dst: {
@@ -694,9 +471,7 @@ const actions = {
     console.log('this.pasteFiles', parms)
 
     return dispatch('copyObjects', parms, {root: true})
-
   }
-
 }
 
 export default {

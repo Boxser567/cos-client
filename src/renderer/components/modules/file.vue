@@ -70,12 +70,10 @@
 
 <script>
   import fileList from './file-list.vue'
-  import fileAdress from  './file-adress'
+  import fileAdress from './file-adress'
   import fileLimit from './file-limit.vue'
   import setHttpHead from './set-http-head.vue'
-  import store from '../../store'
-  import { mutations, mapState, actions } from 'vuex'
-  import bord from 'clipboard'
+  import { mapState } from 'vuex'
   export default {
     name: 'filepage',
     components: {fileList, fileAdress, fileLimit, setHttpHead},
@@ -83,28 +81,27 @@
       this.options.bucket = to.params.bucket || to.query.bucket
       this.options.region = to.params.region || to.query.region
       this.navOptions = [].concat({name: this.options.bucket})
-      if (to.path != from.path) {
+      if (to.path !== from.path) {
         this.options.keyWord = null
         this.options.folders = []
-
       } else {
         this.options.folders = to.query.folders
         let navbar = to.query.folders
         if (navbar && navbar.length) {
           navbar = navbar.split('/')
-          navbar.forEach(n => {if (n) this.navOptions.push({name: n}) })
+          navbar.forEach(n => { if (n) this.navOptions.push({name: n}) })
         }
       }
-      //console.log('router钩子', to.params, this.options)
+      // console.log('router钩子', to.params, this.options)
       next()
     },
     computed: {
       ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo'])
     },
-    data() {
+    data () {
       return {
         options: {
-          bucket: null,//this.$route.params.bucket
+          bucket: null, // this.$route.params.bucket
           region: null,
           folders: null,
           keyWord: null
@@ -118,22 +115,21 @@
       }
     },
     methods: {
-      eableBtn(){
+      eableBtn () {
         if (this.selectFile && this.selectFile.length) {
           return false
         } else {
           return true
         }
       },
-      eableBtn1(type){  //获取地址
+      eableBtn1 (type) { // 获取地址
         if (this.selectFile && this.selectFile.length) {
-          let array = this.selectFile.map(n => n.dir ? true : false)
+          let array = this.selectFile.map(n => !!n.dir)
           if (array.includes(false) && array.includes(true)) {
             return true
           } else if (array.includes(true)) {
             return true
-          }
-          else {
+          } else {
             if (type === 'adress') {
               if (this.selectFile.length > 1) {
                 return true
@@ -146,16 +142,15 @@
           return true
         }
       },
-      goFilePath(index){
+      goFilePath (index) {
         if (!this.navOptions.length) return
         if (index === this.navOptions.length - 1) return
-        let goFolder = '',
-          currentArr = [].concat(this.navOptions)
+        let goFolder = ''
+        let currentArr = [].concat(this.navOptions)
         currentArr.splice(0, 1)
-        if (index != 0) {
+        if (index !== 0) {
           currentArr.forEach((nav, idx) => {
-            if (idx < index)
-              goFolder += nav.name + '/'
+            if (idx < index) { goFolder += nav.name + '/' }
           })
         }
         let topage = {
@@ -169,10 +164,10 @@
         this.options.keyWord = null
         this.$router.push(topage)
       },
-      blurSearch(){
+      blurSearch () {
         this.inputFocus = false
       },
-      focusSearch(){
+      focusSearch () {
         console.log(this.navOptions)
         if (this.navOptions && this.navOptions.length) {
           let obj = this.navOptions[this.navOptions.length - 1]
@@ -180,7 +175,7 @@
           this.inputFocus = true
         }
       },
-      searchFn(){
+      searchFn () {
         if (!this.options.keyWord) return
         this.$store.commit('menulist/fileloading', {loading: true})
         let params = {
@@ -194,10 +189,10 @@
         }
         this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => this.$store.commit('menulist/fileloading', {loading: false}))
       },
-      searchCancelFn(){
+      searchCancelFn () {
         this.options.keyWord = null
       },
-      deleteObj() {
+      deleteObj () {
         this.$confirm('确定要删除?', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
@@ -209,9 +204,9 @@
             Key: this.selectFile.dir ? this.selectFile.Prefix : this.selectFile.Key
           }
           this.$store.dispatch('menulist/deleteFile', parmas).then((resp) => {
-
-            //删除完成后刷新文件列表
-            let bk = this.options.bucket, rg = this.options.region
+            // 删除完成后刷新文件列表
+            let bk = this.options.bucket
+            let rg = this.options.region
             this.$store.commit('menulist/fileloading', {loading: true})
             if (bk && rg) {
               let params = {Bucket: bk, Region: rg}
@@ -223,12 +218,11 @@
                 this.$store.commit('menulist/unSelectFile')
               })
             }
-
           })
         }).catch(() => {
         })
       },
-      copyObj(){
+      copyObj () {
         let pms = {
           Bucket: this.options.bucket,
           Region: this.options.region,
@@ -236,7 +230,7 @@
         }
         this.$store.commit('menulist/copyFiles', pms)
       },
-      fileEvents(types){
+      fileEvents (types) {
         let pms = {
           Bucket: this.options.bucket,
           Region: this.options.region,
@@ -245,12 +239,10 @@
         if (types === 'upload') {
           this.$store.commit('menulist/uploadFile', pms)
         }
-        if (types === 'download')
-          this.$store.commit('menulist/downloadFile', pms)
-        if (types === 'newFolder')
-          this.$store.commit('menulist/newFolder', true)
+        if (types === 'download') { this.$store.commit('menulist/downloadFile', pms) }
+        if (types === 'newFolder') { this.$store.commit('menulist/newFolder', true) }
       },
-      fetchFilelist(){        //刷新文件列表，重走路由
+      fetchFilelist () { // 刷新文件列表，重走路由
         let qey = {
           bucket: this.options.bucket,
           region: this.options.region,
@@ -262,10 +254,10 @@
           query: qey
         })
       },
-      goForward(){
+      goForward () {
         this.$router.go(-1)
       },
-      backForward(){
+      backForward () {
         this.$router.go(1)
       }
     }

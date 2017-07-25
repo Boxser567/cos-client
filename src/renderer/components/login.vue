@@ -63,14 +63,7 @@
         password1: '',
       }
     },
-//    computed: {
-//      backgrounds(){
-//        return 'background:url("' + __static + '/images/bg-login.png")'
-//      }
-//    },
-    created () {
-      console.log(this.$router)
-    },
+    created () {},
     methods: {
       save () {
         this.$store.dispatch('setConfig', {

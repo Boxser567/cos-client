@@ -56,11 +56,11 @@
 </template>
 
 <script>
-  import { mutations, mapState } from 'vuex'
+  import { mapState } from 'vuex'
   export default{
     name: 'add-bucket',
     props: ['dialogAddVisible'],
-    data(){
+    data () {
       return {
         appid: null,
         myform: {
@@ -82,27 +82,27 @@
             }],
           areaDef: 'cn-south',
           cdnSpeed: 'close'
-        },
+        }
       }
     },
     computed: {
       ...mapState('bucket', ['bucketList', 'currentBucket'])
     },
-    created(){
+    created () {
       this.fetchData()
     },
     methods: {
-      fetchData(){
+      fetchData () {
         for (let key in this.bucketList) {
           this.appid = key
         }
       },
-      renderData(){
+      renderData () {
         this.myform.bucketName = ''
         this.myform.limit = 'public-read'
         this.myform.areaDef = 'cn-south'
       },
-      submitForm(){
+      submitForm () {
         if (this.myform.bucketName.length > 40) {
           this.$message.error('bucket不能超过40字符!')
           return
@@ -122,12 +122,10 @@
           this.$emit('closeBucket')
         })
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('closeBucket')
       }
     }
 
   }
-
-
 </script>

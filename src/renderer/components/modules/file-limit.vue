@@ -142,11 +142,10 @@
 
 
 <script>
-
   export default {
 
     props: ['isShow'],
-    data(){
+    data () {
       return {
         activeName: 'first',
         commonData: [{
@@ -165,15 +164,15 @@
         }]
       }
     },
-    created(){
+    created () {
 
     },
     computed: {},
     methods: {
-      handleClick(){
+      handleClick () {
 
       },
-      commonLimit(row, status){
+      commonLimit (row, status) {
         if (status === 'edit') {
           row.old_limit = row.pb_limit
           row.edit = 1
@@ -186,7 +185,7 @@
           row.edit = 0
         }
       },
-      userLimit(row, stadus){
+      userLimit (row, stadus) {
         switch (stadus) {
           case 'save':
             if (row.user === '') {
@@ -223,7 +222,7 @@
             break
         }
       },
-      addUers(){
+      addUers () {
         let last = this.userData[this.userData.length - 1]
         if ((!last.user) || last.edit === 3) {
           this.$message('请先提交正在新增的用户!')
@@ -236,18 +235,17 @@
           edit: 3
         })
       },
-      getLimit(row){
+      getLimit (row) {
         if (row.checkLimit.length > 1) {
           return row.checkLimit[0] + '、' + row.checkLimit[1]
         } else {
           return row.checkLimit[0]
         }
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('closeDialog')
       }
     }
 
   }
-
 </script>
