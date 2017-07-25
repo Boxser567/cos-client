@@ -24,7 +24,7 @@
                 <div class="third" v-show=" tabList[2].iscur ">
                     <div class="title-bar">
                         <div class="el-button-group">
-                            <el-button size="small" :plain="true">打开日志列表</el-button>
+                            <el-button size="small" @click="openLog" :plain="true">打开日志列表</el-button>
                         </div>
                     </div>
                 </div>
@@ -36,7 +36,7 @@
 <script>
   import { mapState } from 'vuex'
   import progressList from './progress-list.vue'
-  import { ipcRenderer } from 'electron'
+  import { ipcRenderer, shell } from 'electron'
 
   export default {
     name: 'fileProgress-page',
