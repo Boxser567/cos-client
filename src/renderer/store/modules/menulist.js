@@ -144,7 +144,8 @@ const mutations = {
     state.selectFile = []
   },
 
-  getFileList (state, data) {
+  getFileList (state, data) { // 获取当前文件列表
+    // console.log('当前文件列表', data)
     let index = null
     if (data.objects.length) {
       data.objects.forEach(function (item, idx) {
@@ -233,16 +234,19 @@ const mutations = {
 const actions = {
   getFileList ({commit}, params) {
     return new Promise((resolve, reject) => {
-      ipcRenderer.send('ListObject', params.pms)
+      commit('fileloading', {loading: true})
+      ipcRenderer.send('ListObject', params)
 
       ipcRenderer.once('ListObject-data', function (event, data) {
-        if (params.pms.Page) {
-          data.keywords = params.pms.Keywords
+        if (params.Page) {
+          data.keywords = params.Keywords
           commit('searchFileList', data)
         } else {
           commit('getFileList', data)
         }
         resolve(data)
+        commit('fileloading', {loading: false})
+
       })
     })
   },

@@ -20,11 +20,12 @@
           message: `无法${error.src}，因为${error.message}`
         })
       })
-      if (this.$store.state.config.cos) {
-        this.$router.replace('/locked')
-      } else {
-        this.$router.replace('/login')
-      }
+//      if (this.$store.state.config.cos) {
+//        this.$router.replace('/locked')
+//      } else {
+//      }
+      this.$router.replace('/login')
+
     },
 
     mounted () {

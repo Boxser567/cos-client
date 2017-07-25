@@ -101,7 +101,7 @@ const actions = {
     })
   },
 
-  putObject ({rootGetters}, params) {
+  putObject ({dispatch, rootGetters}, params) {
     return new Promise((resolve, reject) => {
       params.Body = Buffer.from('')
       rootGetters.cos.putObject(params, function (err, data) {
@@ -112,6 +112,9 @@ const actions = {
           reject(err)
         } else {
           resolve(data)
+
+          dispatch('menulist/getFileList', params, {root: true})
+
         }
       })
     })
