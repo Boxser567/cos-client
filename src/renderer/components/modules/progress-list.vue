@@ -107,6 +107,9 @@
             continue
           }
           if (v.modify || v.status === 'run') {
+            if (v.status === 'complete') {
+              this.$emit('complete', v)
+            }
             // console.debug(`${this.type} normaliseList * id = ${i}`)
             this.normaliseList[i].status = v.status
             this.normaliseList[i].size = v.size

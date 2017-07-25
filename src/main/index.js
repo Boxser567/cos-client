@@ -16,7 +16,7 @@ const winURL = process.env.NODE_ENV === 'development'
   : `file://${__dirname}/index.html`
 
 function createWindow () {
-  let app = new App()
+  let main = new App()
   /**
    * Initial window options
    */
@@ -33,7 +33,7 @@ function createWindow () {
 
   mainWindow.on('closed', () => {
     mainWindow = null
-    app.close()
+    main.close()
   })
 }
 

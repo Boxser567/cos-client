@@ -14,10 +14,12 @@
             </div>
             <div class="el-side-content">
                 <div class="first" v-show=" tabList[0].iscur ">
-                    <progress-list :list="uploadList" :type="'upload'" @speed="val => { uploadSpeed = val }"></progress-list>
+                    <progress-list :list="uploadList" :type="'upload'" @speed="val => { uploadSpeed = val }"
+                                   @complete="oncomplete"></progress-list>
                 </div>
                 <div class="second" v-show=" tabList[1].iscur ">
-                    <progress-list :list="downloadList" :type="'download'" @speed="val => { downloadSpeed = val }"></progress-list>
+                    <progress-list :list="downloadList" :type="'download'"
+                                   @speed="val => { downloadSpeed = val }" @complete="oncomplete"></progress-list>
                 </div>
                 <div class="third" v-show=" tabList[2].iscur ">
                     <div class="title-bar">
@@ -76,6 +78,9 @@
       tabFn (item) {
         this.tabList.forEach(tab => { tab.iscur = false })
         item.iscur = true
+      },
+      oncomplete (v) {
+        console.log(v)
       }
     }
   }

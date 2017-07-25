@@ -34,6 +34,7 @@ App.prototype.init = async function () {
   let config = await init.config()
   config.upload = config.upload || {maxActivity: 3, asyncLim: 2}
   config.download = config.download || {maxActivity: 3}
+  config.logPath = log.transports.file.findLogPath(log.transports.file.appName)
 
   let cos
 
@@ -72,11 +73,7 @@ App.prototype.init = async function () {
   ipcMain.on('ListBucket', (event) => {
     cos.getService((err, data) => {
       if (err) {
-        try {
-          event.sender.send('error', normalizeError(err, 'ListBucket'))
-        } catch (err) {
-          log.warn(err)
-        }
+        if (!event.sender.isDestroyed()) event.sender.send('error', normalizeError(err, 'ListBucket'))
         return
       }
       let result = {}
@@ -92,11 +89,7 @@ App.prototype.init = async function () {
           result[v.AppId] = [v]
         }
       })
-      try {
-        event.sender.send('ListBucket-data', result)
-      } catch (err) {
-        log.warn(err)
-      }
+      if (!event.sender.isDestroyed()) event.sender.send('ListBucket-data', result)
     })
   })
 
@@ -108,10 +101,10 @@ App.prototype.init = async function () {
      * @param  {string}   [arg.Prefix]
      */
     listDir(cos, arg).then(
-      data => event.sender.send('ListObject-data', data),
+      data => { if (!event.sender.isDestroyed()) event.sender.send('ListObject-data', data) },
       err => {
         log.error(err)
-        event.sender.send('error', normalizeError(err, 'ListObject'))
+        if (!event.sender.isDestroyed()) event.sender.send('error', normalizeError(err, 'ListObject'))
       }
     ).catch(err => { log.warn(err) })
   })
@@ -120,12 +113,7 @@ App.prototype.init = async function () {
     if (uploads) {
       uploads.removeAllListeners('refresh')
       uploads.on('refresh', (data) => {
-        try {
-          event.sender.send('GetUploadTasks-data', data)
-        } catch (err) {
-          log.warn(err)
-          uploads.removeAllListeners('refresh')
-        }
+        if (!event.sender.isDestroyed()) event.sender.send('GetUploadTasks-data', data)
       })
       uploads.refresh()
       return
@@ -146,12 +134,7 @@ App.prototype.init = async function () {
     })
 
     uploads.on('refresh', (data) => {
-      try {
-        event.sender.send('GetUploadTasks-data', data)
-      } catch (err) {
-        log.warn(err)
-        uploads.removeAllListeners('refresh')
-      }
+      if (!event.sender.isDestroyed()) event.sender.send('GetUploadTasks-data', data)
     })
 
     let tasks = await init.upload()
@@ -229,11 +212,7 @@ App.prototype.init = async function () {
     if (downloads) {
       downloads.removeAllListeners('refresh')
       downloads.on('refresh', (data) => {
-        try {
-          event.sender.send('GetDownloadTasks-data', data)
-        } catch (e) {
-          log.warn(e)
-        }
+        if (!event.sender.isDestroyed()) event.sender.send('GetDownloadTasks-data', data)
       })
       downloads.refresh()
       return
@@ -254,11 +233,7 @@ App.prototype.init = async function () {
     })
 
     downloads.on('refresh', (data) => {
-      try {
-        event.sender.send('GetDownloadTasks-data', data)
-      } catch (e) {
-        log.warn(e)
-      }
+      if (!event.sender.isDestroyed()) event.sender.send('GetDownloadTasks-data', data)
     })
 
     let tasks = await init.download()
