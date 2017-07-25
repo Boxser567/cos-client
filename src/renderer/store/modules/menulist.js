@@ -324,26 +324,6 @@ const mutations = {
       state.uploadSelect = []
       state.uploadSelect.push(arr.upFile.id)
     }
-
-    // if (state.fileUploadSelect && state.fileUploadSelect.length) {
-    //   state.fileUploadSelect.forEach(function (upfile) {
-    //     let id = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
-    //     if (id != undefined) {
-    //       state.uploadProgress.list[id].active = false
-    //       state.uploadProgress.list.push()
-    //     }
-    //   })
-    // }
-    //
-    // let idx = state.uploadProgress.list.findIndex(n => n.id === arr.upFile.id)
-    //
-    // if (idx != undefined) {
-    //   state.uploadProgress.list[idx].active = true
-    //   state.uploadProgress.list.push()
-    // }
-    //
-    // state.fileUploadSelect = []
-    // state.fileUploadSelect.push(arr.upFile)
   },
 
   selectDownloadFile (state, arr) {
@@ -372,14 +352,6 @@ const mutations = {
     }, function (fileArray) {
       console.log(fileArray)
       if (!fileArray) return
-      // fileArray.forEach(function (file) {
-      //   let path = file
-      //   let params = Object.assign({
-      //     FileName: file
-      //   }, pms)
-      //   console.log(params)
-      //   ipcRenderer.send('NewUploadTask', params)
-      // })
       pms.FileNames = fileArray
       console.log('this-pms', pms)
       ipcRenderer.send('NewUploadTasks', pms)
@@ -419,16 +391,19 @@ const mutations = {
 const actions = {
   getFileList ({commit}, params) {
     return new Promise((resolve, reject) => {
-      ipcRenderer.send('ListObject', params.pms)
+      commit('fileloading', {loading: true})
+      ipcRenderer.send('ListObject', params)
 
       ipcRenderer.once('ListObject-data', function (event, data) {
-        if (params.pms.Page) {
-          data.keywords = params.pms.Keywords
+        if (params.Page) {
+          data.keywords = params.Keywords
           commit('searchFileList', data)
         } else {
           commit('getFileList', data)
         }
         resolve(data)
+        commit('fileloading', {loading: false})
+
       })
     })
   },

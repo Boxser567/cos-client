@@ -134,19 +134,12 @@
       },
 
       fetchData () { // 渲染页面
-        let bk = this.options.bucket
-        let rg = this.options.region
-        this.$store.commit('menulist/fileloading', {loading: true})
-        if (bk && rg) {
-          let params = {Bucket: bk, Region: rg}
-          if (this.options.folders && this.options.folders.length) {
-            params.Prefix = this.options.folders
-          }
-          this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => {
-            this.$store.commit('menulist/fileloading', {loading: false})
-            //            this.$store.commit('menulist/unSelectFile')
-          })
+        if (!this.options.bucket || !this.options.region) return
+        let params = {Bucket: this.options.bucket, Region: this.options.region}
+        if (this.options.folders && this.options.folders.length) {
+          params.Prefix = this.options.folders
         }
+        this.$store.dispatch('menulist/getFileList', params).then(() => { })
       },
 
       // 文件选择
@@ -184,8 +177,9 @@
       // 创建并显示右键菜单
       openFileMenu (e) {
         let currentDom = e.target
-        this.$store.commit('menulist/unSelectFile')
+
         if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
+          this.$store.commit('menulist/unSelectFile')
           this.menu.list = this.fileRightList.filter((m) => {
             if (this.menu.blanks.includes(m.key)) {
               return m
@@ -211,6 +205,7 @@
           } else {
             let cfile = null
             let index = null
+            this.$store.commit('menulist/unSelectFile')
             for (let i = 0; i < 5; i++) {
               if (currentDom.classList.contains('file-list-info')) {
                 index = currentDom.getAttribute('index')
@@ -294,6 +289,12 @@
             this.$store.commit('menulist/copyFiles', pms)
             break
           case 'paste_file': // 粘贴
+
+            if (pms.Bucket === this.copyFiles.src.Bucket && pms.Prefix === this.copyFiles.src.Prefix) {
+              this.$message('路径相同，不能操作')
+              return
+            }
+
             this.$store.dispatch('menulist/pasteFiles', pms)
             break
           case 'download_list':

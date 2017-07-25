@@ -72,7 +72,8 @@
             SecretId: this.SecretId,
             SecretKey: this.SecretKey
           },
-          isCVM:this.isCVM,
+          isCVM: this.isCVM,
+          area: this.areaDef
 //          password: this.password1
         })
         this.$store.dispatch('bucket/getService').then(() => {

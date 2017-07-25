@@ -177,7 +177,6 @@
       },
       searchFn () {
         if (!this.options.keyWord) return
-        this.$store.commit('menulist/fileloading', {loading: true})
         let params = {
           Bucket: this.options.bucket,
           Region: this.options.region,
@@ -187,7 +186,7 @@
         if (this.options.folders && this.options.folders.length) {
           params.Prefix = this.options.folders
         }
-        this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => this.$store.commit('menulist/fileloading', {loading: false}))
+        this.$store.dispatch('menulist/getFileList', params).then(() => {})
       },
       searchCancelFn () {
         this.options.keyWord = null
@@ -213,8 +212,7 @@
               if (this.options.folders && this.options.folders.length) {
                 params.Prefix = this.options.folders
               }
-              this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => {
-                this.$store.commit('menulist/fileloading', {loading: false})
+              this.$store.dispatch('menulist/getFileList', params).then(() => {
                 this.$store.commit('menulist/unSelectFile')
               })
             }
