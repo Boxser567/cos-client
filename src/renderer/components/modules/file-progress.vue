@@ -14,10 +14,10 @@
             </div>
             <div class="el-side-content">
                 <div class="first" v-show=" tabList[0].iscur ">
-                    <progress-list :list="uploadList" :type="'upload'"></progress-list>
+                    <progress-list :list="uploadList" :type="'upload'" @speed="val => { uploadSpeed = val }"></progress-list>
                 </div>
                 <div class="second" v-show=" tabList[1].iscur ">
-                    <progress-list :list="downloadList" :type="'download'"></progress-list>
+                    <progress-list :list="downloadList" :type="'download'" @speed="val => { downloadSpeed = val }"></progress-list>
                 </div>
                 <div class="third" v-show=" tabList[2].iscur ">
                     <div class="title-bar">
@@ -47,25 +47,27 @@
           {iscur: false, name: '错误日志', id: 2}
         ],
         uploadList: [],
-        downloadList: []
+        downloadList: [],
+        uploadSpeed: 0,
+        downloadSpeed: 0
       }
     },
     created () {
       ipcRenderer.send('GetUploadTasks')
       ipcRenderer.on('GetUploadTasks-data', (event, data) => {
-        console.log('GetUploadTasks-data', data.length)
+        // console.log('GetUploadTasks-data', data.length)
         this.uploadList = data
       })
 
       ipcRenderer.send('GetDownloadTasks')
       ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
-        console.log('GetDownloadTasks-data', data.length)
+        // console.log('GetDownloadTasks-data', data.length)
         this.downloadList = data
       })
     },
     components: {progressList},
     computed: {
-      ...mapState('menulist', ['uploadSpeed', 'downloadSpeed', 'isShowFileProgress'])
+      ...mapState('menulist', ['isShowFileProgress'])
     },
     methods: {
       showFileProgress () {

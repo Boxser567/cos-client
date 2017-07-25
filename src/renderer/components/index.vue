@@ -31,7 +31,6 @@
 
             </div>
 
-
             <ul id="bucket-menu-list" tabindex="-1" ref="right" v-if="bucketMenu.viewMenu" @blur="closeMenu"
                 :style="{ top:bucketMenu.top, left:bucketMenu.left }">
                 <li v-for="i in bucketMenu.list" @click="i.func"> {{i.name}}</li>
@@ -56,8 +55,6 @@
 </template>
 
 <script>
-  import { ipcRenderer } from 'electron'
-
   import { mapState } from 'vuex'
   import setting from './modules/setting.vue'
   import addBucket from './modules/add-bucket.vue'
@@ -96,9 +93,7 @@
       }
     },
 
-    created () {
-      this.fetchPost()
-    },
+    created () {},
 
     methods: {
       fetchData () {
@@ -107,18 +102,7 @@
           this.bloading = false
         })
       },
-      fetchPost () {
-        ipcRenderer.send('GetUploadTasks')
 
-        ipcRenderer.on('GetUploadTasks-data', (event, data) => {
-          this.$store.commit('menulist/updataProgress', data)
-        })
-
-        ipcRenderer.send('GetDownloadTasks')
-        ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
-          this.$store.commit('menulist/downloadProgress', data)
-        })
-      },
       selectBucket: function (b) {
         this.$store.commit('bucket/bucketActive', b.Name)
         this.$store.commit('menulist/unSelectFile')
@@ -167,9 +151,11 @@
         this.bucketMenu.viewMenu = false
         this.dialogManageVisible = true
       },
+
       setCors: function () {
 
       },
+
       setLimit: function () {
 
       }

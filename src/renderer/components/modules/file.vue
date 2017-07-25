@@ -116,32 +116,18 @@
     },
     methods: {
       eableBtn () {
-        if (this.selectFile && this.selectFile.length) {
-          return false
-        } else {
-          return true
-        }
+        return !this.selectFile || !this.selectFile.length
       },
+
       eableBtn1 (type) { // 获取地址
-        if (this.selectFile && this.selectFile.length) {
-          let array = this.selectFile.map(n => !!n.dir)
-          if (array.includes(false) && array.includes(true)) {
-            return true
-          } else if (array.includes(true)) {
-            return true
-          } else {
-            if (type === 'adress') {
-              if (this.selectFile.length > 1) {
-                return true
-              }
-            } else {
-              return false
-            }
-          }
-        } else {
-          return true
+        if (!this.selectFile || !this.selectFile.length) return true
+        if (type === 'adress' && this.selectFile.length > 1) return true
+        for (let item of this.selectFile) {
+          if (item.dir) return true
         }
+        return false
       },
+
       goFilePath (index) {
         if (!this.navOptions.length) return
         if (index === this.navOptions.length - 1) return
@@ -164,9 +150,11 @@
         this.options.keyWord = null
         this.$router.push(topage)
       },
+
       blurSearch () {
         this.inputFocus = false
       },
+
       focusSearch () {
         console.log(this.navOptions)
         if (this.navOptions && this.navOptions.length) {
@@ -175,6 +163,7 @@
           this.inputFocus = true
         }
       },
+
       searchFn () {
         if (!this.options.keyWord) return
         this.$store.commit('menulist/fileloading', {loading: true})
@@ -189,9 +178,11 @@
         }
         this.$store.dispatch('menulist/getFileList', {pms: params}).then(() => this.$store.commit('menulist/fileloading', {loading: false}))
       },
+
       searchCancelFn () {
         this.options.keyWord = null
       },
+
       deleteObj () {
         this.$confirm('确定要删除?', '提示', {
           confirmButtonText: '确定',
@@ -219,9 +210,9 @@
               })
             }
           })
-        }).catch(() => {
-        })
+        }).catch(() => {})
       },
+
       copyObj () {
         let pms = {
           Bucket: this.options.bucket,
@@ -230,6 +221,7 @@
         }
         this.$store.commit('menulist/copyFiles', pms)
       },
+
       fileEvents (types) {
         let pms = {
           Bucket: this.options.bucket,
@@ -242,6 +234,7 @@
         if (types === 'download') { this.$store.commit('menulist/downloadFile', pms) }
         if (types === 'newFolder') { this.$store.commit('menulist/newFolder', true) }
       },
+
       fetchFilelist () { // 刷新文件列表，重走路由
         let qey = {
           bucket: this.options.bucket,
@@ -254,9 +247,11 @@
           query: qey
         })
       },
+
       goForward () {
         this.$router.go(-1)
       },
+
       backForward () {
         this.$router.go(1)
       }

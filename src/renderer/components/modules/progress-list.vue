@@ -24,7 +24,8 @@
                     <el-row>
                         <el-col :span="12">
                             <p class="tl">{{props.item.Key}}</p>
-                            <el-progress :stroke-width="2" :percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>
+                            <el-progress :stroke-width="2"
+                                         :percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>
                         </el-col>
                         <el-col :span="4">
                             {{props.item.size | bitSize}}
@@ -37,9 +38,12 @@
                             <span v-if="props.item.status=='error'">出错</span>
                         </el-col>
                         <el-col :span="4">
-                            <i v-if="props.item.status == 'pause'" class="begin" @click="send('begin', 'one', props.item.id)"></i>
-                            <i v-if="props.item.status == 'run'" class="pause" @click="send('pause', 'one', props.item.id)"></i>
-                            <i v-if="props.item.status == 'error'" class="error" @click="send('begin', 'one', props.item.id)"></i>
+                            <i v-if="props.item.status == 'pause'" class="begin"
+                               @click="send('begin', 'one', props.item.id)"></i>
+                            <i v-if="props.item.status == 'run'" class="pause"
+                               @click="send('pause', 'one', props.item.id)"></i>
+                            <i v-if="props.item.status == 'error'" class="error"
+                               @click="send('begin', 'one', props.item.id)"></i>
                             <i class="close" @click="send('delete', 'one', props.item.id)"></i>
                         </el-col>
                     </el-row>
@@ -84,7 +88,9 @@
       list: function (val) {
         let i = 0
         let dirty = false
+        let speed = 0
         for (let v of val) {
+          if (typeof v.speed === 'number') speed += v.speed
           while (i < v.id) {
             if (this.normaliseList[i]) {
               dirty = true
@@ -120,6 +126,7 @@
         if (dirty) {
           this.refresh()
         }
+        this.$emit('speed', speed)
       }
     },
     methods: {
