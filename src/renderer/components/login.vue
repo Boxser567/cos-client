@@ -13,7 +13,7 @@
                 <el-input type="text" v-model="SecretKey" size="large" placeholder="Access Key Secret"></el-input>
             </el-form-item>
             <el-form-item>
-                <el-checkbox>本机是cos云主机</el-checkbox>
+                <el-checkbox v-model="isCVM">本机是CVM云主机</el-checkbox>
 
                 <el-select popper-class="login-select-area" v-model="areaDef" placeholder="请选择">
                     <el-option
@@ -55,12 +55,12 @@
             value: 'cn-southwest',
             label: '西南'
           }],
-        areaDef: 'cn-south',
+        isCVM: false,
+        areaDef: null,
         AppId: '',
         SecretId: '',
         SecretKey: '',
         password1: '',
-        password2: ''
       }
     },
 //    computed: {
@@ -68,7 +68,9 @@
 //        return 'background:url("' + __static + '/images/bg-login.png")'
 //      }
 //    },
-    created () {},
+    created () {
+      console.log(this.$router)
+    },
     methods: {
       save () {
         this.$store.dispatch('setConfig', {
@@ -77,7 +79,8 @@
             SecretId: this.SecretId,
             SecretKey: this.SecretKey
           },
-          password: this.password1
+          isCVM:this.isCVM,
+//          password: this.password1
         })
         this.$store.dispatch('bucket/getService').then(() => {
           this.$router.replace('/')

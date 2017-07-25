@@ -166,8 +166,11 @@
       .el-button--small {
         padding: 4px 9px;
         border: 1px solid #ddd;
-        color: #2277da;
         font-size: 11px;
+        color: #2277da;
+      }
+      .el-button.is-disabled.is-plain, .el-button.is-disabled.is-plain:focus, .el-button.is-disabled.is-plain:hover {
+        color: #bfcbd9;
       }
       .upload {
         background: #2277da;
