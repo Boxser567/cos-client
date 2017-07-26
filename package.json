@@ -1,9 +1,9 @@
 {
-  "name": "gk-cos-client",
-  "productName": "gk-cos-client",
+  "name": "COS",
+  "productName": "COS",
   "version": "0.1.0",
-  "author": "Gokuai Inc",
-  "description": "a client of qcloud cos",
+  "author": "上海够快网络科技股份有限公司",
+  "description": "腾讯云COS控制台客户端",
   "license": "Apache-2.0",
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -20,8 +20,8 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
-    "productName": "gk-cos-client",
-    "appId": "com.gokuai.gk-cos-client",
+    "productName": "COS",
+    "appId": "com.gokuai.cos-client",
     "directories": {
       "output": "build"
     },

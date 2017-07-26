@@ -122,18 +122,11 @@ Tasks.prototype.initRefresh = function () {
     count = 10
     let s = []
     this.tasks.forEach(t => {
-      s.push({
+      s.push(Object.assign({
         id: t.id,
-        Key: t.params.Key,
-        Bucket: t.params.Bucket,
-        Region: t.params.Region,
-        FileName: t.file.fileName,
         status: t.status,
-        size: t.progress.total,
-        loaded: t.progress.loaded,
-        speed: t.progress.speed,
         modify: t.modify
-      })
+      }, t.exports()))
       t.modify = false
     })
     this.emit('refresh', s)
@@ -459,6 +452,18 @@ UploadTask.prototype.stop = function () {
   this.cancel = true
 }
 
+UploadTask.prototype.exports = function () {
+  return {
+    Key: this.params.Key,
+    Bucket: this.params.Bucket,
+    Region: this.params.Region,
+    FileName: this.file.fileName,
+    size: this.progress.total,
+    loaded: this.progress.loaded,
+    speed: this.progress.speed
+  }
+}
+
 function getSliceHash (fileName, index, start, end) {
   let hash = crypto.createHash('md5')
 
@@ -573,6 +578,18 @@ MockUploadTask.prototype.stop = function () {
   this.cancel = true
 }
 
+MockUploadTask.prototype.exports = function () {
+  return {
+    Key: this.params.Key,
+    Bucket: this.params.Bucket,
+    Region: this.params.Region,
+    FileName: this.file.fileName,
+    size: this.progress.total,
+    loaded: this.progress.loaded,
+    speed: this.progress.speed
+  }
+}
+
 /**
  *
  * @param  {object}   cos
@@ -614,6 +631,9 @@ function DownloadTask (cos, name, params, option = {}) {
 DownloadTask.prototype.start = function () {
   this.cancel = false
   this.params.Output = fs.createWriteStream(this.file.fileName + '.tmp')
+  this.params.onProgress = (data) => {
+    this.progress.speed = ~~data.speed
+  }
 
   this.params.Output.on('drain', () => {
     this.progress.loaded = this.params.Output.bytesWritten
@@ -638,6 +658,16 @@ DownloadTask.prototype.start = function () {
 
 DownloadTask.prototype.stop = function () {
   this.cancel = true
+}
+
+DownloadTask.prototype.exports = function () {
+  return {
+    Key: this.params.Key,
+    FileName: this.file.fileName,
+    size: this.progress.total,
+    loaded: this.progress.loaded,
+    speed: this.progress.speed
+  }
 }
 
 /**
@@ -690,6 +720,16 @@ MockDownloadTask.prototype.start = function () {
 
 MockDownloadTask.prototype.stop = function () {
   this.cancel = true
+}
+
+MockDownloadTask.prototype.exports = function () {
+  return {
+    Key: this.params.Key,
+    FileName: this.file.fileName,
+    size: this.progress.total,
+    loaded: this.progress.loaded,
+    speed: this.progress.speed
+  }
 }
 
 export { TaskStatus, Tasks, UploadTask, MockUploadTask, DownloadTask, MockDownloadTask }
