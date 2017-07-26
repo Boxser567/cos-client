@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="title-bar">
-            <div class="el-button-group">
+            <div class="el-button-group select-btn">
                 <el-button size="small" v-show="!btnDisabled.begin || btnDisabled.pause" :disabled="btnDisabled.begin"
                            :plain="true" @click="send('begin','select')">
                     开始

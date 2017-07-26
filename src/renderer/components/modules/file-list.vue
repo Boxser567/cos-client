@@ -37,7 +37,7 @@
                  :key="f.Name"
             >
                 <div class="name">
-                    <img :src="f.Name | getFileImg" alt="">
+                    <img :src="f | getFileImg" alt="">
                     <p>{{ f.Name }}</p>
                 </div>
                 <div class="size">{{f.Size | bitSize}}</div>
