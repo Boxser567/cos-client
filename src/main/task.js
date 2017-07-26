@@ -3,6 +3,7 @@
  */
 'use strict'
 import fs from 'fs'
+import path from 'path'
 import crypto from 'crypto'
 import events from 'events'
 import log from 'electron-log'
@@ -298,7 +299,9 @@ function UploadTask (cos, name, params, option = {}) {
       }
       this.progress.list.push({total: n})
 
-      this.file.iterator = getSliceIterator(this.file)
+      if (this.file.fileSize !== 0) {
+        this.file.iterator = getSliceIterator(this.file)
+      }
 
       this.progress.On = () => {
         setImmediate(() => {
@@ -321,9 +324,19 @@ function UploadTask (cos, name, params, option = {}) {
 // todo 添加校验
 UploadTask.prototype.start = function () {
   this.cancel = false
+  if (this.file.fileSize === 0) {
+    return new Promise((resolve, reject) => {
+      this.params.Body = Buffer.from('')
+      this.cos.putObject(this.params, (err, data) => {
+        err ? reject(Object.assign(err, {params: this.params})) : resolve(data)
+      })
+    })
+  }
+
   return (this.params.UploadId ? this.getMultipartListPart() : this.multipartInit())
     .then(this.uploadSlice.bind(this))
-    .then(this.multipartComplete.bind(this), err => {
+    .then(this.multipartComplete.bind(this))
+    .catch(err => {
       err.params = this.params
       throw err
     })
@@ -630,6 +643,9 @@ function DownloadTask (cos, name, params, option = {}) {
 
 DownloadTask.prototype.start = function () {
   this.cancel = false
+  try {
+    fs.mkdirSync(path.dirname(this.file.fileName))
+  } catch (e) {}
   this.params.Output = fs.createWriteStream(this.file.fileName + '.tmp')
   this.params.onProgress = (data) => {
     this.progress.speed = ~~data.speed
@@ -651,7 +667,9 @@ DownloadTask.prototype.start = function () {
     fs.renameSync(this.file.fileName + '.tmp', this.file.fileName)
     return Promise.resolve()
   }, (err) => {
-    fs.unlinkSync(this.file.fileName + '.tmp')
+    try {
+      fs.unlinkSync(this.file.fileName + '.tmp')
+    } catch (e) {}
     throw err
   })
 }
