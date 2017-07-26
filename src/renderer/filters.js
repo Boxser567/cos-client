@@ -96,11 +96,12 @@ const FILE_SORTS = {
 
 function getFileImg (file) {
   if (!file) return
-  console.log('file-name', file)
   let suffix = ''
   if (file.dir) {
     suffix = 'folder'
   } else {
+    let name = file.Name
+    if (!name) return
     let bucket = file.Name.slice(file.Name.lastIndexOf('.') + 1).toLowerCase()
     for (let key in FILE_SORTS) {
       if (FILE_SORTS[key].indexOf(bucket) > -1) {
