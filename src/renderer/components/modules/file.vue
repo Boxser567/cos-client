@@ -41,12 +41,12 @@
                         <el-button size="small" :plain="true" @click="dialogFileLimit =true" :disabled="eableBtn()">设置权限
                         </el-button>
                     </div>
-                    <div class="el-button-group">
-                        <el-button size="small" :plain="true" @click="dialogFileAdress = true"
-                                   :disabled="eableBtn1('adress')">
-                            获取地址
-                        </el-button>
-                    </div>
+                    <!--<div class="el-button-group">-->
+                        <!--<el-button size="small" :plain="true" @click="dialogFileAdress = true"-->
+                                   <!--:disabled="eableBtn1('adress')">-->
+                            <!--获取地址-->
+                        <!--</el-button>-->
+                    <!--</div>-->
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="dialogSetHttpHead = true"
                                    :disabled="eableBtn1()">设置HTTP头
@@ -61,7 +61,7 @@
 
         <file-limit :isShow="dialogFileLimit" @closeDialog="dialogFileLimit = false"></file-limit>
 
-        <file-adress :isShow="dialogFileAdress" @closeDialog="dialogFileAdress = false"></file-adress>
+        <!--<file-adress :isShow="dialogFileAdress" @closeDialog="dialogFileAdress = false"></file-adress>-->
 
         <set-http-head :isShow="dialogSetHttpHead" @closeDialog="dialogSetHttpHead = false"></set-http-head>
 

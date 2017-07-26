@@ -33,7 +33,7 @@
             <template scope="props">
                 <div class="progress-bar" :key="props.item.id" :class="{ active: props.item.active }"
                      @click="select($event, props.item)">
-                    <img :src="props.item.Key | getFileImg" alt="">
+                    <img :src="props.item | getFileImg" alt="">
                     <el-row>
                         <el-col :span="12">
                             <p class="tl">{{props.item.Key}}</p>
