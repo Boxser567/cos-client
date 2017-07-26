@@ -94,14 +94,14 @@ const FILE_SORTS = {
   'SORT_ZIP': ['rar', 'zip', '7z', 'cab', 'tar', 'gz', 'iso']
 }
 
-function getFileImg (name) {
-  if (!name) return
+function getFileImg (file) {
+  if (!file) return
+  console.log('file-name', file)
   let suffix = ''
-  const filename = name.lastIndexOf('.')
-  if (filename < 0) {
+  if (file.dir) {
     suffix = 'folder'
   } else {
-    let bucket = name.slice(name.lastIndexOf('.') + 1).toLowerCase()
+    let bucket = file.Name.slice(file.Name.lastIndexOf('.') + 1).toLowerCase()
     for (let key in FILE_SORTS) {
       if (FILE_SORTS[key].indexOf(bucket) > -1) {
         if (key === 'SORT_SPEC') suffix = bucket
