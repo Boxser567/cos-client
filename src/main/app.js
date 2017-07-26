@@ -7,7 +7,7 @@ import path from 'path'
 import { ipcMain } from 'electron'
 import log from 'electron-log'
 import Cos from 'cos-nodejs-sdk-v5'
-import { MockDownloadTask as DownloadTask, UploadTask, Tasks } from './task'
+import { DownloadTask, UploadTask, Tasks } from './task'
 import { clear, init, save } from './db'
 
 log.transports.console.level = 'info'

@@ -20,21 +20,18 @@
           message: `无法${error.src}，因为${error.message}`
         })
       })
-      let formClose = false
       window.onbeforeunload = (e) => {
-        if (confirm('确定要关闭吗？')) return
-        e.returnValue = false
+        if (process.env.NODE_ENV !== 'development') {
+          if (confirm('确定要关闭吗？')) return
+          e.returnValue = false
+        }
       }
-
       this.$router.replace('/login')
-
     },
-
     mounted () {
       this.$store.getters.bus.$on('batch', (resp) => {
-//        console.log('this-batch', resp)
-        if (resp ) {
-          switch (resp.action ){
+        if (resp) {
+          switch (resp.action) {
             case 'open':
               this.deleteError = true
               this.errorMsg = resp
@@ -46,7 +43,6 @@
               this.errorMsg = resp
               break
           }
-
         }
       })
       this.$store.getters.bus.$on('confirm', (resp) => {

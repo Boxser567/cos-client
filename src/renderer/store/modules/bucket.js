@@ -2,7 +2,6 @@
  * Created by gokuai on 17/6/26.
  */
 import { ipcRenderer } from 'electron'
-import { Buffer } from 'buffer'
 
 const state = {
   bucketList: null,
@@ -112,9 +111,7 @@ const actions = {
           reject(err)
         } else {
           resolve(data)
-
           dispatch('menulist/getFileList', params, {root: true})
-
         }
       })
     })

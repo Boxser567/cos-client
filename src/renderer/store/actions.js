@@ -42,24 +42,7 @@ export const actions = {
     ipcRenderer.send('SetConfig', state.config)
   },
   deleteObjects ({commit}, arg) {
-    if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
-      let Key = arg.Keys[0]
-      return task(() => {
-          return new Promise((resolve, reject) => {
-            let params = {
-              Bucket: arg.Bucket,
-              Region: arg.Region,
-              Key
-            }
-            cos.deleteObject(params, (err, data) => {
-              err ? reject(Object.assign(err, {params})) : resolve(data)
-            })
-          })
-        }
-      )
-    }
-
-    return batch(arg, 'delete', ({Key}) => {
+    let del = (Key) => {
       return () => {
         return new Promise((resolve, reject) => {
           let params = {
@@ -72,33 +55,33 @@ export const actions = {
           })
         })
       }
-    })
-  },
-  copyObjects ({commit}, arg) {
-    console.log('copy-args', arg)
-    Object.assign(arg, arg.src)
-
-    if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
-      let item = arg.Keys[0].substr(arg.src.Prefix.length)
-      return task(() => {
-        return new Promise((resolve, reject) => {
-          let params = {
-            Bucket: arg.dst.Bucket,
-            Region: arg.dst.Region,
-            Key: arg.dst.Prefix + item,
-            CopySource: encodeURIComponent(`${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${arg.Keys[0]}`)
-          }
-          cos.putObjectCopy(params, (err, data) => {
-            err ? reject(Object.assign(err, {params})) : resolve(data)
-          })
-        })
-      })
     }
 
-    return batch(arg, 'copy', ({Key}) => {
+    if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
+      return task(del(arg.Keys[0]))
+    }
+
+    return batch(arg, 'delete', ({Key}) => del(Key))
+  },
+  copyObjects ({commit}, arg) {
+    Object.assign(arg, arg.src)
+
+    let copy = (Key) => {
       let item = Key.substr(arg.src.Prefix.length)
       return () => {
         return new Promise((resolve, reject) => {
+          if (Key.substr(-1) === '/') {
+            let params = {
+              Bucket: arg.dst.Bucket,
+              Region: arg.dst.Region,
+              Key: arg.dst.Prefix + item,
+              Body: Buffer.from('')
+            }
+            cos.putObject(params, (err, data) => {
+              err ? reject(Object.assign(err, {params})) : resolve(data)
+            })
+            return
+          }
           let params = {
             Bucket: arg.dst.Bucket,
             Region: arg.dst.Region,
@@ -110,7 +93,13 @@ export const actions = {
           })
         })
       }
-    })
+    }
+
+    if (arg.Keys.length === 1 && arg.Dirs.length === 0) {
+      return task(copy(arg.Keys[0]))
+    }
+
+    return batch(arg, 'copy', ({Key}) => copy(Key))
   },
   changeObjectsAcl ({commit}, arg) {
     // todo
