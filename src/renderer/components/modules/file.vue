@@ -42,10 +42,10 @@
                         </el-button>
                     </div>
                     <!--<div class="el-button-group">-->
-                        <!--<el-button size="small" :plain="true" @click="dialogFileAdress = true"-->
-                                   <!--:disabled="eableBtn1('adress')">-->
-                            <!--获取地址-->
-                        <!--</el-button>-->
+                    <!--<el-button size="small" :plain="true" @click="dialogFileAdress = true"-->
+                    <!--:disabled="eableBtn1('adress')">-->
+                    <!--获取地址-->
+                    <!--</el-button>-->
                     <!--</div>-->
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="dialogSetHttpHead = true"
@@ -59,7 +59,7 @@
 
         <file-list :options="options" @deleteObj="deleteObj"></file-list>
 
-        <file-limit :isShow="dialogFileLimit" @closeDialog="dialogFileLimit = false"></file-limit>
+        <file-limit :isShow.sync="dialogFileLimit"></file-limit>
 
         <!--<file-adress :isShow="dialogFileAdress" @closeDialog="dialogFileAdress = false"></file-adress>-->
 

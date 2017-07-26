@@ -52,6 +52,12 @@
         <!--设置-->
         <setting :dialogSettingVisible="dialogSettingVisible" @closeDiolog="dialogSettingVisible = false"></setting>
 
+        <!--跨域访问CORS设置-->
+        <file-debris :isShow.sync="dialogCrosVisible"></file-debris>
+
+        <!--权限设置-->
+        <file-limit v-if="limitOpt && limitOpt.bucket" :isShow.sync="dialogFileLimit" :options="limitOpt"></file-limit>
+
     </div>
 </template>
 
@@ -60,6 +66,8 @@
   import setting from './modules/setting.vue'
   import addBucket from './modules/add-bucket.vue'
   import protoManage from './modules/property-manager.vue'
+  import fileDebris from './modules/file-debris.vue'
+  import fileLimit from  './modules/file-limit.vue'
 
   export default {
     name: 'index-page',
@@ -76,14 +84,20 @@
             {name: '权限管理', func: this.setLimit}
           ]
         },
+        limitOpt: {
+          type: 'bucket',
+          bucket: null
+        },
         rightChooseBucket: null,
         dialogAddVisible: false,
         dialogManageVisible: false,
-        dialogSettingVisible: false
+        dialogSettingVisible: false,
+        dialogCrosVisible: false,
+        dialogFileLimit: false
       }
     },
 
-    components: {addBucket, protoManage, setting},
+    components: {addBucket, protoManage, setting, fileDebris, fileLimit},
 
     computed: {
       ...mapState('bucket', ['bucketList', 'currentBucket']),
@@ -142,6 +156,7 @@
           Region: doms.getAttribute('bucketRegion'),
           createTime: doms.getAttribute('createDate')
         }
+        this.limitOpt.bucket = this.rightChooseBucket
         this.bucketMenu.viewMenu = true
         this.$nextTick(() => {
           this.$refs.right.focus()
@@ -155,11 +170,13 @@
       },
 
       setCors: function () {
-
+        this.closeMenu()
+        this.dialogCrosVisible = true
       },
 
       setLimit: function () {
-
+        this.closeMenu()
+        this.dialogFileLimit = true
       }
     }
   }
