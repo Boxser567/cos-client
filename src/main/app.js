@@ -7,7 +7,7 @@ import path from 'path'
 import { ipcMain } from 'electron'
 import log from 'electron-log'
 import Cos from 'cos-nodejs-sdk-v5'
-import { DownloadTask, UploadTask, Tasks } from './task'
+import { DownloadTask, Tasks, UploadTask } from './task'
 import { clear, init, save } from './db'
 
 log.transports.console.level = 'info'
@@ -283,7 +283,7 @@ App.prototype.init = async function () {
     }
 
     if (arg.Keys) {
-      await fn(arg.Keys.map(k => ({Key: k, Size: '1'})))
+      await fn(arg.Keys.map(k => ({Key: k})))
     }
 
     for (let dir of arg.Dirs) {
@@ -405,7 +405,7 @@ function* downloadGenerator (downloadPath, prefix, contents) {
   }
   let pflen = prefix.length
   for (let content of contents) {
-    if (content.Size === '0') continue
+    if (content.Key.substr(-1) === '/') continue
     yield {
       name: path.join(downloadPath, content.Key.substr(pflen)),
       key: content.Key
