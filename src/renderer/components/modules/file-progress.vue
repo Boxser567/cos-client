@@ -79,12 +79,14 @@
         this.$store.commit('menulist/showFileProgress')
       },
       tabFn (item) {
+        if(this.isShowFileProgress){
+          this.$store.commit('menulist/showFileProgress')
+        }
         this.tabList.forEach(tab => { tab.iscur = false })
         item.iscur = true
       },
       oncomplete (v) {
         console.log(v)
-
       },
       openLog(){
         if (!this.config && this.config.logPath) return

@@ -125,6 +125,8 @@ Tasks.prototype.initRefresh = function () {
       s.push({
         id: t.id,
         Key: t.params.Key,
+        Bucket: t.params.Bucket,
+        Region: t.params.Region,
         FileName: t.file.fileName,
         status: t.status,
         size: t.progress.total,
@@ -378,6 +380,10 @@ UploadTask.prototype.getMultipartListPart = function () {
 /** @private */
 UploadTask.prototype.uploadSlice = function () {
   return Promise.all(new Array(this.asyncLim).fill(0).map(() => this.upload()))
+    .then(() => {
+      this.progress.speed = 0
+      return Promise.resolve()
+    })
 }
 
 UploadTask.prototype.upload = function () {
@@ -405,12 +411,13 @@ UploadTask.prototype.upload = function () {
         Body: result.body,
         onProgress: (data) => {
           pg.loaded = data.loaded
-          pg.speed = data.speed
+          pg.speed = ~~data.speed
           this.progress.On()
         }
         // todo 在sdk更新后换成 ContentMD5
         // ContentSha1: '"' + result.hash + '"'
       }, this.params), (err, data) => {
+        pg.speed = 0
         if (err) {
           reject(err)
           return

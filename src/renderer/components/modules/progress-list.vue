@@ -2,9 +2,22 @@
     <div>
         <div class="title-bar">
             <div class="el-button-group">
-                <el-button size="small" :plain="true" @click="send('begin','select')">开始</el-button>
-                <el-button size="small" :plain="true" @click="send('pause','select')">暂停</el-button>
-                <el-button size="small" :plain="true" @click="send('delete','select')">取消</el-button>
+                <el-button size="small" v-show="!btnDisabled.begin || btnDisabled.pause" :disabled="btnDisabled.begin"
+                           :plain="true" @click="send('begin','select')">
+                    开始
+                </el-button>
+                <el-button size="small" v-show="!btnDisabled.pause" :disabled="btnDisabled.pause" :plain="true"
+                           @click="send('pause','select')">
+                    暂停
+                </el-button>
+                <el-button size="small" v-show="!btnDisabled.cancel || btnDisabled.delete"
+                           :disabled="btnDisabled.cancel" :plain="true"
+                           @click="send('delete','select')">取消
+                </el-button>
+                <el-button size="small" v-show="!btnDisabled.delete" :disabled="btnDisabled.delete" :plain="true"
+                           @click="send('delete','select')">移除
+                </el-button>
+
             </div>
             <div class="el-button-group">
                 <el-button size="small" :plain="true" @click="send('begin','all')">全部开始
@@ -82,6 +95,159 @@
               delete: 'DeleteDownloadTasks'
             }
         }
+      },
+      btnDisabled(){
+        let allTrue = {
+          begin: true,
+          pause: true,
+          delete: true,
+          cancel: true
+        }
+        let check = (status) => {
+          switch (status) {
+            case 'wait':
+            case 'run':
+              return {
+                begin: true,
+                pause: false,
+                delete: true,
+                cancel: false
+              }
+            case 'pause':
+              return {
+                begin: false,
+                pause: true,
+                delete: true,
+                cancel: false
+              }
+            case 'complete':
+              return {
+                begin: true,
+                pause: true,
+                delete: false,
+                cancel: true
+              }
+            case 'error':
+              return {
+                begin: false,
+                pause: true,
+                delete: false,
+                cancel: true
+              }
+          }
+
+        }
+        if (this.selected.length == 0) return allTrue
+        if (this.selected.length === 1) {
+          let item = this.normaliseList[this.selected[0]]
+          if (!item) return allTrue
+          return check(item.status)
+        }
+        let st = ''
+        for (let id of this.selected) {
+          if (!this.normaliseList[id]) continue
+          if (!st) {
+            st = this.normaliseList[id].status
+            continue
+          }
+          if (this.normaliseList[id].status !== st) {
+            return allTrue
+          }
+        }
+        return check(st)
+//        if (arr.length < 1) return true
+//        if (arr.length > 1) {
+//          let flag = false
+//          arr.forEach((n, index) => {
+//            if (arr.length - 1 === index) return
+//            if (n !== arr[index + 1]) {
+//              flag = true
+//            }
+//          })
+//        }
+//
+//        return {
+//          begin: function () {
+//            if (flag) return true
+//            switch (arr[0]) {
+//              case 'wait':
+//                return false
+//                break
+//              case 'pause':
+//                return false
+//                break
+//              case 'complete':
+//                return true
+//                break
+//              case 'run':
+//                return true
+//                break
+//              case 'error':
+//                return false
+//                break
+//            }
+//          },
+//          pause: function () {
+//            if (flag) return true
+//            switch (arr[0]) {
+//              case 'wait':
+//                return false
+//                break
+//              case 'pause':
+//                return true
+//                break
+//              case 'complete':
+//                return true
+//                break
+//              case 'run':
+//                return false
+//                break
+//              case 'error':
+//                return false
+//                break
+//            }
+//          },
+//          delete: function () {  //移除
+//            if (flag) return true
+//            switch (arr[0]) {
+//              case 'wait':
+//                return false
+//                break
+//              case 'pause':
+//                return false
+//                break
+//              case 'complete':
+//                return false
+//                break
+//              case 'run':
+//                return false
+//                break
+//              case 'error':
+//                return false
+//                break
+//            }
+//          },
+//          cancel: function () {
+//            if (flag) return true
+//            switch (arr[0]) {
+//              case 'wait':
+//                return false
+//                break
+//              case 'pause':
+//                return false
+//                break
+//              case 'complete':
+//                return true
+//                break
+//              case 'run':
+//                return false
+//                break
+//              case 'error':
+//                return true
+//                break
+//            }
+//          }
+//        }
       }
     },
     watch: {
@@ -209,7 +375,8 @@
           all: true,
           onlyComplete: true
         })
-      }
+      },
+
     }
   }
 </script>

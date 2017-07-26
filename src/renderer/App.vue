@@ -51,7 +51,7 @@
       })
       this.$store.getters.bus.$on('confirm', (resp) => {
         console.log('this-confirm', resp)
-        if (resp && resp.action === 'open') {
+        if (resp) {
           this.errorContent = resp
           this.deleteContent = true
         }
