@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, Menu } from 'electron'
 import { App } from './app'
 /**
  * Set `__static` path to static files in production
@@ -37,7 +37,74 @@ function createWindow () {
   })
 }
 
+function buildApplicationMenu () {
+  if (process.platform === 'darwin') {
+    var template = [
+      {
+        label: app.getName(),
+        submenu: [
+          {role: 'about'},
+          {type: 'separator'},
+          {role: 'services', submenu: []},
+          {type: 'separator'},
+          {role: 'hide'},
+          {role: 'hideothers'},
+          {role: 'unhide'},
+          {type: 'separator'},
+          {role: 'quit'}
+        ]
+      },
+      {
+        label: 'Edit',
+        submenu: [
+          {role: 'undo'},
+          {role: 'redo'},
+          {type: 'separator'},
+          {role: 'cut'},
+          {role: 'copy'},
+          {role: 'paste'},
+          {role: 'pasteandmatchstyle'},
+          {role: 'delete'},
+          {role: 'selectall'},
+          {type: 'separator'},
+          {
+            label: 'Speech',
+            submenu: [
+              {role: 'startspeaking'},
+              {role: 'stopspeaking'}
+            ]
+          }
+        ]
+      },
+      {
+        role: 'window',
+        submenu: [
+          {role: 'close'},
+          {role: 'minimize'},
+          {role: 'zoom'},
+          {type: 'separator'},
+          {role: 'front'}
+        ]
+      },
+      {
+        role: 'help',
+        submenu: [
+          {
+            label: 'More',
+            click () { require('electron').shell.openExternal('https://www.qcloud.com/document/product/436') }
+          }
+        ]
+      }
+    ]
+    var menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
+  } else {
+    Menu.setApplicationMenu(null)
+  }
+}
+
 app.on('ready', () => {
+  buildApplicationMenu()
   createWindow()
 })
 
