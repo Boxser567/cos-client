@@ -52,7 +52,7 @@
     "linux": {
       "icon": "build/icons"
     },
-    "compression": "store",
+    "compression": "maximum",
     "copyright": "Copyright © 2017 ${author}"
   },
   "dependencies": {
