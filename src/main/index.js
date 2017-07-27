@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow, Menu } from 'electron'
+import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import { App } from './app'
 /**
  * Set `__static` path to static files in production
@@ -14,6 +14,8 @@ let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
+
+const nextURL = `file://${__dirname}/presWindow.html`
 
 function createWindow () {
   let main = new App()
@@ -106,6 +108,23 @@ function buildApplicationMenu () {
 app.on('ready', () => {
   buildApplicationMenu()
   createWindow()
+
+  var presWindow = new BrowserWindow({
+    width: 300,
+    height: 300,
+    show: false
+  })
+
+  presWindow.loadURL(nextURL) //新窗口
+
+  ipcMain.on('zqz-show', function () {
+    presWindow.show()
+  })
+
+  ipcMain.on('hide-pres', function () {
+    presWindow.hide()
+  })
+
 })
 
 app.on('window-all-closed', () => {

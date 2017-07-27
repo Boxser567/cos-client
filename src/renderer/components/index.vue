@@ -13,6 +13,7 @@
             <div class="bucket">
 
                 <div class="bucket-group" v-for="(value,key) in bucketList" :class="{ active:false }">
+                    <!--<div @click="addNewWindow">添加新窗口</div>-->
 
                     <div class="bucket-item" @contextmenu="openMenu($event)">
                         <div class="item"
@@ -30,12 +31,14 @@
                     </div>
                 </div>
 
+
             </div>
 
             <ul id="bucket-menu-list" tabindex="-1" ref="right" v-if="bucketMenu.viewMenu" @blur="closeMenu"
                 :style="{ top:bucketMenu.top, left:bucketMenu.left }">
                 <li v-for="i in bucketMenu.list" @click="i.func"> {{i.name}}</li>
             </ul>
+
 
         </div>
 
@@ -68,6 +71,7 @@
   import protoManage from './modules/property-manager.vue'
   import fileDebris from './modules/file-debris.vue'
   import fileLimit from  './modules/file-limit.vue'
+  import { ipcRenderer } from 'electron'
 
   export default {
     name: 'index-page',
@@ -111,6 +115,11 @@
     created () {},
 
     methods: {
+      addNewWindow(){
+        console.log(442222)
+        ipcRenderer.send('hide-pres')
+        ipcRenderer.send('zqz-show')
+      },
       fetchData () {
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => {
