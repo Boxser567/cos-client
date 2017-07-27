@@ -31,6 +31,7 @@
       color: #fff;
     }
   }
+
   button {
     width: 100%;
     background: rgb(150, 204, 77);
@@ -55,15 +56,14 @@
     width: 120px;
     margin-left: 58px;
     color: #fff;
-
+    .el-input.is-disabled .el-input__inner{
+      background: rgba(255, 255, 255, 0.1);
+    }
     .el-input__icon {
       color: #fff;
     }
     input {
       color: #fff;
-      //&:focus {
-      //  border-color: #96CC4D;
-      //}
     }
   }
 

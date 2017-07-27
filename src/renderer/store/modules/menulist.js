@@ -56,15 +56,21 @@ const state = {
       isActive: false
     },
     {
+      key: 'set_limit',
+      name: '设置权限',
+      index: 8,
+      isActive: false
+    },
+    {
       key: 'paste_file',
       name: '粘贴',
-      index: 8,
+      index: 9,
       isActive: false
     },
     {
       key: 'download_list',
       name: '下载当前目录',
-      index: 9,
+      index: 10,
       isActive: false
     }
   ],
@@ -216,11 +222,12 @@ const mutations = {
       }, pms)
       state.selectFile.forEach(n => {
         if (n.dir) {
-          parms.Dirs.push(n.Name)
+          parms.Dirs.push(n.Prefix)
         } else {
-          parms.Keys.push(n.Name)
+          parms.Keys.push(n.Key)
         }
       })
+      // console.log(state.selectFile, '下载canshu', parms)
       ipcRenderer.send('NewDownloadTasks', parms)
     })
   },

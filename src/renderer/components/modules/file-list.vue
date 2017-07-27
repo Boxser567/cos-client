@@ -73,8 +73,8 @@
           list: null,
           top: 0,
           left: 0,
-          files: ['download_file', 'copy_file', 'delete_file', 'get_address', 'set_http'],
-          folders: ['download_file', 'copy_file', 'delete_file'],
+          files: ['download_file', 'copy_file', 'delete_file', 'get_address', 'set_http', 'set_limit'],
+          folders: ['download_file', 'copy_file', 'delete_file', 'set_limit'],
           blanks: ['upload_file', 'new_folder', 'download_list'],
           groupFile: ['download_file', 'copy_file', 'delete_file', 'set_http']
         }
@@ -178,7 +178,7 @@
       openFileMenu (e) {
         let currentDom = e.target
 
-        if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {
+        if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {  //右键空白
           this.$store.commit('menulist/unSelectFile')
           this.menu.list = this.fileRightList.filter((m) => {
             if (this.menu.blanks.includes(m.key)) {
@@ -205,7 +205,7 @@
             this.selectFile.forEach((x) => {
               if (x.Name === cfile.Name) temper = true
             })
-            if (temper) {
+            if (temper) {  //右键选中多个文件
               let array = this.selectFile.map(n => !!n.dir)
 
               if (array.includes(false) && (!array.includes(true))) {
@@ -216,7 +216,7 @@
                 })
               } else {
                 this.menu.list = this.fileRightList.filter((m) => {
-                  if (this.menu.folders.includes(m.key)) {
+                  if (this.menu.folders.includes(m.key) && m.key !== 'set_limit') {
                     return m
                   }
                 })
@@ -311,6 +311,8 @@
           case 'get_address':
             break
           case 'set_http':
+            break
+          case 'set_limit':
             break
           case 'copy_file': // 复制
             this.$store.commit('menulist/copyFiles', pms)
