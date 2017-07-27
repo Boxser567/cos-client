@@ -89,11 +89,9 @@ const actions = {
 
   getBucketACL ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
-      rootGetters.cos.getBucketACL(params, function (err, data) {
-        console.log('getBucketACL', params, arguments)
+      rootGetters.cos.getBucketAcl(params, function (err, data) {
         if (err) {
           // cos.bus.$emit('globleError', err)
-
         } else {
           resolve(data)
         }

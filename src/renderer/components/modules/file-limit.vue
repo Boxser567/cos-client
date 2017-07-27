@@ -70,7 +70,7 @@
                             label="用户"
                             width="180">
                         <template scope="scope">
-                            <span v-if="scope.row.edit===0">{{ scope.row.user }}</span>
+                            <span v-if="scope.row.edit===0 || scope.row.edit===2">{{ scope.row.user }}</span>
                             <el-input size="small" v-if="scope.row.edit===1 || scope.row.edit===3"
                                       v-model=" scope.row.user "></el-input>
                         </template>
@@ -78,7 +78,7 @@
                     <el-table-column
                             label="权限">
                         <template scope="scope">
-                            <div v-if="scope.row.edit===0"> {{getLimit(scope.row)}}</div>
+                            <div v-if="scope.row.edit===0 || scope.row.edit===2"> {{getLimit(scope.row)}}</div>
                             <div v-if="scope.row.edit===1 || scope.row.edit===3">
                                 <el-checkbox-group v-model="scope.row.checkLimit">
                                     <el-checkbox label="读"></el-checkbox>
@@ -151,36 +151,53 @@
         activeName: 'first',
         commonData: [{
           user: '所有人',
-          name: '王小虎',
           pb_limit: 'private',
           old_limit: null,
           edit: 0
         }],
-        userData: [{
-          user: '286048649',
-          checkLimit: ['读'],
-          old_limit: null,
-          old_user: null,
-          edit: 0
-        }]
+        userData: [],
+        OwnerID: null
       }
     },
 
     created () {
-      this.renderData()
+//      this.renderData()
+    },
+    watch: {
+      'isShow': {
+        handler: function (val) {
+          if (val)
+            this.renderData()
+        }
+      }
     },
     computed: {},
     methods: {
       renderData(){
-        console.log(this.options)
-        if (!this.options.bucket)return
+        this.userData=[]
         let parms = {
           Bucket: this.options.bucket.Bucket,
           Region: this.options.bucket.Region
         }
 
-        this.$store.dispatch('bucket/getBucketACL', parms).then(() => {
-          console.log(111111, arguments)
+        this.$store.dispatch('bucket/getBucketACL', parms).then((resp) => {
+          let OwnerID = resp.Owner.ID
+          resp.Grants.forEach(n => {
+            //Grantee  DisplayName
+            if (n.Grantee.ID.indexOf('anyone') > -1) {
+
+              this.commonData[0].pb_limit = 'public'
+
+            } else {
+              this.userData.push({
+                user: n.Grantee.ID.replace(/\\/g, '/').replace(/.*\//, ''),
+                checkLimit: n.Permission === 'FULL_CONTROL' ? ['读', '写'] : n.Permission === 'WRITE' ? ['写'] : ['读'],
+                old_limit: null,
+                old_user: null,
+                edit: n.Grantee.ID === OwnerID ? 2 : 0
+              })
+            }
+          })
         })
       },
       handleClick () {
