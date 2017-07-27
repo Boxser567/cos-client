@@ -47,7 +47,7 @@
 .bucket-group {
   position: absolute;
   top: 77px;
-  bottom: 0;
+  bottom: 40px;
   left: 0;
   right: 0;
   overflow: auto;
@@ -55,7 +55,16 @@
     height: 45px;
     overflow: hidden;
   }
+}
 
+.load-progress {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  text-indent: 20px;
+  font-size: 14px;
+  height: 40px;
 }
 
 .bucket-item {

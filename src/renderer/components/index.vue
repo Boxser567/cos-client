@@ -13,7 +13,6 @@
             <div class="bucket">
 
                 <div class="bucket-group" v-for="(value,key) in bucketList" :class="{ active:false }">
-                    <!--<div @click="addNewWindow">添加新窗口</div>-->
 
                     <div class="bucket-item" @contextmenu="openMenu($event)">
                         <div class="item"
@@ -31,6 +30,7 @@
                     </div>
                 </div>
 
+                <div class="load-progress" @click="addNewWindow">  查看进程 </div>
 
             </div>
 
@@ -117,8 +117,9 @@
     methods: {
       addNewWindow(){
         console.log(442222)
-        ipcRenderer.send('hide-pres')
-        ipcRenderer.send('zqz-show')
+        window.open('http://localhost:9080/#/locked', '传输进程', 'height=490, width=794, minWidth=794,minHeight=490')
+//        ipcRenderer.send('hide-pres')
+//        ipcRenderer.send('zqz-show')
       },
       fetchData () {
         this.bloading = true

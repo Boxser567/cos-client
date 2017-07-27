@@ -1,15 +1,13 @@
 <template>
-    <div class="list-progress" :class="{ 'list-none':isShowFileProgress }">
+    <div class="list-progress" >
         <div class="el-side-tab">
-            <div class="el-side-head clearfix" @dblclick="showFileProgress">
+            <div class="el-side-head clearfix" >
                 <ul>
                     <li :class="{'active' : t.iscur}" @click="tabFn(t)" v-for="t in tabList">{{t.name}}</li>
                 </ul>
                 <div class="el-speed">
                     上传速度: <span>{{uploadSpeed | bitSpeed}} </span>
                     下载速度: <span>{{downloadSpeed | bitSpeed}} </span>
-                    <i class="el-icon-d-arrow-right" :class="{ active:isShowFileProgress }"
-                       @click="showFileProgress"></i>
                 </div>
             </div>
             <div class="el-side-content">
@@ -40,7 +38,7 @@
 
   export default {
     name: 'fileProgress-page',
-    props: ['options'],
+//    props: ['options'],
     data () {
       return {
         tabList: [
@@ -69,19 +67,13 @@
     },
     components: {progressList},
     computed: {
-      ...mapState('menulist', ['isShowFileProgress']),
+//      ...mapState('menulist', ['isShowFileProgress']),
       config(){
         return this.$store.state.config
       }
     },
     methods: {
-      showFileProgress () {
-        this.$store.commit('menulist/showFileProgress')
-      },
       tabFn (item) {
-        if(this.isShowFileProgress){
-          this.$store.commit('menulist/showFileProgress')
-        }
         this.tabList.forEach(tab => { tab.iscur = false })
         item.iscur = true
       },

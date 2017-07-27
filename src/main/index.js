@@ -108,23 +108,6 @@ function buildApplicationMenu () {
 app.on('ready', () => {
   buildApplicationMenu()
   createWindow()
-
-  var presWindow = new BrowserWindow({
-    width: 300,
-    height: 300,
-    show: false
-  })
-
-  presWindow.loadURL(nextURL) //新窗口
-
-  ipcMain.on('zqz-show', function () {
-    presWindow.show()
-  })
-
-  ipcMain.on('hide-pres', function () {
-    presWindow.hide()
-  })
-
 })
 
 app.on('window-all-closed', () => {

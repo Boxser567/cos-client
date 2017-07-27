@@ -1,7 +1,7 @@
 <template>
 
     <div>
-
+            <h1>测试窗口</h1>
     </div>
 
 </template>
