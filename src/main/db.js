@@ -8,15 +8,14 @@ import path from 'path'
 
 function DB () {
   let userDir = app.getPath('userData')
-  const dbname = process.env.NODE_ENV === 'development' ? 'gk.sqlite' : path.join(userDir, 'db.dat')
-
+  let dbname = 'gk.sqlite'
   if (process.env.NODE_ENV !== 'development') {
-    fs.mkdir(userDir, () => {
-      this.db = new (sqlite3.verbose()).Database(dbname)
-    })
-  } else {
-    this.db = new (sqlite3.verbose()).Database(dbname)
+    dbname = path.join(userDir, 'db.dat')
+    try {
+      fs.mkdirSync(userDir)
+    } catch (e) {}
   }
+  this.db = new (sqlite3.verbose()).Database(dbname)
 }
 
 DB.prototype.config = function () {
