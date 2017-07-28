@@ -8,33 +8,124 @@ import { ipcMain } from 'electron'
 import log from 'electron-log'
 import Cos from 'cos-nodejs-sdk-v5'
 import { DownloadTask, Tasks, UploadTask } from './task'
-import { clear, init, save } from './db'
+import DB from './db'
 
 log.transports.console.level = 'info'
 log.transports.file.level = 'info'
 
-let app
+let main
 
 /**
  * 单例类，在应用初始化时初始化config，在窗口创建时初始化uploads和downloads，
  * 窗口关闭时config，uploads，downloads记录数据库，但不清除。
  */
-function App () {
-  if (app) return app
-  app = this
-  app.init()
+function Main () {
+  if (main) return main
+  main = this
+  main.init().catch(err => {
+    log.error(err)
+  })
 }
 
-App.prototype.init = async function () {
+Main.prototype.init = async function () {
+  let db = new DB()
   /** @type {Tasks} */
   let uploads
   /** @type {Tasks} */
   let downloads
 
-  let config = await init.config()
+  let config = await db.config().get()
   config.upload = config.upload || {maxActivity: 3, asyncLim: 2}
   config.download = config.download || {maxActivity: 3}
   config.logPath = log.transports.file.findLogPath(log.transports.file.appName)
+
+  uploads = new Tasks(config.upload.maxActivity)
+
+  let uploadsIsInit = false
+
+  let uploadSenders = []
+
+  function uploadListen (uploads) {
+    uploads.on('done', (task, result) => {
+      task.progress.loaded = task.progress.total
+      log.info(`upload ${task.params.Bucket}/${task.params.Key} done`)
+    })
+
+    uploads.on('cancel', (task, result) => {
+      log.info(`upload ${task.params.Bucket}/${task.params.Key} cancel`)
+    })
+
+    uploads.on('error', (task, err) => {
+      log.error(`upload ${task.params.Bucket}/${task.params.Key} error`, err)
+    })
+
+    uploads.on('refresh', (data) => {
+      for (let sender of uploadSenders) {
+        if (sender && !sender.isDestroyed()) sender.send('GetUploadTasks-data', data)
+      }
+    })
+  }
+
+  uploadListen(uploads)
+
+  ipcMain.on('GetUploadTasks', (event) => {
+    if (uploadSenders[event.sender.id]) {
+      uploads.refresh()
+      return
+    }
+
+    uploadSenders[event.sender.id] = event.sender
+
+    event.sender.on('closed', () => {
+      delete uploadSenders[event.sender.id]
+    })
+
+    uploads.refresh()
+  })
+
+  downloads = new Tasks(config.download.maxActivity)
+
+  let downloadsIsInit = false
+
+  let downloadSenders = []
+
+  function downloadListen (downloads) {
+    downloads.on('done', (task, result) => {
+      task.progress.loaded = task.progress.total
+      log.info(`download done ${task.params.Bucket}/${task.params.Key}`)
+    })
+
+    downloads.on('cancel', (task, result) => {
+      log.info(`download cancel ${task.params.Bucket}/${task.params.Key}`)
+    })
+
+    downloads.on('error', (task, err) => {
+      log.info(`download error ${task.params.Bucket}/${task.params.Key} `, err)
+    })
+
+    downloads.on('refresh', (data) => {
+      for (let sender of downloadSenders) {
+        if (sender && !sender.isDestroyed) sender.send('GetDownloadTasks-data', data)
+      }
+    })
+  }
+
+  downloadListen(downloads)
+
+  ipcMain.on('GetDownloadTasks', (event) => {
+    if (downloadSenders[event.sender.id]) {
+      downloads.refresh()
+      return
+    }
+
+    downloadSenders[event.sender.id] = event.sender
+
+    event.sender.on('closed', () => {
+      delete downloadSenders[event.sender.id]
+    })
+
+    downloads.refresh()
+  })
 
   let cos
 
@@ -58,16 +149,62 @@ App.prototype.init = async function () {
     config = cfg
     cos = new Cos(cfg.cos)
     // 修改最大并行任务数，当任务数增加时会自动启动新任务，减少时不会立即停止当前运行的任务，而是在当前任务完成后调整
-    if (uploads && cfg.upload) uploads.maxLim(cfg.upload.maxActivity)
-    if (downloads && cfg.download) downloads.maxLim(cfg.upload.maxActivity)
+    if (cfg.upload) uploads.maxLim(cfg.upload.maxActivity)
+    if (cfg.download) downloads.maxLim(cfg.upload.maxActivity)
+
+    if (uploadsIsInit && downloadsIsInit) return
+
+    (async () => {
+      if (uploadsIsInit) return Promise.resolve()
+      uploadsIsInit = true
+      let tasks = await db.upload().get()
+      for (let t of tasks) {
+        try {
+          let task = await new UploadTask(cos, t.name, t.params, t.option)
+          uploads.newTask(task)
+          task.progress.loaded = t.loaded
+          task.progress.total = t.total
+          task.status = t.status
+        } catch (err) {
+          log.error(err)
+        }
+      }
+    })().catch(err => log.error(err));
+
+    (async () => {
+      if (downloadsIsInit) return Promise.resolve()
+      downloadsIsInit = true
+      let tasks = await db.download().get()
+      for (let t of tasks) {
+        try {
+          let task = await new DownloadTask(cos, t.name, t.params, t.option)
+          downloads.newTask(task)
+          task.progress.loaded = t.loaded
+          task.progress.total = t.total
+          task.status = t.status
+        } catch (e) {
+          log.error(e)
+        }
+      }
+    })().catch(err => log.error(err))
   })
 
   // 只能在绑定推送前调用
   ipcMain.on('ClearAll', () => {
-    config = {}
-    uploads = null
-    downloads = null
-    clear()
+    config = {
+      upload: {maxActivity: 3, asyncLim: 2},
+      download: config.download || {maxActivity: 3},
+      logPath: log.transports.file.findLogPath(log.transports.file.appName)
+    }
+    uploads = new Tasks(config.upload.maxActivity)
+
+    uploadListen(uploads)
+
+    downloads = new Tasks(config.download.maxActivity)
+
+    downloadListen(downloads)
+
+    db.clear()
   })
 
   ipcMain.on('ListBucket', (event) => {
@@ -107,49 +244,6 @@ App.prototype.init = async function () {
         if (!event.sender.isDestroyed()) event.sender.send('error', normalizeError(err, 'ListObject'))
       }
     ).catch(err => { log.warn(err) })
-  })
-
-  ipcMain.on('GetUploadTasks', async (event) => {
-    if (uploads) {
-      uploads.removeAllListeners('refresh')
-      uploads.on('refresh', (data) => {
-        if (!event.sender.isDestroyed()) event.sender.send('GetUploadTasks-data', data)
-      })
-      uploads.refresh()
-      return
-    }
-    uploads = new Tasks(config.upload.maxActivity)
-
-    uploads.on('done', (task, result) => {
-      task.progress.loaded = task.progress.total
-      log.info(`upload ${task.params.Bucket}/${task.params.Key} done`)
-    })
-
-    uploads.on('cancel', (task, result) => {
-      log.info(`upload ${task.params.Bucket}/${task.params.Key} cancel`)
-    })
-
-    uploads.on('error', (task, err) => {
-      log.error(`upload ${task.params.Bucket}/${task.params.Key} error`, err)
-    })
-
-    uploads.on('refresh', (data) => {
-      if (!event.sender.isDestroyed()) event.sender.send('GetUploadTasks-data', data)
-    })
-
-    let tasks = await init.upload()
-    for (let t of tasks) {
-      try {
-        let task = await new UploadTask(cos, t.name, t.params, t.option)
-        uploads.newTask(task)
-        task.progress.loaded = t.loaded
-        task.progress.total = t.total
-        task.status = t.status
-      } catch (err) {
-        log.error(err)
-      }
-    }
-    uploads.refresh()
   })
 
   ipcMain.on('NewUploadTasks', async (event, arg) => {
@@ -206,49 +300,6 @@ App.prototype.init = async function () {
      * @param {boolean} arg.onlyNotComplete
      */
     uploads.delete(arg.tasks, arg.all, arg.onlyComplete, arg.onlyNotComplete)
-  })
-
-  ipcMain.on('GetDownloadTasks', async (event) => {
-    if (downloads) {
-      downloads.removeAllListeners('refresh')
-      downloads.on('refresh', (data) => {
-        if (!event.sender.isDestroyed()) event.sender.send('GetDownloadTasks-data', data)
-      })
-      downloads.refresh()
-      return
-    }
-    downloads = new Tasks(config.download.maxActivity)
-
-    downloads.on('done', (task, result) => {
-      task.progress.loaded = task.progress.total
-      log.info(`download done ${task.params.Bucket}/${task.params.Key}`)
-    })
-
-    downloads.on('cancel', (task, result) => {
-      log.info(`download cancel ${task.params.Bucket}/${task.params.Key}`)
-    })
-
-    downloads.on('error', (task, err) => {
-      log.info(`download error ${task.params.Bucket}/${task.params.Key} `, err)
-    })
-
-    downloads.on('refresh', (data) => {
-      if (!event.sender.isDestroyed()) event.sender.send('GetDownloadTasks-data', data)
-    })
-
-    let tasks = await init.download()
-    for (let t of tasks) {
-      try {
-        let task = await new DownloadTask(cos, t.name, t.params, t.option)
-        downloads.newTask(task)
-        task.progress.loaded = t.loaded
-        task.progress.total = t.total
-        task.status = t.status
-      } catch (e) {
-        log.error(e)
-      }
-    }
-    downloads.refresh()
   })
 
   ipcMain.on('NewDownloadTasks', async (event, arg) => {
@@ -335,9 +386,9 @@ App.prototype.init = async function () {
     let cfg = Object.assign({}, config)
     delete cfg.cos
     return Promise.all([
-      save.config(cfg),
-      save.upload(uploads.tasks),
-      save.download(downloads.tasks)
+      db.config().set(cfg),
+      db.upload().set(uploads.tasks),
+      db.download().set(downloads.tasks)
     ])
   }
 }
@@ -431,4 +482,4 @@ function normalizeError (error, src) {
   return {message: 'unknown', src, error}
 }
 
-export { App }
+export default Main
