@@ -5,8 +5,7 @@
             <div class="size">大小</div>
             <div class="time">更新时间</div>
         </div>
-        <div class="list-info" id="menuinfo" @click="fileContentClick($event)" :class="{ active:isShowFileProgress }"
-             @contextmenu="openFileMenu($event)">
+        <div class="list-info" id="menuinfo" @click="fileContentClick($event)"   @contextmenu="openFileMenu($event)">
 
             <div class="loading" v-if="fileloading">
                 <i class="el-icon-loading"></i>
@@ -45,7 +44,7 @@
             </div>
         </div>
 
-        <file-progress :options="options"></file-progress>
+        <!--<file-progress :options="options"></file-progress>-->
 
         <!--文件右键列表信息-->
         <ul id="bucket-menu-list" tabindex="-1" v-show="isShowList" ref="fileRight"
@@ -59,7 +58,7 @@
 <script>
   import { mapState } from 'vuex'
 
-  import fileProgress from './file-progress.vue'
+  //  import fileProgress from './file-progress.vue'
 
   export default {
     name: 'filelist-page',
@@ -81,10 +80,10 @@
       }
     },
 
-    components: {'file-progress': fileProgress},
+//    components: {'file-progress': fileProgress},
 
     computed: {
-      ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles', 'isShowFileProgress'])
+      ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles'])
     },
     created () {
       this.fetchData()

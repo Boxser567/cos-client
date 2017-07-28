@@ -8,8 +8,6 @@ const state = {
 
   fileloading: true,
 
-  isShowFileProgress: false,
-
   selectFile: [],
 
   fileRightList: [
@@ -88,9 +86,6 @@ const mutations = {
     state.fileloading = val.loading
   },
 
-  showFileProgress (state) {
-    state.isShowFileProgress = !state.isShowFileProgress
-  },
 
   selectFile (state, val) { // 选择文件
     if (!state.filelist) return

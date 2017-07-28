@@ -72,7 +72,7 @@
           area: this.areaDef
         })
         this.$store.dispatch('bucket/getService').then(() => {
-          this.$router.replace('/')
+          this.$router.replace('/index')
         }, (err) => {
           ipcRenderer.send('ClearAll')
           this.$message(err.error.Message)

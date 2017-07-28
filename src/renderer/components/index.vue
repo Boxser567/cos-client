@@ -30,12 +30,15 @@
                     </div>
                 </div>
 
+                <div class="load-progress" @click="addNewWindow">  查看进程 </div>
+
             </div>
 
             <ul id="bucket-menu-list" tabindex="-1" ref="right" v-if="bucketMenu.viewMenu" @blur="closeMenu"
                 :style="{ top:bucketMenu.top, left:bucketMenu.left }">
                 <li v-for="i in bucketMenu.list" @click="i.func"> {{i.name}}</li>
             </ul>
+
 
         </div>
 
@@ -68,6 +71,7 @@
   import protoManage from './modules/property-manager.vue'
   import fileDebris from './modules/file-debris.vue'
   import fileLimit from  './modules/file-limit.vue'
+  import { ipcRenderer } from 'electron'
 
   export default {
     name: 'index-page',
@@ -111,6 +115,12 @@
     created () {},
 
     methods: {
+      addNewWindow(){
+        console.log(442222)
+        window.open('http://localhost:9080/#/locked', '传输进程', 'height=490, width=794, minWidth=794,minHeight=490')
+//        ipcRenderer.send('hide-pres')
+//        ipcRenderer.send('zqz-show')
+      },
       fetchData () {
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => {
