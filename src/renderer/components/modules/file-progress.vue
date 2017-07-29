@@ -1,13 +1,14 @@
 <template>
-    <div class="list-progress" >
+    <div class="list-progress">
         <div class="el-side-tab">
-            <div class="el-side-head clearfix" >
+            <div class="el-side-head clearfix">
                 <ul>
                     <li :class="{'active' : t.iscur}" @click="tabFn(t)" v-for="t in tabList">{{t.name}}</li>
                 </ul>
                 <div class="el-speed">
-                    上传速度: <span>{{uploadSpeed | bitSpeed}} </span>
-                    下载速度: <span>{{downloadSpeed | bitSpeed}} </span>
+                    <p> 上传速度: <span>{{uploadSpeed | bitSpeed}} </span></p>
+                    <p> 下载速度: <span>{{downloadSpeed | bitSpeed}} </span></p>
+
                 </div>
             </div>
             <div class="el-side-content">

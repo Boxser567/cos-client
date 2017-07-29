@@ -98,6 +98,31 @@ const actions = {
       })
     })
   },
+  getObjectACL ({rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.getObjectAcl(params, function (err, data) {
+        if (err) {
+          // cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
+
+  putBucketAcl({rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.putBucketAcl(params, function (err, data) {
+        if (err) {
+          console.log(3333, params, err)
+          // rootGetters.cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
+
 
   putObject ({dispatch, rootGetters}, params) {
     return new Promise((resolve, reject) => {

@@ -205,7 +205,7 @@
   overflow: hidden;
   .list {
     padding: 0 20px;
-    font-size: 14px;
+    font-size: 13px;
     position: relative;
     & > div {
       display: inline-block;
@@ -238,7 +238,7 @@
 
     .name {
       img {
-        width: 32px;
+        width: 24px;
         position: absolute;
         left: 20px;
         top: 4px;
@@ -248,8 +248,8 @@
       }
     }
     .list {
-      height: 40px;
-      line-height: 40px;
+      height: 32px;
+      line-height: 32px;
       color: $fontColor;
       &.active {
         background: $fileActive !important;
@@ -312,13 +312,13 @@
   }
   .el-side-head {
     font-size: 12px;
-    padding: 0 20px;
+    padding: 20px 0;
     padding-top: 7px;
     background: $rightSidebarBgColor;
     border-right: 1px solid $borderColor;
-    width: 140px;
+    width: 180px;
     position: absolute;
-    top:0;
+    top: 0;
     left: 0;
     bottom: 0;
     ul {
@@ -330,9 +330,12 @@
       position: relative;
       z-index: 1;
       padding: 8px 20px;
-      margin-right: 8px;
+      margin: 2px 0px;
       cursor: pointer;
       color: #5b6678;
+      border-bottom: 2px solid $rightSidebarBgColor;
+      text-align: center;
+      font-size: 13px;
       &.active {
         z-index: 5;
         color: #2277da;
@@ -340,9 +343,11 @@
       }
     }
     .el-speed {
-      height: 32px;
-      line-height: 30px;
-      padding-right: 40px;
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-indent: 20px;
       span {
         padding: 0 4px;
         text-align: center;
@@ -368,7 +373,7 @@
   }
   .el-side-content {
     position: absolute;
-    top:0;
+    top: 0;
     left: 181px;
     right: 0;
     bottom: 0;

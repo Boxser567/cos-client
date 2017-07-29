@@ -117,9 +117,9 @@
           ACL: this.myform.limit
         }
         this.$store.dispatch('bucket/putBucket', {pms: params}).then(() => {
-          this.$emit('freshBucket')
           this.renderData()
-          this.$emit('closeBucket')
+          this.$emit('freshBucket')
+          this.closeDialog()
         })
       },
       closeDialog () {

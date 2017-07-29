@@ -50,10 +50,14 @@
 
       deleteBucket: function () {
         if (!this.currentBucket) return
-        this.$store.dispatch('bucket/deleteBucket', this.currentBucket).then(() => {
-          this.$emit('freshBucket')
-          this.$emit('closeManage')
-        })
+
+        this.$confirm('确定要删除吗？删除后数据不可恢复', '提示').then(() => {
+          this.$store.dispatch('bucket/deleteBucket', this.currentBucket).then(() => {
+            this.$emit('freshBucket')
+            this.closeDialog()
+          })
+        }).catch(() => {})
+
       }
     }
 
