@@ -1,15 +1,6 @@
 # gk-cos-client
 
-> An electron-vue project
+[![](https://travis-ci.org/forsaken628/cos-client.svg?branch=master)](https://travis-ci.org/forsaken628/cos-client)
+[![](https://ci.appveyor.com/api/projects/status/github/forsaken628/cos-client?svg=true)](https://ci.appveyor.com/api/projects/status/github/forsaken628/cos-client?svg=true)
+[![](https://david-dm.org/forsaken628/cos-client.svg)](https://david-dm.org/forsaken628/cos-client)
 
-#### Build Setup
-
-``` bash
-# install dependencies
-npm install
-
-```
-
----
-
-This project was generated with [electron-vue](https://github.com/SimulatedGREG/electron-vue) using [vue-cli](https://github.com/vuejs/vue-cli). Documentation about the original structure can be found [here](https://simulatedgreg.gitbooks.io/electron-vue/content/index.html).

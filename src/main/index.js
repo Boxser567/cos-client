@@ -1,7 +1,7 @@
 'use strict'
 
-import { app, BrowserWindow, Menu, ipcMain } from 'electron'
-import { App } from './app'
+import { app, BrowserWindow, Menu } from 'electron'
+import Main from './main'
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -15,10 +15,7 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
-const nextURL = `file://${__dirname}/presWindow.html`
-
 function createWindow () {
-  let main = new App()
   /**
    * Initial window options
    */
@@ -121,3 +118,5 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+let main = new Main()
