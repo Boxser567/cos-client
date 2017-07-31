@@ -105,7 +105,7 @@ Main.prototype.init = async function () {
 
     downloads.on('refresh', (data) => {
       for (let sender of downloadSenders) {
-        if (sender && !sender.isDestroyed) sender.send('GetDownloadTasks-data', data)
+        if (sender && !sender.isDestroyed()) sender.send('GetDownloadTasks-data', data)
       }
     })
   }
