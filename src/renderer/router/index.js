@@ -6,17 +6,11 @@ Vue.use(Router)
 const router = new Router({
   scrollBehavior: () => ({y: 0}),
   routes: [
-
     {
-      path: '/locked',
-      name: 'locked',
+      path: '/progress',
+      name: 'progress',
       component: require('@/components/modules/file-progress')
     },
-    // {
-    //   path: '/upload',
-    //   name: 'upload',
-    //   component: require('@/components/modules/presWindow.html')
-    // },
     {
       path: '/',
       component: require('@/components/main'),
@@ -27,9 +21,9 @@ const router = new Router({
           component: require('@/components/login')
         },
         {
-          path:'index',
+          path: 'index',
           component: require('@/components/index'),
-          children:[
+          children: [
             {
               path: '',
               name: 'container-page',
@@ -40,10 +34,8 @@ const router = new Router({
               name: 'filepage',
               component: require('@/components/modules/file')
             }
-
           ]
         }
-
       ]
     }
   ]

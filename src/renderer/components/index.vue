@@ -12,36 +12,25 @@
             </div>
 
             <div class="bucket">
-
-                <div class="bucket-group" v-for="(value,key) in bucketList" :class="{ active:false }">
-
-                    <div class="bucket-item" @contextmenu="openMenu($event)">
-                        <div class="item"
-                             v-for="b in value"
+                <div class="bucket-group" v-for="(value, key) in bucketList" :class="{ active:false }">
+                    <div class="bucket-item">
+                        <div class="item" v-for="b in value"
                              @click="selectBucket(b)"
+                             @contextmenu="openMenu($event, b)"
                              :key="b.Name"
                              :class="{ 'active':b.active }"
-                             :bucketName="b.Name"
-                             :bucketRegion="b.Location"
-                             :createDate="b.CreateDate"
-                             :title="b.Name"
-                        >
-                            <a>{{b.Name}} <i class="el-icon-arrow-down" @click="openMenu($event)"></i></a>
+                             :title="b.Name">
+                            <a>{{b.Name}} <i class="el-icon-arrow-down" @click="openMenu($event, b)"></i></a>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div class="loading" v-if="bloading"><i class="el-icon-loading"></i></div>
 
-            <div class="load-progress" @click="addNewWindow"> 查看进程</div>
-
-            <ul id="bucket-menu-list" tabindex="-1" ref="right" v-if="bucketMenu.viewMenu" @blur="closeMenu"
-                :style="{ top:bucketMenu.top, left:bucketMenu.left }">
-                <li v-for="i in bucketMenu.list" @click="i.func"> {{i.name}}</li>
-            </ul>
-
+            <div class="load-progress" @click="openProgressWindow"> 查看进程
+                {{ run.upload || run.download ? 'run' : 'stop' }}
+            </div>
 
         </div>
 
@@ -62,7 +51,8 @@
         <file-debris :isShow.sync="dialogCrosVisible"></file-debris>
 
         <!--权限设置-->
-        <file-limit v-if="limitOpt && limitOpt.bucket" :isShow.sync="dialogFileLimit" :options="limitOpt"></file-limit>
+        <file-limit :isShow.sync="dialogFileLimit"
+                    :options="{type:'bucket', bucket:this.rightChooseBucket}"></file-limit>
 
     </div>
 </template>
@@ -73,35 +63,28 @@
   import addBucket from './modules/add-bucket.vue'
   import protoManage from './modules/property-manager.vue'
   import fileDebris from './modules/file-debris.vue'
-  import fileLimit from  './modules/file-limit.vue'
-  import { ipcRenderer } from 'electron'
+  import fileLimit from './modules/file-limit.vue'
+  import { ipcRenderer, remote } from 'electron'
+  const {Menu, MenuItem} = remote
+
+  const bucketMenu = new Menu()
 
   export default {
     name: 'index-page',
     data () {
       return {
         bloading: false,
-        bucketMenu: {
-          viewMenu: false,
-          top: '0px',
-          left: '0px',
-          list: [
-            {name: '基本信息', func: this.getProperty},
-            {name: '跨域访问CORS设置', func: this.setCors},
-            {name: '权限管理', func: this.setLimit}
-          ]
-        },
-        limitOpt: {
-          type: 'bucket',
-          bucket: null
-        },
         selectBT: null,
         rightChooseBucket: null,
         dialogAddVisible: false,
         dialogManageVisible: false,
         dialogSettingVisible: false,
         dialogCrosVisible: false,
-        dialogFileLimit: false
+        dialogFileLimit: false,
+        run: {
+          upload: false,
+          download: false
+        }
       }
     },
 
@@ -116,25 +99,39 @@
       }
     },
 
-    created () {},
+    created () {
+      ipcRenderer.send('GetUploadTasks')
+      ipcRenderer.send('GetDownloadTasks')
+
+      ipcRenderer.on('GetUploadTasks-data', (event, tasks) => {
+        this.run.upload = tasks.some(t => t.status === 'run')
+      })
+
+      ipcRenderer.on('GetDownloadTasks-data', (event, tasks) => {
+        this.run.download = tasks.some(t => t.status === 'run')
+      })
+
+      bucketMenu.append(new MenuItem({label: '基本信息', click: this.getProperty}))
+      bucketMenu.append(new MenuItem({label: '跨域访问CORS设置', click: this.setCors}))
+      bucketMenu.append(new MenuItem({label: '权限管理', click: this.setLimit}))
+    },
 
     methods: {
-      addNewWindow(){
-        const winURL = process.env.NODE_ENV === 'development'
-          ? `http://localhost:9080/#/locked`
-          : `file://${__dirname}/locked.html`
-        window.open('http://localhost:9080/#/locked', '_blank', 'title=918291,height=450, width=794,resizable=no')
+      openProgressWindow () {
+        const url = (process.env.NODE_ENV === 'development'
+          ? `http://localhost:9080/#/progress` : `file://${__dirname}/index.html#/progress`)
+        window.open(url, '_blank', 'title=918291,height=450, width=794,resizable=no')
       },
+
       fetchData () {
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => {
-          if (this.selectBT)
-            this.$store.commit('bucket/bucketActive', this.selectBT)
+          if (this.selectBT) this.$store.commit('bucket/bucketActive', this.selectBT)
           this.bloading = false
         })
       },
 
-      selectBucket: function (b) {
+      selectBucket (b) {
         this.selectBT = b.Name
         this.$store.commit('bucket/bucketActive', b.Name)
         this.$store.commit('menulist/unSelectFile')
@@ -148,56 +145,28 @@
         })
       },
 
-      setMenu: function (top, left) {
-        let largestHeight = window.innerHeight - this.$refs.right.offsetHeight - 25
-        let largestWidth = window.innerWidth - this.$refs.right.offsetWidth - 25
-        if (top > largestHeight) top = largestHeight
-        if (left > largestWidth) left = largestWidth
-        this.bucketMenu.top = top + 'px'
-        this.bucketMenu.left = left + 'px'
-      },
-
-      closeMenu: function () {
-        this.bucketMenu.viewMenu = false
-      },
-
-      openMenu: function (e) {
+      openMenu (e, item) {
         e.preventDefault()
         e.stopPropagation()
-        let doms = e.target.parentNode
-        if (e.target.tagName === 'I') {
-          doms = doms.parentNode
-        }
         this.rightChooseBucket = {
-          Bucket: doms.getAttribute('bucketName'),
-          Region: doms.getAttribute('bucketRegion'),
-          createTime: doms.getAttribute('createDate')
+          Bucket: item.Name,
+          Region: item.Location,
+          CreateDate: item.CreateDate
         }
-        this.limitOpt.bucket = this.rightChooseBucket
-        this.bucketMenu.viewMenu = true
-        this.$nextTick(() => {
-          this.$refs.right.focus()
-          this.setMenu(e.y, e.x)
-        })
+        bucketMenu.popup(remote.getCurrentWindow())
       },
 
-      getProperty: function () {
-        this.bucketMenu.viewMenu = false
+      getProperty () {
         this.dialogManageVisible = true
       },
 
-      setCors: function () {
-        this.closeMenu()
+      setCors () {
         this.dialogCrosVisible = true
       },
 
-      setLimit: function () {
-        this.closeMenu()
+      setLimit () {
         this.dialogFileLimit = true
       }
     }
   }
 </script>
-
-
-
