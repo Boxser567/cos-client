@@ -57,6 +57,16 @@
           this.deleteContent = true
         }
       })
+      this.$store.getters.bus.$on('globleError', (resp) => {
+        if (resp) {
+          let error = resp.error
+          this.$notify.error({
+            title: 'Error',
+            message: `无法${error.src}，因为${error.message}`
+          })
+        }
+      })
+
     },
     data () {
       return {

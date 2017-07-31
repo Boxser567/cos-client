@@ -10,6 +10,7 @@
                     <li><a @click="fetchData"><i class="fresh"></i>刷新</a></li>
                 </ul>
             </div>
+
             <div class="bucket">
 
                 <div class="bucket-group" v-for="(value,key) in bucketList" :class="{ active:false }">
@@ -30,9 +31,11 @@
                     </div>
                 </div>
 
-                <div class="load-progress" @click="addNewWindow">  查看进程 </div>
-
             </div>
+
+            <div class="loading" v-if="bloading"><i class="el-icon-loading"></i></div>
+
+            <div class="load-progress" @click="addNewWindow"> 查看进程</div>
 
             <ul id="bucket-menu-list" tabindex="-1" ref="right" v-if="bucketMenu.viewMenu" @blur="closeMenu"
                 :style="{ top:bucketMenu.top, left:bucketMenu.left }">
@@ -77,7 +80,7 @@
     name: 'index-page',
     data () {
       return {
-        bloading: true,
+        bloading: false,
         bucketMenu: {
           viewMenu: false,
           top: '0px',
@@ -92,6 +95,7 @@
           type: 'bucket',
           bucket: null
         },
+        selectBT: null,
         rightChooseBucket: null,
         dialogAddVisible: false,
         dialogManageVisible: false,
@@ -116,19 +120,22 @@
 
     methods: {
       addNewWindow(){
-        console.log(442222)
-        window.open('http://localhost:9080/#/locked', '传输进程', 'height=490, width=794, minWidth=794,minHeight=490')
-//        ipcRenderer.send('hide-pres')
-//        ipcRenderer.send('zqz-show')
+        const winURL = process.env.NODE_ENV === 'development'
+          ? `http://localhost:9080/#/locked`
+          : `file://${__dirname}/locked.html`
+        window.open('http://localhost:9080/#/locked', '_blank', 'title=918291,height=450, width=794,resizable=no')
       },
       fetchData () {
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => {
+          if (this.selectBT)
+            this.$store.commit('bucket/bucketActive', this.selectBT)
           this.bloading = false
         })
       },
 
       selectBucket: function (b) {
+        this.selectBT = b.Name
         this.$store.commit('bucket/bucketActive', b.Name)
         this.$store.commit('menulist/unSelectFile')
         this.$router.push({

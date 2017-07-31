@@ -10,3 +10,4 @@ thumbs.db
 !.gitkeep
 .idea/
 /gk.sqlite
+package-lock.json

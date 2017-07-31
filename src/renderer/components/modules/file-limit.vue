@@ -24,12 +24,12 @@
                             label="权限">
                         <template scope="scope">
                             <div v-if="scope.row.edit===1">
-                                <el-radio class="radio" v-model="scope.row.pb_limit" label="public">公有读私有写
+                                <el-radio class="radio" v-model="scope.row.pb_limit" label="public-read">公有读私有写
                                 </el-radio>
                                 <el-radio class="radio" v-model="scope.row.pb_limit" label="private">私有读写</el-radio>
                             </div>
                             <div v-if="scope.row.edit === 0">
-                                <span v-if="scope.row.pb_limit==='public'">公有读私有写</span>
+                                <span v-if="scope.row.pb_limit==='public-read'">公有读私有写</span>
                                 <span v-if="scope.row.pb_limit==='private'">私有读写</span>
                             </div>
                         </template>
@@ -65,7 +65,7 @@
                 <el-table
                         :data="userData"
                         border
-                        style="width: 100%">
+                        style="width: 100%; display: block;">
                     <el-table-column
                             label="用户"
                             width="180">
@@ -174,20 +174,20 @@
     computed: {},
     methods: {
       renderData(){
-        this.userData=[]
+        this.userData = []
+        this.activeName = 'first'
         let parms = {
           Bucket: this.options.bucket.Bucket,
           Region: this.options.bucket.Region
         }
 
         this.$store.dispatch('bucket/getBucketACL', parms).then((resp) => {
+          console.log(resp)
           let OwnerID = resp.Owner.ID
           resp.Grants.forEach(n => {
             //Grantee  DisplayName
             if (n.Grantee.ID.indexOf('anyone') > -1) {
-
-              this.commonData[0].pb_limit = 'public'
-
+              this.commonData[0].pb_limit = 'public-read'
             } else {
               this.userData.push({
                 user: n.Grantee.ID.replace(/\\/g, '/').replace(/.*\//, ''),
@@ -203,13 +203,16 @@
       handleClick () {
 
       },
-      commonLimit (row, status) {
+      commonLimit (row, status) {       //公共权限修改和保存
         if (status === 'edit') {
           row.old_limit = row.pb_limit
           row.edit = 1
         }
         if (status === 'save') {
-          row.edit = 0
+          let parms = Object.assign(this.options.bucket, {ACL: this.commonData[0].pb_limit})
+          this.$store.dispatch('bucket/putBucketAcl', parms).then(() => {
+            row.edit = 0
+          })
         }
         if (status === 'cancel') {
           row.pb_limit = row.old_limit
@@ -230,6 +233,10 @@
               this.$message('请输入添加的用户名!')
               return
             }
+            if (row.checkLimit.length === 0) {
+              this.$message('请至少选择一个用户权限!')
+              return
+            }
             row.edit = 0
             break
           case 'edit':
@@ -238,7 +245,6 @@
             row.edit = 1
             break
           case 'delete':
-
             this.userData.splice(this.userData.length - 1, 1)
             break
           case 'cancel':
