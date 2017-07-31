@@ -13,7 +13,7 @@
         <el-row>
             <el-col :span="8">创建时间:</el-col>
             <el-col :span="16">
-                {{currentBucket.createTime | getDate }}
+                {{currentBucket.CreateDate | getDate }}
             </el-col>
         </el-row>
 

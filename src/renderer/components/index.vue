@@ -153,7 +153,7 @@
           Region: item.Location,
           CreateDate: item.CreateDate
         }
-        bucketMenu.popup(remote.getCurrentWindow())
+        bucketMenu.popup(remote.getCurrentWindow(), {async: true})
       },
 
       getProperty () {
