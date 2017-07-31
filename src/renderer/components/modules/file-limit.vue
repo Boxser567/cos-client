@@ -91,38 +91,25 @@
                         <template scope="scope">
                             <div v-if="scope.row.edit===2"> --</div>
                             <div v-if="scope.row.edit===1">
-                                <el-button
-                                        type="primary"
-                                        size="small"
-                                        @click="userLimit(scope.row,'save')">保存
+                                <el-button type="primary" size="small" @click="userLimit(scope.row,'save')">保存
                                 </el-button>
-                                <el-button
-                                        size="small"
-                                        @click="userLimit(scope.row,'cancel')">取消
-                                </el-button>
+                                <el-button size="small" @click="userLimit(scope.row,'cancel')">取消</el-button>
                             </div>
                             <div v-if="scope.row.edit===0">
-                                <el-button
-                                        type="primary"
-                                        size="small"
-                                        @click="userLimit(scope.row,'edit')">编辑
+                                <el-button type="primary" size="small" @click="userLimit(scope.row,'edit')">编辑
                                 </el-button>
-                                <el-button
-                                        size="small"
-                                        @click="userLimit(scope.row,'delete')">删除
+                                <el-button size="small"
+                                           @click="userLimit(scope.row,'delete')">删除
                                 </el-button>
                             </div>
 
                             <!--新增的-->
                             <div v-if="scope.row.edit===3">
-                                <el-button
-                                        type="primary"
-                                        size="small"
-                                        @click="userLimit(scope.row,'add')">保存
+                                <el-button type="primary" size="small"
+                                           @click="userLimit(scope.row,'add')">保存
                                 </el-button>
-                                <el-button
-                                        size="small"
-                                        @click="userLimit(scope.$index,'delRow')">删除
+                                <el-button size="small"
+                                           @click="userLimit(scope.$index,'delRow')">删除
                                 </el-button>
                             </div>
                         </template>
@@ -153,15 +140,12 @@
           user: '所有人',
           pb_limit: 'private',
           old_limit: null,
-          edit: 0
+          edit: 0  //0初始化  1编辑  2为==OwnerID   3添加用户
         }],
         userData: [],
-        OwnerID: null
+        Owner: null,
+        myResponse: null
       }
-    },
-
-    created () {
-//      this.renderData()
     },
     watch: {
       'isShow': {
@@ -176,25 +160,32 @@
       renderData(){
         this.userData = []
         this.activeName = 'first'
+        this.commonData[0].pb_limit = 'private'
         let parms = {
           Bucket: this.options.bucket.Bucket,
           Region: this.options.bucket.Region
         }
 
         this.$store.dispatch('bucket/getBucketACL', parms).then((resp) => {
-          console.log(resp)
-          let OwnerID = resp.Owner.ID
+          console.log(parms, '请求参数和返回', resp)
+          this.myResponse = {
+            Grants: resp.Grants,
+            Owner: resp.Owner
+//            headers:resp.headers
+          }
+          this.Owner = resp.Owner
           resp.Grants.forEach(n => {
             //Grantee  DisplayName
-            if (n.Grantee.ID.indexOf('anyone') > -1) {
+            if (n.Grantee.ID === 'qcs::cam::anyone:anyone') {
               this.commonData[0].pb_limit = 'public-read'
             } else {
               this.userData.push({
+                ID: n.Grantee.ID,
                 user: n.Grantee.ID.replace(/\\/g, '/').replace(/.*\//, ''),
                 checkLimit: n.Permission === 'FULL_CONTROL' ? ['读', '写'] : n.Permission === 'WRITE' ? ['写'] : ['读'],
                 old_limit: null,
                 old_user: null,
-                edit: n.Grantee.ID === OwnerID ? 2 : 0
+                edit: n.Grantee.ID === this.Owner.ID ? 2 : 0
               })
             }
           })
@@ -209,35 +200,59 @@
           row.edit = 1
         }
         if (status === 'save') {
-          let parms = Object.assign(this.options.bucket, {ACL: this.commonData[0].pb_limit})
-          this.$store.dispatch('bucket/putBucketAcl', parms).then(() => {
-            row.edit = 0
-          })
+          this.submitForm()
         }
         if (status === 'cancel') {
           row.pb_limit = row.old_limit
           row.edit = 0
         }
       },
+
       userLimit (row, stadus) {
+        let _self = this
+
+        function checkName () {
+          let name = row.user
+          if (name === '') {
+            _self.$message('请输入添加的用户名!')
+            return
+          }
+//          this.userData.forEach(x=>{
+//            if(x.user===row){}
+//          })
+
+          if (name.indexOf('/') > -1) {
+            console.log('主帐号/子账号')
+            let arr = name.split('/')
+            if (arr.length !== 2) {
+              _self.$message('帐号格式填写不正确!')
+              return
+            } else {
+//                _self.$message('主帐号与协作者帐号不对应!')
+            }
+          } else {
+            let reg = /^[1-9][0-9]{4,12}$/gim
+            if (!reg.test(name)) {
+              _self.$message('帐号格式填写不正确!')
+              return
+            }
+          }
+          if (row.checkLimit.length === 0) {
+            _self.$message('请至少选择一个用户权限!')
+            return
+          }
+        }
+
         switch (stadus) {
           case 'save':
-            if (row.user === '') {
-              this.$message('请输入添加的用户名!')
-              return
-            }
             row.edit = 0
+            checkName()
+            this.submitForm()
             break
           case 'add':
-            if (row.user === '') {
-              this.$message('请输入添加的用户名!')
-              return
-            }
-            if (row.checkLimit.length === 0) {
-              this.$message('请至少选择一个用户权限!')
-              return
-            }
             row.edit = 0
+            checkName()
+            this.submitForm()
             break
           case 'edit':
             row.old_user = row.user
@@ -245,7 +260,14 @@
             row.edit = 1
             break
           case 'delete':
-            this.userData.splice(this.userData.length - 1, 1)
+            //删除
+            let index = null
+            this.userData.forEach((n, i) => {
+              if (n.user === row.user)
+                index = i
+            })
+            this.userData.splice(index, 1)
+            this.submitForm()
             break
           case 'cancel':
             row.user = row.old_user
@@ -258,6 +280,39 @@
           default :
             break
         }
+      },
+      submitForm(){
+        let parms = Object.assign(this.options.bucket, {ACL: this.commonData[0].pb_limit})
+
+        let grants = [], flag = false
+        this.userData.forEach(n => {
+          grants.push({
+            Grantee: {
+              DisplayName: `qcs::cam::uin/${n.user}:uin/${n.user}`,
+              ID: `qcs::cam::uin/${n.user}:uin/${n.user}`
+            },
+            Permission: n.checkLimit.toString() === ['读', '写'].toString() ? 'FULL_CONTROL' : n.checkLimit.toString() === ['读'].toString() ? 'READ' : 'WRITE'
+          })
+          if (n.edit === 1 || n.edit === 3) {
+            flag = true
+          }
+        })
+        if (flag) {
+          this.$message('请先将用户权限表单填写完整!')
+          return
+        }
+        parms.AccessControlPolicy = {
+          Grants: grants,
+          Owner: this.Owner
+        }
+
+        this.$store.dispatch('bucket/putBucketAcl', parms).then((resp) => {
+          console.log('添加的参数', parms, resp)
+          this.commonData[0].edit = 0
+//          this.userData.forEach(n => {
+//            n.ID === this.Owner.ID ? 2 : 0
+//          })
+        })
       },
       addUers () {
         let last = this.userData[this.userData.length - 1]
