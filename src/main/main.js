@@ -37,7 +37,6 @@ Main.prototype.init = async function () {
   let config = await db.config().get()
   config.upload = config.upload || {maxActivity: 3, asyncLim: 2}
   config.download = config.download || {maxActivity: 3}
-  config.logPath = log.transports.file.findLogPath(log.transports.file.appName)
 
   uploads = new Tasks(config.upload.maxActivity)
 
@@ -187,6 +186,10 @@ Main.prototype.init = async function () {
         }
       }
     })().catch(err => log.error(err))
+  })
+
+  ipcMain.on('GetLogPath', (event) => {
+    event.returnValue = log.transports.file.findLogPath(log.transports.file.appName)
   })
 
   // 只能在绑定推送前调用
