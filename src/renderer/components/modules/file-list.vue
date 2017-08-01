@@ -5,7 +5,7 @@
             <div class="size">大小</div>
             <div class="time">更新时间</div>
         </div>
-        <div class="list-info" id="menuinfo" @click="fileContentClick($event)"   @contextmenu="openFileMenu($event)">
+        <div class="list-info" id="menuinfo" @click="fileContentClick($event)" @contextmenu="openFileMenu($event)">
 
             <div class="loading" v-if="fileloading">
                 <i class="el-icon-loading"></i>
@@ -33,8 +33,7 @@
                  @click="itemSelect($event,$index, f)"
                  @dblclick="goFolder($event,f)"
                  :index="$index"
-                 :key="f.Name"
-            >
+                 :key="f.Name">
                 <div class="name">
                     <img :src="f | getFileImg" alt="">
                     <p>{{ f.Name }}</p>
@@ -44,7 +43,6 @@
             </div>
         </div>
 
-        <!--<file-progress :options="options"></file-progress>-->
 
         <!--文件右键列表信息-->
         <ul id="bucket-menu-list" tabindex="-1" v-show="isShowList" ref="fileRight"
@@ -57,8 +55,10 @@
 
 <script>
   import { mapState } from 'vuex'
+  import { remote } from 'electron'
+  const {Menu, MenuItem} = remote
 
-  //  import fileProgress from './file-progress.vue'
+  const menu = new Menu()
 
   export default {
     name: 'filelist-page',
@@ -80,13 +80,22 @@
       }
     },
 
-//    components: {'file-progress': fileProgress},
-
     computed: {
       ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles'])
     },
     created () {
       this.fetchData()
+      let vue = this
+      menu.append(new MenuItem({label: '上传文件', click () { vue.rightClickFn('upload_file') }}))
+      menu.append(new MenuItem({label: '创建文件夹', click () { vue.rightClickFn('new_folder') }}))
+      menu.append(new MenuItem({label: '下载', click () { vue.rightClickFn('download_file') }}))
+      menu.append(new MenuItem({label: '复制', click () { vue.rightClickFn('copy_file') }}))
+      menu.append(new MenuItem({label: '删除', click () { vue.rightClickFn('delete_file') }}))
+      menu.append(new MenuItem({label: '获取地址', click () { vue.rightClickFn('get_address') }}))
+      menu.append(new MenuItem({label: '设置HTTP头', click () { vue.rightClickFn('set_http') }}))
+      menu.append(new MenuItem({label: '设置权限', click () { vue.rightClickFn('set_limit') }}))
+      menu.append(new MenuItem({label: '粘贴', click () { vue.rightClickFn('paste_file') }}))
+      menu.append(new MenuItem({label: '下载当前目录', click () { vue.rightClickFn('download_list') }}))
     },
 
     watch: {
@@ -143,15 +152,11 @@
 
       // 文件选择
       itemSelect (e, index, file) {
-        let array = {
+        this.$store.commit('menulist/selectFile', {
           file: file,
-          key: false,
+          key: e.shiftKey,
           index: index
-        }
-        if (e.shiftKey) {
-          array.key = true
-        }
-        this.$store.commit('menulist/selectFile', array)
+        })
       },
 
       // 文件空白处单击
@@ -165,11 +170,13 @@
         if (!file.dir) return
         this.options.folders = file.Prefix
         this.options.keyWord = null
-        let pms = {bucket: this.options.bucket, region: this.options.region, folders: this.options.folders}
-        //        this.$store.commit('menulist/unSelectFile')
         this.$router.push({
           path: '/file/' + this.options.bucket,
-          query: pms
+          query: {
+            bucket: this.options.bucket,
+            region: this.options.region,
+            folders: this.options.folders
+          }
         })
       },
 
@@ -177,7 +184,7 @@
       openFileMenu (e) {
         let currentDom = e.target
 
-        if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) {  //右键空白
+        if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) { // 右键空白
           this.$store.commit('menulist/unSelectFile')
           this.menu.list = this.fileRightList.filter((m) => {
             if (this.menu.blanks.includes(m.key)) {
@@ -200,11 +207,8 @@
 
           if (this.selectFile && this.selectFile.length > 1) {
             if (!(cfile && index)) return
-            let temper = false
-            this.selectFile.forEach((x) => {
-              if (x.Name === cfile.Name) temper = true
-            })
-            if (temper) {  //右键选中多个文件
+            let temper = this.selectFile.some(x => x.Name === cfile.Name)
+            if (temper) { // 右键选中多个文件
               let array = this.selectFile.map(n => !!n.dir)
 
               if (array.includes(false) && (!array.includes(true))) {
@@ -238,7 +242,6 @@
                 })
               }
             }
-
           } else {
             if (cfile && index) {
               this.$store.commit('menulist/unSelectFile')
@@ -260,19 +263,10 @@
             }
           }
         }
-        let _self = this
-        this.$nextTick(function () {
-          let top = e.y - 90
-          let left = e.x - 225
-          let largestHeight = window.innerHeight - _self.$refs.fileRight.offsetHeight - 25
-          let largestWidth = window.innerWidth - _self.$refs.fileRight.offsetWidth - 225
-          if (top > largestHeight) top = largestHeight
-          if (left > largestWidth) left = largestWidth
-          _self.menu.top = top + 'px'
-          _self.menu.left = left + 'px'
-          _self.isShowList = true
-          document.addEventListener('click', _self.closeFileMenu)
+        menu.items.forEach(item => {
+          item.visible = this.menu.list.some(t => t.name === item.label)
         })
+        menu.popup(remote.getCurrentWindow(), {async: true})
         e.preventDefault()
       },
 
@@ -305,13 +299,16 @@
             this.$store.commit('menulist/downloadFile', pms)
             break
           case 'delete_file':
-            this.$emit('deleteObj')
+            this.$emit('sendObj', 'delete_file')
             break
           case 'get_address':
+            this.$emit('sendObj', 'get_address')
             break
           case 'set_http':
+            this.$emit('sendObj', 'set_http')
             break
           case 'set_limit':
+            this.$emit('sendObj', 'set_limit')
             break
           case 'copy_file': // 复制
             this.$store.commit('menulist/copyFiles', pms)

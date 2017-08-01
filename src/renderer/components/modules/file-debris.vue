@@ -9,7 +9,7 @@
         <div>
             当前状态：
             <el-switch
-                    v-model="value3"
+                    v-model="isOpen"
                     on-color="#13ce66"
                     off-color="#ff4949"
                     on-value="1"
@@ -30,14 +30,30 @@
   import { shell } from 'electron'
   export default {
 
-    props: ['isShow'],
+    props: ['isShow', 'options'],
 
     data(){
       return {
-        value3: 0
+        isOpen: 0
       }
     },
+    watch: {
+      'isShow': {
+        handler: function (val) {
+          if (val)
+            this.renderData()
+        }
+      }
+
+    },
     methods: {
+      renderData(){
+        this.isOpen = 0
+        if (!this.options) return
+        this.$store.dispatch('bucket/getBucketCORS', this.options).then(res => {
+          console.log(res)
+        })
+      },
       closeDialog(){
         this.$emit('update:isShow', false)
       },

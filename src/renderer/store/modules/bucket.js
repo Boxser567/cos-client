@@ -3,6 +3,8 @@
  */
 import { ipcRenderer } from 'electron'
 
+import sdkUtil from 'cos-nodejs-sdk-v5/sdk/util'
+
 const state = {
   bucketList: null,
   currentBucket: null
@@ -49,6 +51,10 @@ const actions = {
   //   })
   // },
 
+  getAuth({rootGetters}, param){
+    return Promise.resolve(sdkUtil.getAuth(param))
+  },
+
   getService ({commit}) {
     return new Promise((resolve, reject) => {
       // rootState.bus={type:'error',msg:'出错'}
@@ -61,6 +67,7 @@ const actions = {
       })
     })
   },
+
   putBucket ({commit, rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.putBucket(params.pms, function (err, data) {
@@ -98,17 +105,6 @@ const actions = {
       })
     })
   },
-  getObjectACL ({rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.getObjectAcl(params, function (err, data) {
-        if (err) {
-          // cos.bus.$emit('globleError', err)
-        } else {
-          resolve(data)
-        }
-      })
-    })
-  },
 
   putBucketAcl({rootGetters}, params){
     return new Promise((resolve, reject) => {
@@ -123,6 +119,55 @@ const actions = {
     })
   },
 
+  getBucketCORS({rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.getBucketCORS(params, function (err, data) {
+        if (err) {
+          // rootGetters.cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
+
+  getObjectACL ({rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.getObjectAcl(params, function (err, data) {
+        if (err) {
+          // cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
+
+  getObjectACL({rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.getObjectAcl(params, function (err, data) {
+        if (err) {
+          console.log(3333, params, err)
+          // rootGetters.cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
+
+  putObjectACL({rootGetters}, params){
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.putObjectAcl(params, function (err, data) {
+        if (err) {
+          console.log(3333, params, err)
+          // rootGetters.cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
 
   putObject ({dispatch, rootGetters}, params) {
     return new Promise((resolve, reject) => {

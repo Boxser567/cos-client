@@ -6,19 +6,28 @@
                    :visible.sync="isShow"
                    :before-close="closeDialog"
                    size="small">
+
             <el-row>
-                <el-col :span="8">文件名:</el-col>
-                <el-col :span="16">aaaa.xml</el-col>
+                <el-col :span="5">文件名:</el-col>
+                <el-col :span="19">{{selectFile[0]?selectFile[0].Key :'' }}</el-col>
             </el-row>
-            <el-row>
-                <el-col :span="8">地址:</el-col>
-                <el-col :span="16">
-                    <p id="myEle">http://aa.com</p>
+            <el-row v-if="!isPublic">
+                <el-col :span="5"> &nbsp;</el-col>
+                <el-col :span="19">请输入链接的有效期：
+                    <el-input class="seconds" v-model="seconds" @focus="elFocus($event)" size="small"></el-input>
+                    秒
+                    <el-button type="primary" size="small" @click="createSign">获取</el-button>
+                </el-col>
+            </el-row>
+            <el-row v-if="isPublic">
+                <el-col :span="5">地址:</el-col>
+                <el-col :span="19">
+                    <el-input class="adress" v-model="iptText" @focus="elFocus($event)" size="small"></el-input>
                     <el-button type="primary" size="small" @click="selectText()">复制</el-button>
                 </el-col>
             </el-row>
             <div slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="closeDialog">确 定</el-button>
+                <el-button @click="closeDialog">关 闭</el-button>
             </div>
         </el-dialog>
     </div>
@@ -27,19 +36,93 @@
 
 
 <script>
+  import { mapState } from 'vuex'
+  import { clipboard } from 'electron'
+
   export default {
+    props: ['isShow', 'options'],
 
-    props: ['isShow'],
     data () {
-      return {}
+      return {
+        isPublic: null,
+        iptText: null,
+        seconds: 3600
+      }
     },
-    created () {
-
+    created () { },
+    watch: {
+      'isShow': {
+        handler: function (val) {
+          if (val)
+            this.renderData()
+        }
+      }
     },
-    computed: {},
+    computed: {
+      ...mapState('menulist', ['selectFile']),
+      config(){
+        return this.$store.state.config
+      },
+      getKey () {
+        let list = this.$store.state.bucket.bucketList
+        for (let key in list) {
+          return key
+        }
+      }
+    },
     methods: {
-      selectText () {
+      renderData() {
+        if (!(this.options && this.options.bucket)) return
+        this.isPublic = null
+        this.iptText = null
+        this.seconds = 3600
+        let parms = {
+          Bucket: this.options.bucket,
+          Region: this.options.region,
+          Key: this.selectFile[0].Key
+        }
 
+        this.$store.dispatch('bucket/getObjectACL', parms).then(res => {
+          console.log('getObjectACL', res)
+          res.Grants.forEach(n => {
+            if (n.Grantee.ID === 'qcs::cam::anyone:anyone') {
+              this.isPublic = true
+            }
+          })
+          if (this.isPublic) {
+            this.iptText = `http://${parms.Bucket}-${this.getKey}.${parms.Region}.myqcloud.com/${parms.Key}`
+          }
+        })
+      },
+      createSign(){
+        let reg = /^[0-9]*$/
+        if (this.seconds === '' || !reg.test(this.seconds)) {
+          this.$message('请正确输入有效时间')
+          return
+        }
+        let pms = {
+          method: 'get',
+          SecretId: this.config.cos.SecretId,
+          SecretKey: this.config.cos.SecretKey,
+          pathname: '/' + (this.selectFile[0].Key + ''),
+          expires: this.seconds
+        }
+        this.$store.dispatch('bucket/getAuth', pms).then(data => {
+          data = encodeURIComponent(data)
+          let auth = `http://${this.options.bucket}-${this.getKey}.${this.options.region}.myqcloud.com/${this.selectFile[0].Key}`
+          this.iptText = `${auth}?sign=${data}`
+          this.isPublic = true
+        })
+      },
+      elFocus(e){
+        e.target.select()
+        console.log(e.target)
+      },
+      selectText () {
+        if (this.iptText) {
+          clipboard.writeText(this.iptText)
+          this.$message('已复制到剪切板')
+        }
       },
       // url: 'http://' + param.Bucket + '-1253834952.' + param.Region + '.myqcloud.com/' + state.selectFile.Key
       closeDialog () {

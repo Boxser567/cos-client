@@ -96,7 +96,7 @@
             }
         }
       },
-      btnDisabled(){
+      btnDisabled () {
         let allTrue = {
           begin: true,
           pause: true,
@@ -135,9 +135,8 @@
                 cancel: true
               }
           }
-
         }
-        if (this.selected.length == 0) return allTrue
+        if (this.selected.length === 0) return allTrue
         if (this.selected.length === 1) {
           let item = this.normaliseList[this.selected[0]]
           if (!item) return allTrue
@@ -155,99 +154,6 @@
           }
         }
         return check(st)
-//        if (arr.length < 1) return true
-//        if (arr.length > 1) {
-//          let flag = false
-//          arr.forEach((n, index) => {
-//            if (arr.length - 1 === index) return
-//            if (n !== arr[index + 1]) {
-//              flag = true
-//            }
-//          })
-//        }
-//
-//        return {
-//          begin: function () {
-//            if (flag) return true
-//            switch (arr[0]) {
-//              case 'wait':
-//                return false
-//                break
-//              case 'pause':
-//                return false
-//                break
-//              case 'complete':
-//                return true
-//                break
-//              case 'run':
-//                return true
-//                break
-//              case 'error':
-//                return false
-//                break
-//            }
-//          },
-//          pause: function () {
-//            if (flag) return true
-//            switch (arr[0]) {
-//              case 'wait':
-//                return false
-//                break
-//              case 'pause':
-//                return true
-//                break
-//              case 'complete':
-//                return true
-//                break
-//              case 'run':
-//                return false
-//                break
-//              case 'error':
-//                return false
-//                break
-//            }
-//          },
-//          delete: function () {  //移除
-//            if (flag) return true
-//            switch (arr[0]) {
-//              case 'wait':
-//                return false
-//                break
-//              case 'pause':
-//                return false
-//                break
-//              case 'complete':
-//                return false
-//                break
-//              case 'run':
-//                return false
-//                break
-//              case 'error':
-//                return false
-//                break
-//            }
-//          },
-//          cancel: function () {
-//            if (flag) return true
-//            switch (arr[0]) {
-//              case 'wait':
-//                return false
-//                break
-//              case 'pause':
-//                return false
-//                break
-//              case 'complete':
-//                return true
-//                break
-//              case 'run':
-//                return false
-//                break
-//              case 'error':
-//                return true
-//                break
-//            }
-//          }
-//        }
       }
     },
     watch: {
@@ -256,7 +162,7 @@
         let dirty = false
         let speed = 0
         for (let v of val) {
-          if (typeof v.speed === 'number') speed += v.speed
+          if (typeof v.speed === 'number' && v.status === 'run') speed += v.speed
           while (i < v.id) {
             if (this.normaliseList[i]) {
               dirty = true
@@ -375,8 +281,7 @@
           all: true,
           onlyComplete: true
         })
-      },
-
+      }
     }
   }
 </script>

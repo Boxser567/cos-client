@@ -208,7 +208,7 @@
     font-size: 13px;
     position: relative;
     & > div {
-      display: inline-block;
+      display: inline-flex;
     }
     &.header {
       font-size: 12px;
@@ -245,6 +245,10 @@
       }
       p {
         padding-left: 42px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 80%;
       }
     }
     .list {

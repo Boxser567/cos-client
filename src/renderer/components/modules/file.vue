@@ -38,15 +38,16 @@
                         </el-button>
                         <el-button size="small" :plain="true" @click="deleteObj" :disabled="eableBtn()">删除
                         </el-button>
-                        <el-button size="small" :plain="true" @click="dialogFileLimit =true" :disabled="eableBtn()">设置权限
+                        <el-button size="small" :plain="true" @click="controlObj('set_limit')" :disabled="eableBtn1()">
+                            设置权限
                         </el-button>
                     </div>
-                    <!--<div class="el-button-group">-->
-                    <!--<el-button size="small" :plain="true" @click="dialogFileAdress = true"-->
-                    <!--:disabled="eableBtn1('adress')">-->
-                    <!--获取地址-->
-                    <!--</el-button>-->
-                    <!--</div>-->
+                    <div class="el-button-group">
+                        <el-button size="small" :plain="true" @click="controlObj('get_address')"
+                                   :disabled="eableBtn1('adress')">
+                            获取地址
+                        </el-button>
+                    </div>
                     <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="dialogSetHttpHead = true"
                                    :disabled="eableBtn1()">设置HTTP头
@@ -57,11 +58,12 @@
             </div>
         </div>
 
-        <file-list :options="options" @deleteObj="deleteObj"></file-list>
+        <file-list :options="options" @sendObj="controlObj"></file-list>
 
-        <file-limit :isShow.sync="dialogFileLimit"></file-limit>
+        <file-limit :isShow.sync="dialogFileLimit" :options="limitOption"></file-limit>
 
-        <!--<file-adress :isShow="dialogFileAdress" @closeDialog="dialogFileAdress = false"></file-adress>-->
+        <file-adress :options="options" :isShow="dialogFileAdress"
+                     @closeDialog="dialogFileAdress = false"></file-adress>
 
         <set-http-head :isShow="dialogSetHttpHead" @closeDialog="dialogSetHttpHead = false"></set-http-head>
 
@@ -92,7 +94,6 @@
           navbar.forEach(n => { if (n) this.navOptions.push({name: n}) })
         }
       }
-      // console.log('router钩子', to.params, this.options)
       next()
     },
     computed: {
@@ -111,7 +112,8 @@
         currentFolder: null,
         dialogSetHttpHead: false,
         dialogFileAdress: false,
-        dialogFileLimit: false
+        dialogFileLimit: false,
+        limitOption: null
       }
     },
     methods: {
@@ -180,6 +182,30 @@
 
       searchCancelFn () {
         this.options.keyWord = null
+      },
+
+      controlObj(val){
+        switch (val) {
+          case 'delete_file':
+            this.deleteObj()
+            break
+          case 'set_limit':
+            this.limitOption = {
+              Bucket: this.options.bucket,
+              Region: this.options.region,
+              type: 'files'
+            }
+            this.dialogFileLimit = true
+            break
+          case 'get_address':
+            this.dialogFileAdress = true
+            break
+          case 'set_http':
+            this.dialogSetHttpHead = true
+            break
+          default :
+            break
+        }
       },
 
       deleteObj () {

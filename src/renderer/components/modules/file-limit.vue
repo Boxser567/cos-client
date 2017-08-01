@@ -1,6 +1,6 @@
 <template>
 
-    <el-dialog title="权限设置"
+    <el-dialog title="设置权限"
                custom-class="dialog-file-limit"
                :visible.sync="isShow"
                :before-close="closeDialog"
@@ -129,6 +129,8 @@
 
 
 <script>
+  import { mapState } from 'vuex'
+
   export default {
 
     props: ['isShow', 'options'],
@@ -144,7 +146,7 @@
         }],
         userData: [],
         Owner: null,
-        myResponse: null
+        parameters: null
       }
     },
     watch: {
@@ -155,27 +157,29 @@
         }
       }
     },
-    computed: {},
+    computed: {
+      ...mapState('menulist', ['selectFile'])
+    },
     methods: {
       renderData(){
         this.userData = []
         this.activeName = 'first'
         this.commonData[0].pb_limit = 'private'
-        let parms = {
-          Bucket: this.options.bucket.Bucket,
-          Region: this.options.bucket.Region
+        this.parameters = {
+          Bucket: this.options.Bucket || this.options.bucket.Bucket,
+          Region: this.options.Region || this.options.bucket.Region
+        }
+        if (!this.parameters.Bucket || !this.parameters.Region) return
+        let parms = this.parameters, str = 'getBucketACL'
+        if (this.options.type === 'files') {
+          str = 'getObjectACL'
+          parms.Key = this.selectFile[0].Key
         }
 
-        this.$store.dispatch('bucket/getBucketACL', parms).then((resp) => {
+        this.$store.dispatch(`bucket/${str}`, parms).then((resp) => {
           console.log(parms, '请求参数和返回', resp)
-          this.myResponse = {
-            Grants: resp.Grants,
-            Owner: resp.Owner
-//            headers:resp.headers
-          }
           this.Owner = resp.Owner
           resp.Grants.forEach(n => {
-            //Grantee  DisplayName
             if (n.Grantee.ID === 'qcs::cam::anyone:anyone') {
               this.commonData[0].pb_limit = 'public-read'
             } else {
@@ -282,17 +286,18 @@
         }
       },
       submitForm(){
-        let parms = Object.assign(this.options.bucket, {ACL: this.commonData[0].pb_limit})
-
-        let grants = [], flag = false
+        let parms = Object.assign(this.parameters, {ACL: this.commonData[0].pb_limit}),
+          grants = [], flag = false
         this.userData.forEach(n => {
-          grants.push({
-            Grantee: {
-              DisplayName: `qcs::cam::uin/${n.user}:uin/${n.user}`,
-              ID: `qcs::cam::uin/${n.user}:uin/${n.user}`
-            },
-            Permission: n.checkLimit.toString() === ['读', '写'].toString() ? 'FULL_CONTROL' : n.checkLimit.toString() === ['读'].toString() ? 'READ' : 'WRITE'
-          })
+          let checkID = `qcs::cam::uin/${n.user}:uin/${n.user}`
+          if (!(checkID === this.Owner.ID))
+            grants.push({
+              Grantee: {
+                DisplayName: `qcs::cam::uin/${n.user}:uin/${n.user}`,
+                ID: `qcs::cam::uin/${n.user}:uin/${n.user}`
+              },
+              Permission: n.checkLimit.toString() === ['读', '写'].toString() ? 'FULL_CONTROL' : n.checkLimit.toString() === ['读'].toString() ? 'READ' : 'WRITE'
+            })
           if (n.edit === 1 || n.edit === 3) {
             flag = true
           }
@@ -306,12 +311,15 @@
           Owner: this.Owner
         }
 
-        this.$store.dispatch('bucket/putBucketAcl', parms).then((resp) => {
+        let str = 'putBucketAcl'
+        if (this.options.type === 'files') {
+          str = 'putObjectACL'
+          parms.Key = this.selectFile[0].Key
+        }
+
+        this.$store.dispatch(`bucket/${str}`, parms).then((resp) => {
           console.log('添加的参数', parms, resp)
           this.commonData[0].edit = 0
-//          this.userData.forEach(n => {
-//            n.ID === this.Owner.ID ? 2 : 0
-//          })
         })
       },
       addUers () {

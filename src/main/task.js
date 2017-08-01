@@ -303,16 +303,20 @@ function UploadTask (cos, name, params, option = {}) {
         this.file.iterator = getSliceIterator(this.file)
       }
 
+      let time0 = Date.now()
+      let loaded0 = 0
       this.progress.On = () => {
+        let time1 = Date.now()
+        if (time1 < time0 + 100) return
         setImmediate(() => {
-          let loaded = 0
-          let speed = 0
+          let loaded1 = 0
           this.progress.list.forEach(piece => {
-            loaded += piece.loaded || 0
-            speed += piece.speed || 0
+            loaded1 += piece.loaded || 0
           })
-          this.progress.loaded = loaded
-          this.progress.speed = speed
+          this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
+          this.progress.loaded = loaded1
+          time0 = time1
+          loaded0 = loaded1
         })
       }
 
@@ -417,13 +421,11 @@ UploadTask.prototype.upload = function () {
         Body: result.body,
         onProgress: (data) => {
           pg.loaded = data.loaded
-          pg.speed = ~~data.speed
           this.progress.On()
         }
         // todo 在sdk更新后换成 ContentMD5
         // ContentSha1: '"' + result.hash + '"'
       }, this.params), (err, data) => {
-        pg.speed = 0
         if (err) {
           reject(err)
           return
@@ -647,12 +649,16 @@ DownloadTask.prototype.start = function () {
     fs.mkdirSync(path.dirname(this.file.fileName))
   } catch (e) {}
   this.params.Output = fs.createWriteStream(this.file.fileName + '.tmp')
-  this.params.onProgress = (data) => {
-    this.progress.speed = ~~data.speed
-  }
 
+  let time0 = Date.now()
+  let loaded0 = 0
   this.params.Output.on('drain', () => {
     this.progress.loaded = this.params.Output.bytesWritten
+    let time1 = Date.now()
+    let loaded1 = this.progress.loaded
+    if (time1 > time0 + 100) {
+      this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
+    }
     if (this.cancel) {
       this.params.Output.close()
       this.params.Output.emit('error', new Error('cancel'))
@@ -664,6 +670,7 @@ DownloadTask.prototype.start = function () {
       err ? reject(err) : resolve(result)
     })
   }).then(() => {
+    this.progress.speed = 0
     fs.renameSync(this.file.fileName + '.tmp', this.file.fileName)
     return Promise.resolve()
   }, (err) => {

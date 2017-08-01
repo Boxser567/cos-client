@@ -33,13 +33,11 @@
 </template>
 
 <script>
-  import { mapState } from 'vuex'
   import progressList from './progress-list.vue'
   import { ipcRenderer, shell } from 'electron'
 
   export default {
     name: 'fileProgress-page',
-//    props: ['options'],
     data () {
       return {
         tabList: [
@@ -68,8 +66,7 @@
     },
     components: {progressList},
     computed: {
-//      ...mapState('menulist', ['isShowFileProgress']),
-      config(){
+      config () {
         return this.$store.state.config
       }
     },
