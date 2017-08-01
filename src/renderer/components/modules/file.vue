@@ -182,27 +182,34 @@
         this.options.keyWord = null
       },
 
-      deleteObj () {
-        this.$confirm('确定要删除?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          let parmas = {
+      async deleteObj () {
+        try {
+          await this.$confirm('确定要删除?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+
+          let params = {
             Bucket: this.options.bucket,
             Region: this.options.region,
-            Key: this.selectFile.dir ? this.selectFile.Prefix : this.selectFile.Key
+            Dirs: [],
+            Keys: []
           }
-          this.$store.dispatch('menulist/deleteFile', parmas).then((resp) => {
-            // 删除完成后刷新文件列表
-            if (!this.options.bucket || !this.options.region) return
-            let pams = {Bucket: this.options.bucket, Region: this.options.region}
-            if (this.options.folders && this.options.folders.length) {
-              pams.Prefix = this.options.folders
-            }
-            this.$store.dispatch('menulist/getFileList', pams).then(() => { })
+          this.selectFile.forEach(n => {
+            n.dir ? params.Dirs.push(n.Prefix) : params.Keys.push(n.Key)
           })
-        }).catch(() => {})
+          await this.$store.dispatch('deleteObjects', params)
+
+          // 删除完成后刷新文件列表
+          await this.$store.dispatch('menulist/getFileList', {
+            Bucket: this.options.bucket,
+            Region: this.options.region,
+            Prefix: this.options.folders && this.options.folders.length ? this.options.folders : null
+          })
+        } catch (e) {
+          if (e !== 'cancel') console.error(e)
+        }
       },
 
       copyObj () {

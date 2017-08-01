@@ -233,22 +233,6 @@ Main.prototype.init = async function () {
     })
   })
 
-  ipcMain.on('ListObject', (event, arg) => {
-    /**
-     * @param  {object}   arg
-     * @param  {string}   arg.Bucket
-     * @param  {string}   arg.Region
-     * @param  {string}   [arg.Prefix]
-     */
-    listDir(cos, arg).then(
-      data => { if (!event.sender.isDestroyed()) event.sender.send('ListObject-data', data) },
-      err => {
-        log.error(err)
-        if (!event.sender.isDestroyed()) event.sender.send('error', normalizeError(err, 'ListObject'))
-      }
-    ).catch(err => { log.warn(err) })
-  })
-
   ipcMain.on('NewUploadTasks', async (event, arg) => {
     /**
      * @param  {object}   arg
@@ -394,33 +378,6 @@ Main.prototype.init = async function () {
       db.download().set(downloads.tasks)
     ])
   }
-}
-
-async function listDir (cos, params) {
-  let dirs = []
-  let objects = []
-  params.Delimiter = '/'
-  let result
-  let pflen = params.Prefix ? params.Prefix.length : 0
-
-  do {
-    result = await new Promise((resolve, reject) => {
-      cos.getBucket(params, (err, result) => { err ? reject(err) : resolve(result) })
-    })
-
-    result.CommonPrefixes.forEach(v => {
-      if (v.Prefix !== params.Prefix) {
-        dirs.push({
-          Name: v.Prefix.slice(pflen, -1),
-          Prefix: v.Prefix
-        })
-      }
-    })
-    result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
-
-    params.Marker = result.NextMarker
-  } while (result.IsTruncated === 'true')
-  return {dirs, objects}
 }
 
 function* uploadGenerator (name, prefix) {
