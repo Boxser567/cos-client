@@ -16,11 +16,11 @@
                     <div class="bucket-item">
                         <div class="item" v-for="b in value"
                              @click="selectBucket(b)"
-                             @contextmenu="openMenu($event, b)"
+                             @contextmenu="openMenu(b)"
                              :key="b.Name"
                              :class="{ 'active':b.active }"
                              :title="b.Name">
-                            <a>{{b.Name}} <i class="el-icon-arrow-down" @click="openMenu($event, b)"></i></a>
+                            <a>{{b.Name}} <i class="el-icon-arrow-down" @click.stop="openMenu(b)"></i></a>
                         </div>
                     </div>
                 </div>
@@ -145,9 +145,7 @@
         })
       },
 
-      openMenu (e, item) {
-        e.preventDefault()
-        e.stopPropagation()
+      openMenu (item) {
         this.rightChooseBucket = {
           Bucket: item.Name,
           Region: item.Location,
