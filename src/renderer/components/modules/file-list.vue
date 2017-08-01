@@ -30,16 +30,16 @@
             </div>
 
             <div class="list file-list-info" v-if="filelist.length" :class="{ active:f.active }"
-                 v-for="(f,$index) in filelist"
-                 @click="itemSelect($event,$index, f)"
+                 v-for="(f, $index) in filelist"
+                 @click="itemSelect($event, $index, f)"
                  @dblclick="goFolder(f)"
-                 @contextmenu="openMenu(f,$index)"
+                 @contextmenu="openMenu(f, $index)"
                  :key="f.Name">
                 <div class="name">
                     <img :src="f | getFileImg" alt="">
                     <p>{{ f.Name }}</p>
                 </div>
-                <div class="size">{{f.Size | bitSize}}</div>
+                <div class="size">{{ f.Size | bitSize }}</div>
                 <div class="time">{{ f.LastModified | getDate }}</div>
             </div>
         </div>
@@ -86,28 +86,7 @@
     },
 
     watch: {
-      $route: 'fetchData',
-      copyFiles: {
-        handler: function (val) {
-          let exst = this.menu.files.indexOf('paste_file') > -1
-          if (val && val.list.length) {
-            if (!exst) {
-              this.menu.files.push('paste_file')
-              this.menu.folders.push('paste_file')
-              this.menu.blanks.push('paste_file')
-              this.menu.groupFile.push('paste_file')
-            }
-          } else {
-            if (exst) {
-              this.menu.files.splice(this.menu.files.length - 1, 1)
-              this.menu.folders.splice(this.menu.folders.length - 1, 1)
-              this.menu.blanks.splice(this.menu.blanks.length - 1, 1)
-              this.menu.groupFile.splice(this.menu.groupFile.length - 1, 1)
-            }
-          }
-        },
-        deep: true
-      }
+      $route: 'fetchData'
     },
 
     methods: {
@@ -195,13 +174,13 @@
       },
 
       popMenu (type) {
-        this.menu.list = this.fileRightList.filter(m => {
-          menu.items[m.index - 1].visible = false
-          if (this.menu[type].includes(m.key)) {
-            menu.items[m.index - 1].visible = true
-            return m
+        for (let m of this.fileRightList) {
+          if (m.key === 'paste_file') {
+            menu.items[m.index - 1].visible = !!this.copyFiles.list.length
+            continue
           }
-        })
+          menu.items[m.index - 1].visible = this.menu[type].includes(m.key)
+        }
         menu.popup(remote.getCurrentWindow(), {async: true})
       },
       // 右键菜单点击事件

@@ -1,14 +1,8 @@
+import moment from 'moment'
+
 function getDate (time) {
   if (!time) return '-'
-  let timeStan = (new Date(time)).valueOf()
-  let dt = new Date(timeStan)
-  let Y = dt.getFullYear() + '-'
-  let M = (dt.getMonth() + 1 < 10 ? '0' + (dt.getMonth() + 1) : dt.getMonth() + 1) + '-'
-  let D = dt.getDate() + ' '
-  let h = dt.getHours() + ':'
-  let m = dt.getMinutes() + ':'
-  let s = dt.getSeconds()
-  return Y + M + D + h + m + s
+  return moment(time).format('YYYY-MM-DD HH:mm:ss')
 }
 
 function bitSize (num, decimal) {
@@ -129,20 +123,6 @@ function getDirName (name) {
   return name.replace('/', '')
 }
 
-// {
-//     value: "cn-south",
-//         label: ''
-// }, {
-//     value: "cn-north",
-//         label: ''
-// }, {
-//     value: "cn-",
-//         label: ''
-// }, {
-//     value: "cn-",
-//         label: ''
-// }
-
 function getArea (i) {
   switch (i) {
     case 'cn-south':
@@ -159,11 +139,11 @@ function getArea (i) {
 }
 
 export default {
-  getDate: getDate,
-  bitSize: bitSize,
-  bitSpeed: bitSpeed,
-  getFileImg: getFileImg,
-  getDirName: getDirName,
-  getArea: getArea,
-  getInteger: getInteger
+  getDate,
+  bitSize,
+  bitSpeed,
+  getFileImg,
+  getDirName,
+  getArea,
+  getInteger
 }

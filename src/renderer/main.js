@@ -2,7 +2,7 @@ import Vue from 'vue'
 import axios from 'axios'
 import ElementUI from 'element-ui'
 import elem from 'element-ui/lib/index'
-import App from './App'
+import App from './App.vue'
 import router from './router'
 import store from './store'
 
@@ -22,10 +22,6 @@ Vue.config.productionTip = false
 Object.keys(myfilte).forEach(function (key) {
   Vue.filter(key, myfilte[key])
 })
-
-// if (process.env.NODE_ENV === 'development') {
-//   global.__static = './static'
-// }
 
 /* eslint-disable no-new */
 new Vue({
