@@ -100,16 +100,8 @@
         this.tabList.forEach(tab => { tab.iscur = false })
         this.tabList[index].iscur = true
       },
-      openLog(){
-        console.log('this.$store.state.config', this.$store.state.config)
-
-//        if (!this.config && this.config.logPath) return
-//        let flag = false
-//        if (!flag) {
-//          let log = this.config.logPath.indexOf('/') < 0 ? '' : this.config.logPath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '')
-//          shell.showItemInFolder(log)
-//          flag = true
-//        }
+      openLog () {
+        shell.showItemInFolder(ipcRenderer.sendSync('GetLogPath'))
       }
     }
   }
