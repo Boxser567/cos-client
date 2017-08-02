@@ -87,7 +87,7 @@
       }
     },
     methods: {
-      submit(){
+      submit () {
         let AllowedOrigins = util.String.getArray(this.form.AllowedOrigins)
         let AllowedHeaders = util.String.getArray(this.form.AllowedHeaders)
         let ExposeHeaders = util.String.getArray(this.form.ExposeHeaders)
@@ -111,7 +111,7 @@
         this.$emit('submitForm', obj)
         this.closeDialog()
       },
-      closeDialog(){
+      closeDialog () {
         this.form = null
         this.form = {
           AllowedOrigins: null,

@@ -57,7 +57,6 @@
             this.closeDialog()
           })
         }).catch(() => {})
-
       }
     }
 

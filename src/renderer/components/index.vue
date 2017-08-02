@@ -137,9 +137,9 @@
         this.$router.push({
           path: '/file/' + b.Name,
           query: {
-            bucket: b.Name,
-            region: b.Location,
-            folders: []
+            Bucket: b.Name,
+            Region: b.Location,
+            Prefix: ''
           }
         })
       },

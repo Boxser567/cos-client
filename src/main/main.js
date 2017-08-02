@@ -210,29 +210,6 @@ Main.prototype.init = async function () {
     db.clear()
   })
 
-  ipcMain.on('ListBucket', (event) => {
-    cos.getService((err, data) => {
-      if (err) {
-        if (!event.sender.isDestroyed()) event.sender.send('error', normalizeError(err, 'ListBucket'))
-        return
-      }
-      let result = {}
-      data.Buckets.forEach(v => {
-        let ss = v.Name.split('-')
-        v.Name = ss[0]
-        v.AppId = ss[1]
-        config.cos.AppId = v.AppId
-        cos.options.AppId = v.AppId
-        if (Array.isArray(result[v.AppId])) {
-          result[v.AppId].push(v)
-        } else {
-          result[v.AppId] = [v]
-        }
-      })
-      if (!event.sender.isDestroyed()) event.sender.send('ListBucket-data', result)
-    })
-  })
-
   ipcMain.on('NewUploadTasks', async (event, arg) => {
     /**
      * @param  {object}   arg
@@ -430,16 +407,6 @@ function getBucket (cos, params) {
       err ? reject(err) : resolve(data)
     })
   })
-}
-
-function normalizeError (error, src) {
-  if (error.error) {
-    return {message: error.error.Message, src, error}
-  }
-  if (error.message) {
-    return {message: error.message, src, error}
-  }
-  return {message: 'unknown', src, error}
 }
 
 export default Main

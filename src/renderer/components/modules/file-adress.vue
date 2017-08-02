@@ -9,7 +9,7 @@
 
             <el-row>
                 <el-col :span="5">文件名:</el-col>
-                <el-col :span="19">{{selectFile[0]?selectFile[0].Key :'' }}</el-col>
+                <el-col :span="19">{{selectFile[0] ? selectFile[0].Key : '' }}</el-col>
             </el-row>
             <el-row v-if="!isPublic">
                 <el-col :span="5"> &nbsp;</el-col>
@@ -40,7 +40,7 @@
   import { clipboard } from 'electron'
 
   export default {
-    props: ['isShow', 'options'],
+    props: ['isShow'],
 
     data () {
       return {
@@ -53,14 +53,13 @@
     watch: {
       'isShow': {
         handler: function (val) {
-          if (val)
-            this.renderData()
+          if (val) { this.renderData() }
         }
       }
     },
     computed: {
-      ...mapState('menulist', ['selectFile']),
-      config(){
+      ...mapState('menulist', ['selectFile', 'options']),
+      config () {
         return this.$store.state.config
       },
       getKey () {
@@ -71,14 +70,14 @@
       }
     },
     methods: {
-      renderData() {
-        if (!(this.options && this.options.bucket)) return
+      renderData () {
+        if (!this.options.Bucket) return
         this.isPublic = null
         this.iptText = null
         this.seconds = 3600
         let parms = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
+          Bucket: this.options.Bucket,
+          Region: this.options.Region,
           Key: this.selectFile[0].Key
         }
 
@@ -94,7 +93,7 @@
           }
         })
       },
-      createSign(){
+      createSign () {
         let reg = /^[0-9]*$/
         if (this.seconds === '' || !reg.test(this.seconds)) {
           this.$message('请正确输入有效时间')
@@ -109,12 +108,12 @@
         }
         this.$store.dispatch('bucket/getAuth', pms).then(data => {
           data = encodeURIComponent(data)
-          let auth = `http://${this.options.bucket}-${this.getKey}.${this.options.region}.myqcloud.com/${this.selectFile[0].Key}`
+          let auth = `http://${this.options.Bucket}-${this.getKey}.${this.options.Region}.myqcloud.com/${this.selectFile[0].Key}`
           this.iptText = `${auth}?sign=${data}`
           this.isPublic = true
         })
       },
-      elFocus(e){
+      elFocus (e) {
         e.target.select()
         console.log(e.target)
       },
