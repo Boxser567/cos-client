@@ -139,7 +139,7 @@
           query: {
             bucket: b.Name,
             region: b.Location,
-            folders: []
+            folders: ''
           }
         })
       },

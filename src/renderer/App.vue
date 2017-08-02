@@ -10,7 +10,7 @@
     created () {},
     data () {
       return {}
-    },
+    }
   }
 </script>
 

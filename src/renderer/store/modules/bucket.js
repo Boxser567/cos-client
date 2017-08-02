@@ -1,22 +1,27 @@
 /**
  * Created by gokuai on 17/6/26.
  */
-import { ipcRenderer } from 'electron'
 
 import sdkUtil from 'cos-nodejs-sdk-v5/sdk/util'
 
 const state = {
-  bucketList: null,
-  currentBucket: null
+  bucketList: null
 }
 
 const mutations = {
-  getMuService (state, data) {
-    console.log('bucket列表', data)
-    for (let key in data) {
-      data[key].forEach(n => { n.active = false })
+  getMuService (state, Buckets) {
+    console.log('bucket列表', Buckets)
+    let appid = ''
+    for (let bkt of Buckets) {
+      let ss = bkt.Name.split('-')
+      bkt.Name = ss[0]
+      bkt.AppId = ss[1]
+      appid = ss[1]
+      bkt.active = false
     }
-    state.bucketList = data
+    let bucketList = {}
+    bucketList[appid] = Buckets
+    state.bucketList = bucketList
   },
 
   bucketActive (state, bucketName) {
@@ -29,12 +34,7 @@ const mutations = {
         }
       })
     }
-  },
-
-  currentBucket (state, val) {
-    state.currentBucket = val
   }
-
 }
 
 const actions = {
@@ -55,16 +55,17 @@ const actions = {
     return Promise.resolve(sdkUtil.getAuth(param))
   },
 
-  getService ({commit}) {
+  getService ({rootGetters, commit}) {
     return new Promise((resolve, reject) => {
-      // rootState.bus={type:'error',msg:'出错'}
-
-      ipcRenderer.send('ListBucket')
-
-      ipcRenderer.once('ListBucket-data', function (event, data) {
-        commit('getMuService', data)
+      rootGetters.cos.getService((err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        commit('getMuService', data.Buckets)
         resolve(data)
       })
+      // rootState.bus={type:'error',msg:'出错'}
     })
   },
 

@@ -4,6 +4,12 @@
 import { ipcRenderer, remote } from 'electron'
 
 const state = {
+  options: {
+    bucket: '',
+    region: '',
+    folders: ''
+  },
+
   filelist: null,
 
   fileloading: true,
@@ -82,6 +88,10 @@ const state = {
 }
 
 const mutations = {
+  options (state, val) {
+    state.options = val
+  },
+
   fileloading (state, val) { // 文件加载
     state.fileloading = val.loading
   },
@@ -190,44 +200,12 @@ const mutations = {
     state.newFolder = val
   },
 
-  uploadFile (state, pms) {
-    remote.dialog.showOpenDialog({
-      filters: [{name: 'All Files', extensions: ['*']}],
-      properties: ['openFile', 'openDirectory', 'multiSelections']
-    }, function (fileArray) {
-      if (!fileArray) return
-      pms.FileNames = fileArray
-      ipcRenderer.send('NewUploadTasks', pms)
-    })
-  },
-
-  downloadFile (state, pms) {
-    if (!state.selectFile) return
-    remote.dialog.showOpenDialog({
-      buttonLabel: '选择',
-      filters: [{name: 'All Files', extensions: ['*']}],
-      properties: ['openDirectory']
-    }, function (fileArray) {
-      if (!fileArray) return
-      let parms = Object.assign({
-        Path: fileArray[0],
-        Dirs: [],
-        Keys: []
-      }, pms)
-      state.selectFile.forEach(n => {
-        if (n.dir) {
-          parms.Dirs.push(n.Prefix)
-        } else {
-          parms.Keys.push(n.Key)
-        }
-      })
-      // console.log(state.selectFile, '下载canshu', parms)
-      ipcRenderer.send('NewDownloadTasks', parms)
-    })
-  },
-
-  copyFiles (state, pms) {
-    state.copyFiles.src = pms
+  copyFiles (state) {
+    state.copyFiles.src = {
+      Bucket: state.options.bucket,
+      Region: state.options.region,
+      Prefix: state.options.folders
+    }
     state.copyFiles.list = state.selectFile
   },
 
@@ -256,14 +234,57 @@ const actions = {
     return data
   },
 
-  pasteFiles ({dispatch, state}, params) {
+  uploadFile ({state}) {
+    remote.dialog.showOpenDialog({
+      filters: [{name: 'All Files', extensions: ['*']}],
+      properties: ['openFile', 'openDirectory', 'multiSelections']
+    }, fileArray => {
+      if (!fileArray) return
+      ipcRenderer.send('NewUploadTasks', {
+        Bucket: state.options.bucket,
+        Region: state.options.region,
+        Prefix: state.options.folders,
+        FileNames: fileArray
+      })
+    })
+  },
+
+  downloadFile ({state}) {
+    if (!state.selectFile) return
+    remote.dialog.showOpenDialog({
+      buttonLabel: '选择',
+      filters: [{name: 'All Files', extensions: ['*']}],
+      properties: ['openDirectory']
+    }, function (fileArray) {
+      if (!fileArray) return
+      let parms = {
+        Bucket: state.options.bucket,
+        Region: state.options.region,
+        Prefix: state.options.folders,
+        Path: fileArray[0],
+        Dirs: [],
+        Keys: []
+      }
+      state.selectFile.forEach(n => {
+        if (n.dir) {
+          parms.Dirs.push(n.Prefix)
+        } else {
+          parms.Keys.push(n.Key)
+        }
+      })
+      // console.log(state.selectFile, '下载canshu', parms)
+      ipcRenderer.send('NewDownloadTasks', parms)
+    })
+  },
+
+  pasteFiles ({dispatch, state}) {
     if (state.copyFiles.list.length < 1) return Promise.resolve()
     let parms = {
       src: state.copyFiles.src,
       dst: {
-        Bucket: params.Bucket,
-        Region: params.Region,
-        Prefix: params.Prefix
+        Bucket: state.options.bucket,
+        Region: state.options.region,
+        Prefix: state.options.folders
       },
       Dirs: [],
       Keys: []

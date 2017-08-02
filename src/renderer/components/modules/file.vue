@@ -9,16 +9,16 @@
                 <div class="nav-bar">
                     <div class="nav">
                         <ul v-show="!inputFocus">
-                            <li v-for="(n,index) in navOptions" @click="goFilePath(index)">{{ n.name }}</li>
+                            <li v-for="(n, index) in navOptions" @click="goFilePath(index)">{{ n.name }}</li>
                         </ul>
                         <div class="search-inbar" v-show="inputFocus">
                             在<span>{{currentFolder}}</span>中搜索
                         </div>
                     </div>
-                    <input type="text" v-model="options.keyWord" @focus="focusSearch" @blur="blurSearch"
+                    <input type="text" v-model="keyWord" @focus="focusSearch" @blur="blurSearch"
                            @keyup.enter="searchFn">
-                    <i class="el-icon-close" v-show="options.keyWord" @click="searchCancelFn"></i>
-                    <i class="el-icon-search" v-show="!options.keyWord" @click="searchFn"></i>
+                    <i class="el-icon-close" v-show="keyWord" @click="searchCancelFn"></i>
+                    <i class="el-icon-search" v-show="!keyWord" @click="searchFn"></i>
                 </div>
             </div>
             <div class="bottom-row">
@@ -58,15 +58,14 @@
             </div>
         </div>
 
-        <file-list :options="options" @sendObj="controlObj"></file-list>
+        <file-list @sendObj="controlObj"></file-list>
 
         <file-limit :isShow.sync="dialogFileLimit" :options="limitOption"></file-limit>
 
-        <file-adress :options="options" :isShow="dialogFileAdress"
+        <file-adress :isShow="dialogFileAdress"
                      @closeDialog="dialogFileAdress = false"></file-adress>
 
         <set-http-head :isShow="dialogSetHttpHead" @closeDialog="dialogSetHttpHead = false"></set-http-head>
-
     </div>
 </template>
 
@@ -80,33 +79,32 @@
     name: 'filepage',
     components: {fileList, fileAdress, fileLimit, setHttpHead},
     beforeRouteUpdate (to, from, next) {
-      this.options.bucket = to.params.bucket || to.query.bucket
-      this.options.region = to.params.region || to.query.region
-      this.navOptions = [].concat({name: this.options.bucket})
+      let options = {
+        bucket: to.query.bucket,
+        region: to.query.region
+      }
+      this.navOptions = [].concat({name: options.bucket})
       if (to.path !== from.path) {
-        this.options.keyWord = null
-        this.options.folders = []
+        this.keyWord = ''
+        options.folders = ''
       } else {
-        this.options.folders = to.query.folders
+        options.folders = to.query.folders
         let navbar = to.query.folders
         if (navbar && navbar.length) {
           navbar = navbar.split('/')
           navbar.forEach(n => { if (n) this.navOptions.push({name: n}) })
         }
       }
+      this.$store.commit('menulist/options', options)
+      this.fetchFilelist()
       next()
     },
     computed: {
-      ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo'])
+      ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo', 'options'])
     },
     data () {
       return {
-        options: {
-          bucket: null, // this.$route.params.bucket
-          region: null,
-          folders: null,
-          keyWord: null
-        },
+        keyWord: '',
         navOptions: [],
         inputFocus: false,
         currentFolder: null,
@@ -141,16 +139,15 @@
             if (idx < index) { goFolder += nav.name + '/' }
           })
         }
-        let topage = {
+        this.keyWord = ''
+        this.$router.push({
           path: '/file/' + this.options.bucket,
           query: {
             bucket: this.options.bucket,
             region: this.options.region,
             folders: goFolder
           }
-        }
-        this.options.keyWord = null
-        this.$router.push(topage)
+        })
       },
 
       blurSearch () {
@@ -167,24 +164,22 @@
       },
 
       searchFn () {
-        if (!this.options.keyWord) return
+        if (!this.keyWord) return
         let params = {
           Bucket: this.options.bucket,
           Region: this.options.region,
           Page: 'file',
-          Keywords: this.options.keyWord
+          Keywords: this.keyWord,
+          Prefix: this.options.folders
         }
-        if (this.options.folders && this.options.folders.length) {
-          params.Prefix = this.options.folders
-        }
-        this.$store.dispatch('menulist/getFileList', params).then(() => {})
+        this.$store.dispatch('menulist/getFileList', params)
       },
 
       searchCancelFn () {
-        this.options.keyWord = null
+        this.keyWord = ''
       },
 
-      controlObj(val){
+      controlObj (val) {
         switch (val) {
           case 'delete_file':
             this.deleteObj()
@@ -231,7 +226,7 @@
           await this.$store.dispatch('menulist/getFileList', {
             Bucket: this.options.bucket,
             Region: this.options.region,
-            Prefix: this.options.folders && this.options.folders.length ? this.options.folders : null
+            Prefix: this.options.folders
           })
         } catch (e) {
           if (e !== 'cancel') console.error(e)
@@ -239,38 +234,29 @@
       },
 
       copyObj () {
-        let pms = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
-          Prefix: (this.options.folders && this.options.folders.length > 0) ? this.options.folders : ''
-        }
-        this.$store.commit('menulist/copyFiles', pms)
+        this.$store.commit('menulist/copyFiles')
       },
 
       fileEvents (types) {
-        let pms = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
-          Prefix: (this.options.folders && this.options.folders.length > 0) ? this.options.folders : ''
+        switch (types) {
+          case 'upload':
+            this.$store.dispatch('menulist/uploadFile')
+            return
+          case 'download':
+            this.$store.dispatch('menulist/downloadFile')
+            return
+          case 'newFolder':
+            this.$store.commit('menulist/newFolder', true)
         }
-        if (types === 'upload') {
-          this.$store.commit('menulist/uploadFile', pms)
-        }
-        if (types === 'download') { this.$store.commit('menulist/downloadFile', pms) }
-        if (types === 'newFolder') { this.$store.commit('menulist/newFolder', true) }
       },
 
-      fetchFilelist () { // 刷新文件列表，重走路由
-        let qey = {
-          bucket: this.options.bucket,
-          region: this.options.region,
-          folders: this.options.folders
+      fetchFilelist () {
+        let params = {
+          Bucket: this.options.bucket,
+          Region: this.options.region,
+          Prefix: this.options.folders
         }
-        console.log('this-routers', qey)
-        this.$router.push({
-          path: '/file/' + this.options.bucket,
-          query: qey
-        })
+        this.$store.dispatch('menulist/getFileList', params)
       },
 
       goForward () {

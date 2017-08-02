@@ -34,7 +34,7 @@
 
     props: ['isShow', 'options'],
 
-    data(){
+    data () {
       return {
         isOpen: 0
       }
@@ -42,31 +42,29 @@
     watch: {
       'isShow': {
         handler: function (val) {
-          if (val)
-            this.renderData()
+          if (val) { this.renderData() }
         }
       }
 
     },
     methods: {
-      renderData(){
+      renderData () {
         this.isOpen = 0
         if (!this.options) return
         this.$store.dispatch('bucket/getBucketCORS', this.options).then(res => {
           console.log(res)
         })
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('update:isShow', false)
       },
-      openUrl(){
+      openUrl () {
         shell.openExternal('https://www.qcloud.com/document/product/436/6251')
       },
-      save(){
+      save () {
 
       }
     }
 
   }
-
 </script>
