@@ -122,7 +122,7 @@ const actions = {
 
   getBucketCORS ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
-      rootGetters.cos.getBucketCORS(params, function (err, data) {
+      rootGetters.cos.getBucketCors(params, function (err, data) {
         if (err) {
           // rootGetters.cos.bus.$emit('globleError', err)
         } else {
