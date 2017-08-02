@@ -12,19 +12,6 @@
             <el-form-item>
                 <el-input type="text" v-model="SecretKey" size="large" placeholder="Access Key Secret"></el-input>
             </el-form-item>
-
-            <el-form-item>
-                <el-checkbox v-model="isCVM">本机是CVM云主机</el-checkbox>
-                <el-select popper-class="login-select-area" v-model="areaDef" :disabled="!isCVM" placeholder="请选择">
-                    <el-option
-                            v-for="item in areaList"
-                            :key="item.value"
-                            :label="item.label"
-                            :value="item.value">
-                    </el-option>
-                </el-select>
-            </el-form-item>
-
             <el-form-item>
                 <el-button type="primary" @click="save">登 录</el-button>
             </el-form-item>
@@ -38,22 +25,6 @@
     name: 'newPage',
     data () {
       return {
-        areaList: [
-          {
-            value: 'cn-south',
-            label: '华南'
-          }, {
-            value: 'cn-north',
-            label: '华北'
-          }, {
-            value: 'cn-east',
-            label: '华东'
-          }, {
-            value: 'cn-southwest',
-            label: '西南'
-          }],
-        isCVM: false,
-        areaDef: null,
         AppId: '',
         SecretId: '',
         SecretKey: ''
@@ -68,8 +39,6 @@
             SecretId: this.SecretId,
             SecretKey: this.SecretKey
           },
-          isCVM: this.isCVM,
-          area: this.areaDef
         })
         this.$store.dispatch('bucket/getService').then(() => {
           this.$router.replace('/index')

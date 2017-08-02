@@ -156,17 +156,17 @@
   .el-row {
     padding: 10px 0;
   }
-  .el-col-8,.el-col-5 {
+  .el-col-8, .el-col-5 {
     text-align: right;
     padding-right: 45px;
     line-height: 30px;
   }
-  .el-col-19{
+  .el-col-19 {
     line-height: 30px;
   }
   .el-button--small {
     margin-left: 20px;
-  //  float: right;
+    //  float: right;
   }
   .seconds {
     display: inline-block;
@@ -214,6 +214,26 @@
   }
   .user-limit {
     margin-top: 20px;
+  }
+}
+
+.dialog-bucket-cors {
+  width: 95%;
+  max-width: 1040px;
+  top: 20px !important;
+  .el-dialog__body{
+    padding: 10px 20px;
+  }
+  .tl{
+    padding: 8px 0;
+  }
+  a{
+    display: block;
+    color: $activebg2;
+    cursor: pointer;
+    &:hover{
+      text-decoration: underline;
+    }
   }
 }
 
