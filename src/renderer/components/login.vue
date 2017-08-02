@@ -38,7 +38,7 @@
             AppId: this.AppId,
             SecretId: this.SecretId,
             SecretKey: this.SecretKey
-          },
+          }
         })
         this.$store.dispatch('bucket/getService').then(() => {
           this.$router.replace('/index')

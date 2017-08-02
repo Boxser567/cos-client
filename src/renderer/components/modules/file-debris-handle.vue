@@ -88,14 +88,13 @@
     },
     computed: {},
     methods: {
-      submit(){
+      submit () {
         this.form.origin = getArray(this.form.origin)
         this.form.allowHeaders = getArray(this.form.allowHeaders)
         this.form.exposeHeaders = getArray(this.form.exposeHeaders)
         console.log(this.form)
-
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('update:isShow', false)
       }
     }

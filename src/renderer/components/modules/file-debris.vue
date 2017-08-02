@@ -72,25 +72,24 @@
 
     props: ['isShow', 'options'],
 
-    data(){
+    data () {
       return {
         isOpen: 0,
         isHandleColumn: false,
-        tableData: []  //AllowedHeaders  , AllowedMethods ,  AllowedOrigins  , ExposeHeaders  , MaxAgeSeconds
+        tableData: [] // AllowedHeaders  , AllowedMethods ,  AllowedOrigins  , ExposeHeaders  , MaxAgeSeconds
       }
     },
     watch: {
       'isShow': {
         handler: function (val) {
-          if (val)
-            this.renderData()
+          if (val) this.renderData()
         }
       }
 
     },
     components: {myHandle},
     methods: {
-      renderData(){
+      renderData () {
         this.isOpen = 0
         if (!this.options) return
         this.$store.dispatch('bucket/getBucketCORS', this.options).then(res => {
@@ -98,25 +97,23 @@
           this.tableData = res.CORSRules
         })
       },
-      handleRow(index){
-        console.log(333,index)
+      handleRow (index) {
+        console.log(333, index)
         this.isHandleColumn = true
       },
-      deleteRow(index){
-
+      deleteRow (index) {
         this.tableData.splice(index, 1)
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('update:isShow', false)
       },
-      openUrl(){
+      openUrl () {
         shell.openExternal('https://www.qcloud.com/document/product/436/6251')
       },
-      save(){
+      save () {
 
       }
     }
 
   }
-
 </script>

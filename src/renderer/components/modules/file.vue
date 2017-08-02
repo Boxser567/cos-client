@@ -79,20 +79,14 @@
     name: 'filepage',
     components: {fileList, fileAdress, fileLimit, setHttpHead},
     beforeRouteUpdate (to, from, next) {
-      let options = {
-        bucket: to.query.bucket,
-        region: to.query.region
-      }
-      this.navOptions = [].concat({name: options.bucket})
+      let options = to.query
+      this.navOptions = [].concat({name: options.Bucket})
       if (to.path !== from.path) {
         this.keyWord = ''
-        options.folders = ''
+        options.Prefix = ''
       } else {
-        options.folders = to.query.folders
-        let navbar = to.query.folders
-        if (navbar && navbar.length) {
-          navbar = navbar.split('/')
-          navbar.forEach(n => { if (n) this.navOptions.push({name: n}) })
+        if (to.query.Prefix) {
+          to.query.Prefix.split('/').forEach(name => this.navOptions.push({name}))
         }
       }
       this.$store.commit('menulist/options', options)
@@ -131,21 +125,21 @@
       goFilePath (index) {
         if (!this.navOptions.length) return
         if (index === this.navOptions.length - 1) return
-        let goFolder = ''
+        let Prefix = ''
         let currentArr = [].concat(this.navOptions)
         currentArr.splice(0, 1)
         if (index !== 0) {
           currentArr.forEach((nav, idx) => {
-            if (idx < index) { goFolder += nav.name + '/' }
+            if (idx < index) { Prefix += nav.name + '/' }
           })
         }
         this.keyWord = ''
         this.$router.push({
-          path: '/file/' + this.options.bucket,
+          path: '/file/' + this.options.Bucket,
           query: {
-            bucket: this.options.bucket,
-            region: this.options.region,
-            folders: goFolder
+            Bucket: this.options.Bucket,
+            Region: this.options.Region,
+            Prefix
           }
         })
       },
@@ -165,14 +159,10 @@
 
       searchFn () {
         if (!this.keyWord) return
-        let params = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
+        this.$store.dispatch('menulist/getFileList', Object.assign({
           Page: 'file',
-          Keywords: this.keyWord,
-          Prefix: this.options.folders
-        }
-        this.$store.dispatch('menulist/getFileList', params)
+          Keywords: this.keyWord
+        }, this.options))
       },
 
       searchCancelFn () {
@@ -186,8 +176,8 @@
             break
           case 'set_limit':
             this.limitOption = {
-              Bucket: this.options.bucket,
-              Region: this.options.region,
+              Bucket: this.options.Bucket,
+              Region: this.options.Region,
               type: 'files'
             }
             this.dialogFileLimit = true
@@ -212,8 +202,8 @@
           })
 
           let params = {
-            Bucket: this.options.bucket,
-            Region: this.options.region,
+            Bucket: this.options.Bucket,
+            Region: this.options.Region,
             Dirs: [],
             Keys: []
           }
@@ -223,11 +213,7 @@
           await this.$store.dispatch('deleteObjects', params)
 
           // 删除完成后刷新文件列表
-          await this.$store.dispatch('menulist/getFileList', {
-            Bucket: this.options.bucket,
-            Region: this.options.region,
-            Prefix: this.options.folders
-          })
+          await this.$store.dispatch('menulist/getFileList', this.options)
         } catch (e) {
           if (e !== 'cancel') console.error(e)
         }
@@ -251,12 +237,7 @@
       },
 
       fetchFilelist () {
-        let params = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
-          Prefix: this.options.folders
-        }
-        this.$store.dispatch('menulist/getFileList', params)
+        this.$store.dispatch('menulist/getFileList', this.options)
       },
 
       goForward () {

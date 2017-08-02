@@ -5,9 +5,9 @@ import { ipcRenderer, remote } from 'electron'
 
 const state = {
   options: {
-    bucket: '',
-    region: '',
-    folders: ''
+    Bucket: '',
+    Region: '',
+    Prefix: ''
   },
 
   filelist: null,
@@ -201,11 +201,7 @@ const mutations = {
   },
 
   copyFiles (state) {
-    state.copyFiles.src = {
-      Bucket: state.options.bucket,
-      Region: state.options.region,
-      Prefix: state.options.folders
-    }
+    state.copyFiles.src = state.options
     state.copyFiles.list = state.selectFile
   },
 
@@ -238,14 +234,9 @@ const actions = {
     remote.dialog.showOpenDialog({
       filters: [{name: 'All Files', extensions: ['*']}],
       properties: ['openFile', 'openDirectory', 'multiSelections']
-    }, fileArray => {
-      if (!fileArray) return
-      ipcRenderer.send('NewUploadTasks', {
-        Bucket: state.options.bucket,
-        Region: state.options.region,
-        Prefix: state.options.folders,
-        FileNames: fileArray
-      })
+    }, FileNames => {
+      if (!FileNames) return
+      ipcRenderer.send('NewUploadTasks', Object.assign({FileNames}, state.options))
     })
   },
 
@@ -257,14 +248,11 @@ const actions = {
       properties: ['openDirectory']
     }, function (fileArray) {
       if (!fileArray) return
-      let parms = {
-        Bucket: state.options.bucket,
-        Region: state.options.region,
-        Prefix: state.options.folders,
+      let parms = Object.assign({
         Path: fileArray[0],
         Dirs: [],
         Keys: []
-      }
+      }, state.options)
       state.selectFile.forEach(n => {
         if (n.dir) {
           parms.Dirs.push(n.Prefix)
@@ -281,11 +269,7 @@ const actions = {
     if (state.copyFiles.list.length < 1) return Promise.resolve()
     let parms = {
       src: state.copyFiles.src,
-      dst: {
-        Bucket: state.options.bucket,
-        Region: state.options.region,
-        Prefix: state.options.folders
-      },
+      dst: state.options,
       Dirs: [],
       Keys: []
     }

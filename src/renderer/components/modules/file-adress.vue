@@ -71,13 +71,13 @@
     },
     methods: {
       renderData () {
-        if (!this.options.bucket) return
+        if (!this.options.Bucket) return
         this.isPublic = null
         this.iptText = null
         this.seconds = 3600
         let parms = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
+          Bucket: this.options.Bucket,
+          Region: this.options.Region,
           Key: this.selectFile[0].Key
         }
 
@@ -108,7 +108,7 @@
         }
         this.$store.dispatch('bucket/getAuth', pms).then(data => {
           data = encodeURIComponent(data)
-          let auth = `http://${this.options.bucket}-${this.getKey}.${this.options.region}.myqcloud.com/${this.selectFile[0].Key}`
+          let auth = `http://${this.options.Bucket}-${this.getKey}.${this.options.Region}.myqcloud.com/${this.selectFile[0].Key}`
           this.iptText = `${auth}?sign=${data}`
           this.isPublic = true
         })

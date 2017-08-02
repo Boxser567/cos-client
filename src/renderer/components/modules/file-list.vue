@@ -86,9 +86,9 @@
     methods: {
       addFolderFn: function () { // 新建文件夹
         let parms = {
-          Bucket: this.options.bucket,
-          Region: this.options.region,
-          Key: this.options.folders + this.folderName + '/'
+          Bucket: this.options.Bucket,
+          Region: this.options.Region,
+          Key: this.options.Prefix + this.folderName + '/'
         }
         this.$store.dispatch('bucket/putObject', parms).then(() => {
           this.$store.commit('menulist/newFolder', false)
@@ -111,11 +111,11 @@
       goFolder (file) {
         if (!file.dir) return
         this.$router.push({
-          path: '/file/' + this.options.bucket,
+          path: '/file/' + this.options.Bucket,
           query: {
-            bucket: this.options.bucket,
-            region: this.options.region,
-            folders: file.Prefix
+            Bucket: this.options.Bucket,
+            Region: this.options.Region,
+            Prefix: file.Prefix
           }
         })
       },
@@ -192,8 +192,8 @@
             this.$store.commit('menulist/copyFiles')
             break
           case 'paste_file': // 粘贴
-            if (this.options.bucket === this.copyFiles.src.Bucket &&
-              this.options.folders === this.copyFiles.src.Prefix) {
+            if (this.options.Bucket === this.copyFiles.src.Bucket &&
+              this.options.Prefix === this.copyFiles.src.Prefix) {
               this.$message('路径相同，不能操作')
               return
             }
