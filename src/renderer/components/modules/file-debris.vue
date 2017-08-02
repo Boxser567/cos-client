@@ -12,10 +12,12 @@
                         v-model="isOpen"
                         on-color="#13ce66"
                         off-color="#ff4949"
-                        on-value="1"
+                        on-value="100"
                         off-value="0">
                 </el-switch>
-                <p class="tl">配置详情</p>
+                <p class="tl">配置详情
+                    <el-button type="text" @click="addRule"><i class="el-icon-plus"></i> 新增规则</el-button>
+                </p>
                 <el-table :data="tableData" max-height="300" stripe style="width: 100%">
                     <el-table-column label="来源Origin" width="200">
                         <template scope="scope">
@@ -44,7 +46,7 @@
                     </el-table-column>
                     <el-table-column label="操作" fixed="right" width="90">
                         <template scope="scope">
-                            <div  class="done">
+                            <div class="done">
                                 <el-button @click.native.prevent="handleRow(scope.$index)" type="text" size="small">修改
                                 </el-button>
                                 <el-button @click.native.prevent="deleteRow(scope.$index)" type="text" size="small">删除
@@ -54,13 +56,14 @@
                     </el-table-column>
                 </el-table>
             </div>
-            <!--<a @click="openUrl" style="color: #1c8de0; padding: 10px 0;display: inline-block">CORS设置使用帮助</a>-->
             <div slot="footer" class="dialog-footer">
+                <a @click="openUrl" style="color: #1c8de0; font-size: 12px; float: left">CORS设置使用帮助</a>
+
                 <el-button type="primary" size="small" @click="save">保 存</el-button>
                 <el-button size="small" @click="closeDialog">关 闭</el-button>
             </div>
         </el-dialog>
-        <my-handle :isShow.sync="isHandleColumn"></my-handle>
+        <my-handle :isShow.sync="isHandleColumn" @submitForm="handleForm"></my-handle>
     </div>
 </template>
 
@@ -74,7 +77,7 @@
 
     data(){
       return {
-        isOpen: 0,
+        isOpen: 100,
         isHandleColumn: false,
         tableData: []  //AllowedHeaders  , AllowedMethods ,  AllowedOrigins  , ExposeHeaders  , MaxAgeSeconds
       }
@@ -91,29 +94,46 @@
     components: {myHandle},
     methods: {
       renderData(){
-        this.isOpen = 0
         if (!this.options) return
         this.$store.dispatch('bucket/getBucketCORS', this.options).then(res => {
           console.log(res)
           this.tableData = res.CORSRules
+//          if (res.CORSRules.length) this.isOpen = 1
+//          else this.isOpen = 0
         })
       },
       handleRow(index){
-        console.log(333,index)
+        console.log(333, index)
+        this.isHandleColumn = true
+      },
+      addRule(){
         this.isHandleColumn = true
       },
       deleteRow(index){
-
         this.tableData.splice(index, 1)
       },
       closeDialog(){
+        this.isOpen = 0
         this.$emit('update:isShow', false)
       },
       openUrl(){
         shell.openExternal('https://www.qcloud.com/document/product/436/6251')
       },
+      handleForm(obj){
+        this.tableData.push(obj)
+      },
       save(){
+        let parms = {
+          Bucket: this.options.Bucket,
+          Region: this.options.Region,
+          CORSRules: this.tableData
+        }
+        console.log('提交', parms)
+        return
 
+        this.$store.dispatch('bucket/putBucketCORS', parms).then(res => {
+
+        })
       }
     }
 

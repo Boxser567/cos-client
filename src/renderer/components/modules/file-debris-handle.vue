@@ -6,17 +6,17 @@
                :before-close="closeDialog">
 
         <el-form label-width="160px">
-            <el-form-item label="来源 Origin">
+            <el-form-item label="*  来源 AllowedOrigins">
                 <el-input
                         type="textarea"
                         placeholder="支持多行输入"
                         :autosize="{ minRows: 2, maxRows: 2}"
                         resize="none"
-                        v-model="form.origin">
+                        v-model="form.AllowedOrigins">
                 </el-input>
             </el-form-item>
-            <el-form-item label="操作 Methods">
-                <el-checkbox-group v-model="form.methods">
+            <el-form-item label="*  操作 AllowedMethods">
+                <el-checkbox-group v-model="form.AllowedMethods">
                     <el-checkbox label="PUT"></el-checkbox>
                     <el-checkbox label="GET"></el-checkbox>
                     <el-checkbox label="POST"></el-checkbox>
@@ -30,7 +30,7 @@
                         placeholder="支持多行输入"
                         :autosize="{ minRows: 2, maxRows: 2}"
                         resize="none"
-                        v-model="form.allowHeaders">
+                        v-model="form.AllowedHeaders">
                 </el-input>
             </el-form-item>
             <el-form-item label="Expose-Headers">
@@ -39,17 +39,17 @@
                         placeholder="支持多行输入"
                         :autosize="{ minRows: 2, maxRows: 2}"
                         resize="none"
-                        v-model="form.exposeHeaders">
+                        v-model="form.ExposeHeaders">
                 </el-input>
             </el-form-item>
-            <el-form-item label="超时 Max-Age">
-                <el-input class="max-age" type="text" size="small" v-model="form.maxAge"></el-input>
+            <el-form-item label="*  超时 Max-Age">
+                <el-input class="max-age" type="text" size="small" v-model="form.MaxAgeSeconds"></el-input>
                 s
             </el-form-item>
         </el-form>
 
         <div slot="footer" class="dialog-footer">
-            <el-button type="primary" size="small" @click="submit">提交</el-button>
+            <el-button type="primary" size="small" :disabled="disableBtn" @click="submit">提交</el-button>
             <el-button size="small" @click="closeDialog">关 闭</el-button>
         </div>
     </el-dialog>
@@ -58,46 +58,72 @@
 
 
 <script>
-  function getArray (text) {
-    if (!text) return
-    let arr = text.split('\n')
-    arr.forEach((n, i) => {
-      if (n === '') {
-        arr.splice(i, 1)
-      }
-    })
-    return arr
-  }
+
+  import util from '../../assets/util'
 
   export default {
 
-    props: ['isShow'],
+    props: ['isShow', 'openMode'],
     data () {
       return {
         form: {
-          origin: null,
-          methods: [],
-          allowHeaders: null,
-          exposeHeaders: null,
-          maxAge: 5
+          AllowedOrigins: null,
+          AllowedMethods: [],
+          AllowedHeaders: 'accept\ncontent-type\nAllowedOrigins\nauthorization',
+          ExposeHeaders: null,
+          MaxAgeSeconds: 5
         }
       }
+
     },
     created () {
 
     },
-    computed: {},
+    computed: {
+      disableBtn(){
+        if (!this.form.AllowedOrigins || !this.form.AllowedMethods.length || (this.form.MaxAgeSeconds === ''))
+          return true
+        return false
+      }
+    },
     methods: {
       submit(){
-        this.form.origin = getArray(this.form.origin)
-        this.form.allowHeaders = getArray(this.form.allowHeaders)
-        this.form.exposeHeaders = getArray(this.form.exposeHeaders)
-        console.log(this.form)
-
+        let AllowedOrigins = util.String.getArray(this.form.AllowedOrigins)
+        let AllowedHeaders = util.String.getArray(this.form.AllowedHeaders)
+        let ExposeHeaders = util.String.getArray(this.form.ExposeHeaders)
+        AllowedOrigins.forEach((n, i) => {
+          if (!util.Validation.isDomain(n)) {
+            this.$message(`来源Origin第${i}行 输入格式有误`)
+            return
+          }
+        })
+        if (!util.Validation.isNonNegativeNum(this.form.MaxAgeSeconds)) {
+          this.$message('max-age必须为非负整数')
+          return
+        }
+        let obj = {
+          AllowedOrigins: AllowedOrigins,
+          AllowedMethods: this.form.AllowedMethods,
+          AllowedHeaders: AllowedHeaders,
+          ExposeHeaders: ExposeHeaders,
+          MaxAgeSeconds: this.form.MaxAgeSeconds
+        }
+        this.$emit('submitForm', obj)
+        this.closeDialog()
       },
       closeDialog(){
+        this.form = null
+        this.form = {
+          AllowedOrigins: null,
+          AllowedMethods: [],
+          AllowedHeaders: 'accept\ncontent-type\nAllowedOrigins\nauthorization',
+          ExposeHeaders: null,
+          MaxAgeSeconds: 5
+        }
         this.$emit('update:isShow', false)
-      }
+
+      },
+
     }
 
   }

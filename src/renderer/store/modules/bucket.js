@@ -131,6 +131,19 @@ const actions = {
     })
   },
 
+  putBucketCORS ({rootGetters}, params) {
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.putBucketCors(params, function (err, data) {
+        if (err) {
+          // rootGetters.cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
+
+
   getObjectACL ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.getObjectAcl(params, function (err, data) {
