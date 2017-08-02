@@ -142,7 +142,7 @@
           user: '所有人',
           pb_limit: 'private',
           old_limit: null,
-          edit: 0  //0初始化  1编辑  2为==OwnerID   3添加用户
+          edit: 0 // 0初始化  1编辑  2为==OwnerID   3添加用户
         }],
         userData: [],
         Owner: null,
@@ -152,8 +152,7 @@
     watch: {
       'isShow': {
         handler: function (val) {
-          if (val)
-            this.renderData()
+          if (val) { this.renderData() }
         }
       }
     },
@@ -161,7 +160,7 @@
       ...mapState('menulist', ['selectFile'])
     },
     methods: {
-      renderData(){
+      renderData () {
         this.userData = []
         this.activeName = 'first'
         this.commonData[0].pb_limit = 'private'
@@ -170,7 +169,8 @@
           Region: this.options.Region || this.options.bucket.Region
         }
         if (!this.parameters.Bucket || !this.parameters.Region) return
-        let parms = this.parameters, str = 'getBucketACL'
+        let parms = this.parameters
+        let str = 'getBucketACL'
         if (this.options.type === 'files') {
           str = 'getObjectACL'
           parms.Key = this.selectFile[0].Key
@@ -198,7 +198,7 @@
       handleClick () {
 
       },
-      commonLimit (row, status) {       //公共权限修改和保存
+      commonLimit (row, status) { // 公共权限修改和保存
         if (status === 'edit') {
           row.old_limit = row.pb_limit
           row.edit = 1
@@ -221,9 +221,9 @@
             _self.$message('请输入添加的用户名!')
             return
           }
-//          this.userData.forEach(x=>{
-//            if(x.user===row){}
-//          })
+          //          this.userData.forEach(x=>{
+          //            if(x.user===row){}
+          //          })
 
           if (name.indexOf('/') > -1) {
             console.log('主帐号/子账号')
@@ -232,7 +232,7 @@
               _self.$message('帐号格式填写不正确!')
               return
             } else {
-//                _self.$message('主帐号与协作者帐号不对应!')
+              //                _self.$message('主帐号与协作者帐号不对应!')
             }
           } else {
             let reg = /^[1-9][0-9]{4,12}$/gim
@@ -243,7 +243,6 @@
           }
           if (row.checkLimit.length === 0) {
             _self.$message('请至少选择一个用户权限!')
-            return
           }
         }
 
@@ -264,11 +263,10 @@
             row.edit = 1
             break
           case 'delete':
-            //删除
+            // 删除
             let index = null
             this.userData.forEach((n, i) => {
-              if (n.user === row.user)
-                index = i
+              if (n.user === row.user) { index = i }
             })
             this.userData.splice(index, 1)
             this.submitForm()
@@ -285,12 +283,13 @@
             break
         }
       },
-      submitForm(){
-        let parms = Object.assign(this.parameters, {ACL: this.commonData[0].pb_limit}),
-          grants = [], flag = false
+      submitForm () {
+        let parms = Object.assign(this.parameters, {ACL: this.commonData[0].pb_limit})
+        let grants = []
+        let flag = false
         this.userData.forEach(n => {
           let checkID = `qcs::cam::uin/${n.user}:uin/${n.user}`
-          if (!(checkID === this.Owner.ID))
+          if (checkID !== this.Owner.ID) {
             grants.push({
               Grantee: {
                 DisplayName: `qcs::cam::uin/${n.user}:uin/${n.user}`,
@@ -298,6 +297,7 @@
               },
               Permission: n.checkLimit.toString() === ['读', '写'].toString() ? 'FULL_CONTROL' : n.checkLimit.toString() === ['读'].toString() ? 'READ' : 'WRITE'
             })
+          }
           if (n.edit === 1 || n.edit === 3) {
             flag = true
           }

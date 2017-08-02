@@ -51,7 +51,7 @@ const actions = {
   //   })
   // },
 
-  getAuth({rootGetters}, param){
+  getAuth ({rootGetters}, param) {
     return Promise.resolve(sdkUtil.getAuth(param))
   },
 
@@ -106,7 +106,7 @@ const actions = {
     })
   },
 
-  putBucketAcl({rootGetters}, params){
+  putBucketAcl ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.putBucketAcl(params, function (err, data) {
         if (err) {
@@ -119,7 +119,7 @@ const actions = {
     })
   },
 
-  getBucketCORS({rootGetters}, params){
+  getBucketCORS ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.getBucketCors(params, function (err, data) {
         if (err) {
@@ -131,19 +131,7 @@ const actions = {
     })
   },
 
-  getObjectACL ({rootGetters}, params){
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.getObjectAcl(params, function (err, data) {
-        if (err) {
-          // cos.bus.$emit('globleError', err)
-        } else {
-          resolve(data)
-        }
-      })
-    })
-  },
-
-  getObjectACL({rootGetters}, params){
+  getObjectACL ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.getObjectAcl(params, function (err, data) {
         if (err) {
@@ -156,7 +144,7 @@ const actions = {
     })
   },
 
-  putObjectACL({rootGetters}, params){
+  putObjectACL ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.putObjectAcl(params, function (err, data) {
         if (err) {
