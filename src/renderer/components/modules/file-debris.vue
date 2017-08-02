@@ -44,10 +44,12 @@
                     </el-table-column>
                     <el-table-column label="操作" fixed="right" width="90">
                         <template scope="scope">
-                            <el-button @click.native.prevent="handleRow(scope.$index)" type="text" size="small">修改
-                            </el-button>
-                            <el-button @click.native.prevent="deleteRow(scope.$index)" type="text" size="small">删除
-                            </el-button>
+                            <div  class="done">
+                                <el-button @click.native.prevent="handleRow(scope.$index)" type="text" size="small">修改
+                                </el-button>
+                                <el-button @click.native.prevent="deleteRow(scope.$index)" type="text" size="small">删除
+                                </el-button>
+                            </div>
                         </template>
                     </el-table-column>
                 </el-table>

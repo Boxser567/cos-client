@@ -221,19 +221,35 @@
   width: 95%;
   max-width: 1040px;
   top: 20px !important;
-  .el-dialog__body{
+  .el-dialog__body {
     padding: 10px 20px;
   }
-  .tl{
+  .tl {
     padding: 8px 0;
   }
-  a{
-    display: block;
-    color: $activebg2;
-    cursor: pointer;
-    &:hover{
-      text-decoration: underline;
+  .done {
+    text-align: center;
+    .el-button--text {
+      margin: 0;
     }
+  }
+}
+
+.dialog-bucket-cors-add {
+  width: 700px;
+  top: 20px !important;
+  textarea{
+    width: 270px;
+  }
+  .max-age{
+    width: 100px;
+    display: inline-block;
+  }
+  .el-form-item__label{
+    padding-right: 28px;
+  }
+  .el-dialog__body{
+    padding-bottom: 0;
   }
 }
 
