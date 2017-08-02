@@ -3,22 +3,31 @@
         <div class="el-side-tab">
             <div class="el-side-head clearfix">
                 <ul>
-                    <li :class="{'active' : t.iscur}" @click="tabFn(t)" v-for="t in tabList">{{t.name}}</li>
+                    <li :class="{'active' : tabList[0].iscur}" @click="tabFn(0)">
+                        {{ tabList[0].name }} {{ uploadCount }}
+                    </li>
+                    <li :class="{'active' : tabList[1].iscur}" @click="tabFn(1)">
+                        {{ tabList[1].name }} {{ downloadCount }}
+                    </li>
+                    <li :class="{'active' : tabList[2].iscur}" @click="tabFn(2)">
+                        {{ tabList[2].name }}
+                    </li>
                 </ul>
-                <div class="el-speed">
-                    <p> 上传速度: <span>{{uploadSpeed | bitSpeed}} </span></p>
-                    <p> 下载速度: <span>{{downloadSpeed | bitSpeed}} </span></p>
 
+                <div class="el-speed">
+                    <p> 上传速度: <span>{{uploadSpeed | bitSpeed}}</span></p>
+                    <p> 下载速度: <span>{{downloadSpeed | bitSpeed}}</span></p>
                 </div>
             </div>
+
             <div class="el-side-content">
                 <div class="first" v-show=" tabList[0].iscur ">
-                    <progress-list :list="uploadList" :type="'upload'" @speed="val => { uploadSpeed = val }"
-                                   @complete="oncomplete"></progress-list>
+                    <progress-list :list="uploadList" :type="'upload'"
+                                   @speed="val => uploadSpeed = val"></progress-list>
                 </div>
                 <div class="second" v-show=" tabList[1].iscur ">
                     <progress-list :list="downloadList" :type="'download'"
-                                   @speed="val => { downloadSpeed = val }" @complete="oncomplete"></progress-list>
+                                   @speed="val => downloadSpeed = val"></progress-list>
                 </div>
                 <div class="third" v-show=" tabList[2].iscur ">
                     <div class="title-bar">
@@ -68,15 +77,28 @@
     computed: {
       config () {
         return this.$store.state.config
+      },
+      uploadCount () {
+        if (!this.uploadList.length) return ''
+        let c = 0
+        for (let item of this.uploadList) {
+          if (item.status === 'complete') c++
+        }
+        return `(${c}/${this.uploadList.length})`
+      },
+      downloadCount () {
+        if (!this.downloadList.length) return ''
+        let c = 0
+        for (let item of this.downloadList) {
+          if (item.status === 'complete') c++
+        }
+        return `(${c}/${this.downloadList.length})`
       }
     },
     methods: {
-      tabFn (item) {
+      tabFn (index) {
         this.tabList.forEach(tab => { tab.iscur = false })
-        item.iscur = true
-      },
-      oncomplete (v) {
-        console.log(v)
+        this.tabList[index].iscur = true
       },
       openLog(){
         console.log('this.$store.state.config', this.$store.state.config)

@@ -645,9 +645,15 @@ function DownloadTask (cos, name, params, option = {}) {
 
 DownloadTask.prototype.start = function () {
   this.cancel = false
-  try {
-    fs.mkdirSync(path.dirname(this.file.fileName))
-  } catch (e) {}
+  let {dir, root} = path.parse(this.file.fileName)
+  dir.split(path.sep).reduce((parentDir, childDir) => {
+    const curDir = path.resolve(parentDir, childDir)
+    if (!fs.existsSync(curDir)) {
+      fs.mkdirSync(curDir)
+    }
+    return curDir
+  }, root)
+
   this.params.Output = fs.createWriteStream(this.file.fileName + '.tmp')
 
   let time0 = Date.now()

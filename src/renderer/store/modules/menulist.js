@@ -86,7 +86,6 @@ const mutations = {
     state.fileloading = val.loading
   },
 
-
   selectFile (state, val) { // 选择文件
     if (!state.filelist) return
 
@@ -232,49 +231,35 @@ const mutations = {
     state.copyFiles.list = state.selectFile
   },
 
-  copyFilesNone(state){
+  copyFilesNone (state) {
     state.copyFiles.src = null
     state.copyFiles.list = []
   }
 }
 
 const actions = {
-  getFileList ({commit}, params) {
-    return new Promise((resolve, reject) => {
-      commit('fileloading', {loading: true})
-      ipcRenderer.send('ListObject', params)
-
-      ipcRenderer.once('ListObject-data', function (event, data) {
-        if (params.Page) {
-          data.keywords = params.Keywords
-          commit('searchFileList', data)
-        } else {
-          commit('getFileList', data)
-        }
-        resolve(data)
-        commit('fileloading', {loading: false})
-
-      })
-    })
-  },
-
-  deleteFile ({commit, dispatch, state}, params) {
-    if (state.selectFile.length < 1) return Promise.resolve()
-    params.Dirs = []
-    params.Keys = []
-    state.selectFile.forEach(n => {
-      if (n.dir) {
-        params.Dirs.push(n.Prefix)
+  async getFileList ({commit, rootGetters}, params) {
+    commit('fileloading', {loading: true})
+    let data
+    try {
+      data = await listDir(rootGetters.cos, params)
+      if (params.Page) {
+        data.keywords = params.Keywords
+        commit('searchFileList', data)
       } else {
-        params.Keys.push(n.Key)
+        commit('getFileList', data)
       }
-    })
-    return dispatch('deleteObjects', params, {root: true})
+    } catch (e) {
+      console.error(e)
+    }
+    commit('fileloading', {loading: false})
+    return data
   },
 
-  pasteFiles ({commit, dispatch, state}, params) {
+  pasteFiles ({dispatch, state}, params) {
     if (state.copyFiles.list.length < 1) return Promise.resolve()
     let parms = {
+      src: state.copyFiles.src,
       dst: {
         Bucket: params.Bucket,
         Region: params.Region,
@@ -283,7 +268,6 @@ const actions = {
       Dirs: [],
       Keys: []
     }
-    parms.src = state.copyFiles.src
     state.copyFiles.list.forEach(n => {
       if (n.dir) {
         parms.Dirs.push(n.Prefix)
@@ -293,6 +277,33 @@ const actions = {
     })
     return dispatch('copyObjects', parms, {root: true})
   }
+}
+
+async function listDir (cos, params) {
+  let dirs = []
+  let objects = []
+  params.Delimiter = '/'
+  let result
+  let pflen = params.Prefix ? params.Prefix.length : 0
+
+  do {
+    result = await new Promise((resolve, reject) => {
+      cos.getBucket(params, (err, result) => { err ? reject(err) : resolve(result) })
+    })
+
+    result.CommonPrefixes.forEach(v => {
+      if (v.Prefix !== params.Prefix) {
+        dirs.push({
+          Name: v.Prefix.slice(pflen, -1),
+          Prefix: v.Prefix
+        })
+      }
+    })
+    result.Contents.forEach(v => objects.push(Object.assign({Name: v.Key.slice(pflen)}, v)))
+
+    params.Marker = result.NextMarker
+  } while (result.IsTruncated === 'true')
+  return {dirs, objects}
 }
 
 export default {

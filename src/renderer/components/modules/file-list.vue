@@ -5,13 +5,14 @@
             <div class="size">大小</div>
             <div class="time">更新时间</div>
         </div>
-        <div class="list-info" id="menuinfo" @click="fileContentClick($event)" @contextmenu="openFileMenu($event)">
+        <div class="list-info" id="menuinfo" @click.self="fileContentClick()" @contextmenu.self="openMenu()">
 
             <div class="loading" v-if="fileloading">
                 <i class="el-icon-loading"></i>
             </div>
 
-            <div class="file-none" v-if="filelist && filelist.length==0 && !newFolder && !fileloading">
+            <div class="file-none" v-if="filelist && filelist.length==0 && !newFolder && !fileloading"
+                 @contextmenu="openMenu()">
                 <span>没有文件</span>
             </div>
 
@@ -29,27 +30,19 @@
             </div>
 
             <div class="list file-list-info" v-if="filelist.length" :class="{ active:f.active }"
-                 v-for="(f,$index) in filelist"
-                 @click="itemSelect($event,$index, f)"
-                 @dblclick="goFolder($event,f)"
-                 :index="$index"
+                 v-for="(f, $index) in filelist"
+                 @click="itemSelect($event, $index, f)"
+                 @dblclick="goFolder(f)"
+                 @contextmenu="openMenu(f, $index)"
                  :key="f.Name">
                 <div class="name">
                     <img :src="f | getFileImg" alt="">
                     <p>{{ f.Name }}</p>
                 </div>
-                <div class="size">{{f.Size | bitSize}}</div>
+                <div class="size">{{ f.Size | bitSize }}</div>
                 <div class="time">{{ f.LastModified | getDate }}</div>
             </div>
         </div>
-
-
-        <!--文件右键列表信息-->
-        <ul id="bucket-menu-list" tabindex="-1" v-show="isShowList" ref="fileRight"
-            :style="{top:menu.top,left:menu.left}">
-            <li v-for="f in menu.list" @click="rightClickFn(f.key)"> {{ f.name }}</li>
-        </ul>
-
     </div>
 </template>
 
@@ -83,44 +76,17 @@
     computed: {
       ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles'])
     },
+
     created () {
       this.fetchData()
       let vue = this
-      menu.append(new MenuItem({label: '上传文件', click () { vue.rightClickFn('upload_file') }}))
-      menu.append(new MenuItem({label: '创建文件夹', click () { vue.rightClickFn('new_folder') }}))
-      menu.append(new MenuItem({label: '下载', click () { vue.rightClickFn('download_file') }}))
-      menu.append(new MenuItem({label: '复制', click () { vue.rightClickFn('copy_file') }}))
-      menu.append(new MenuItem({label: '删除', click () { vue.rightClickFn('delete_file') }}))
-      menu.append(new MenuItem({label: '获取地址', click () { vue.rightClickFn('get_address') }}))
-      menu.append(new MenuItem({label: '设置HTTP头', click () { vue.rightClickFn('set_http') }}))
-      menu.append(new MenuItem({label: '设置权限', click () { vue.rightClickFn('set_limit') }}))
-      menu.append(new MenuItem({label: '粘贴', click () { vue.rightClickFn('paste_file') }}))
-      menu.append(new MenuItem({label: '下载当前目录', click () { vue.rightClickFn('download_list') }}))
+      for (let item of this.fileRightList) {
+        menu.append(new MenuItem({label: item.name, click () { vue.rightClickFn(item.key) }}))
+      }
     },
 
     watch: {
-      $route: 'fetchData',
-      copyFiles: {
-        handler: function (val) {
-          let exst = this.menu.files.indexOf('paste_file') > -1
-          if (val && val.list.length) {
-            if (!exst) {
-              this.menu.files.push('paste_file')
-              this.menu.folders.push('paste_file')
-              this.menu.blanks.push('paste_file')
-              this.menu.groupFile.push('paste_file')
-            }
-          } else {
-            if (exst) {
-              this.menu.files.splice(this.menu.files.length - 1, 1)
-              this.menu.folders.splice(this.menu.folders.length - 1, 1)
-              this.menu.blanks.splice(this.menu.blanks.length - 1, 1)
-              this.menu.groupFile.splice(this.menu.groupFile.length - 1, 1)
-            }
-          }
-        },
-        deep: true
-      }
+      $route: 'fetchData'
     },
 
     methods: {
@@ -149,7 +115,6 @@
         }
         this.$store.dispatch('menulist/getFileList', params).then(() => { })
       },
-
       // 文件选择
       itemSelect (e, index, file) {
         this.$store.commit('menulist/selectFile', {
@@ -158,15 +123,12 @@
           index: index
         })
       },
-
       // 文件空白处单击
-      fileContentClick (e) {
-        if (e.target.classList.contains('list-info')) {
-          this.$store.commit('menulist/unSelectFile')
-        }
+      fileContentClick () {
+        this.$store.commit('menulist/unSelectFile')
       },
       // 双击文件夹
-      goFolder (e, file) {
+      goFolder (file) {
         if (!file.dir) return
         this.options.folders = file.Prefix
         this.options.keyWord = null
@@ -179,103 +141,48 @@
           }
         })
       },
-
       // 创建并显示右键菜单
-      openFileMenu (e) {
-        let currentDom = e.target
-
-        if (currentDom.classList.contains('list-info') || currentDom.classList.contains('file-none')) { // 右键空白
+      openMenu (cfile, index) {
+        if (!cfile) {
           this.$store.commit('menulist/unSelectFile')
-          this.menu.list = this.fileRightList.filter((m) => {
-            if (this.menu.blanks.includes(m.key)) {
-              return m
-            }
-          })
-        } else {
-          let cfile = null
-          let index = null
-          for (let i = 0; i < 5; i++) {
-            if (currentDom.classList.contains('file-list-info')) {
-              index = currentDom.getAttribute('index')
-              if (index !== undefined) {
-                cfile = this.filelist[index]
-              }
-              break
-            }
-            currentDom = currentDom.parentNode
-          }
-
-          if (this.selectFile && this.selectFile.length > 1) {
-            if (!(cfile && index)) return
-            let temper = this.selectFile.some(x => x.Name === cfile.Name)
-            if (temper) { // 右键选中多个文件
-              let array = this.selectFile.map(n => !!n.dir)
-
-              if (array.includes(false) && (!array.includes(true))) {
-                this.menu.list = this.fileRightList.filter((m) => {
-                  if (this.menu.groupFile.includes(m.key)) {
-                    return m
-                  }
-                })
-              } else {
-                this.menu.list = this.fileRightList.filter((m) => {
-                  if (this.menu.folders.includes(m.key) && m.key !== 'set_limit') {
-                    return m
-                  }
-                })
-              }
-            } else {
-              this.$store.commit('menulist/unSelectFile')
-              this.$store.commit('menulist/selectFile', {file: cfile, index: index})
-
-              if (cfile.dir) {
-                this.menu.list = this.fileRightList.filter((m) => {
-                  if (this.menu.folders.includes(m.key)) {
-                    return m
-                  }
-                })
-              } else {
-                this.menu.list = this.fileRightList.filter((m) => {
-                  if (this.menu.files.includes(m.key)) {
-                    return m
-                  }
-                })
-              }
-            }
-          } else {
-            if (cfile && index) {
-              this.$store.commit('menulist/unSelectFile')
-              this.$store.commit('menulist/selectFile', {file: cfile, index: index})
-
-              if (cfile.dir) {
-                this.menu.list = this.fileRightList.filter((m) => {
-                  if (this.menu.folders.includes(m.key)) {
-                    return m
-                  }
-                })
-              } else {
-                this.menu.list = this.fileRightList.filter((m) => {
-                  if (this.menu.files.includes(m.key)) {
-                    return m
-                  }
-                })
-              }
-            }
-          }
+          this.popMenu('blanks')
+          return
         }
-        menu.items.forEach(item => {
-          item.visible = this.menu.list.some(t => t.name === item.label)
-        })
+
+        if (this.selectFile &&
+          this.selectFile.length > 1 &&
+          this.selectFile.some(x => x.Name === cfile.Name)) {
+          // 右键选中多个文件
+          let array = this.selectFile.map(n => !!n.dir)
+
+          if (array.includes(false) && (!array.includes(true))) {
+            this.popMenu('groupFile')
+            return
+          }
+          this.popMenu('folders')
+          return
+        }
+
+        this.$store.commit('menulist/unSelectFile')
+        this.$store.commit('menulist/selectFile', {file: cfile, index: index})
+
+        if (cfile.dir) {
+          this.popMenu('folders')
+          return
+        }
+        this.popMenu('files')
+      },
+
+      popMenu (type) {
+        for (let m of this.fileRightList) {
+          if (m.key === 'paste_file') {
+            menu.items[m.index - 1].visible = !!this.copyFiles.list.length
+            continue
+          }
+          menu.items[m.index - 1].visible = this.menu[type].includes(m.key)
+        }
         menu.popup(remote.getCurrentWindow(), {async: true})
-        e.preventDefault()
       },
-
-      // 关闭右键菜单
-      closeFileMenu () {
-        this.isShowList = false
-        document.removeEventListener('click', this.closeFileMenu)
-      },
-
       // 右键菜单点击事件
       rightClickFn (item) {
         if (!item) return
