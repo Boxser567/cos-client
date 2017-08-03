@@ -11,8 +11,7 @@
             <el-tab-pane label="公共权限" name="first">
                 <el-table
                         :data="commonData"
-                        border
-                        style="width: 100%">
+                        border>
                     <el-table-column
                             label="用户组"
                             width="180">
@@ -21,6 +20,7 @@
                         </template>
                     </el-table-column>
                     <el-table-column
+                            width="299"
                             label="权限">
                         <template scope="scope">
                             <div v-if="scope.row.edit===1">
@@ -62,10 +62,7 @@
             </el-tab-pane>
 
             <el-tab-pane label="用户权限" name="second">
-                <el-table
-                        :data="userData"
-                        border
-                        style="width: 100%; display: block;">
+                <el-table :data="userData" border style="width: 100%; display: block;">
                     <el-table-column
                             label="用户"
                             width="180">

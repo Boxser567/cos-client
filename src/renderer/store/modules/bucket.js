@@ -143,6 +143,17 @@ const actions = {
       })
     })
   },
+  deleteBucketCORS({rootGetters}, params) {
+    return new Promise((resolve, reject) => {
+      rootGetters.cos.deleteBucketCors(params, function (err, data) {
+        if (err) {
+          // rootGetters.cos.bus.$emit('globleError', err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  },
 
 
   getObjectACL ({rootGetters}, params) {

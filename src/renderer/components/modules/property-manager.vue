@@ -8,7 +8,7 @@
         </el-row>
         <el-row>
             <el-col :span="8">所属地域:</el-col>
-            <el-col :span="16">{{currentBucket.Region}}</el-col>
+            <el-col :span="16">{{currentBucket.Region | getArea}} ({{currentBucket.Region}})</el-col>
         </el-row>
         <el-row>
             <el-col :span="8">创建时间:</el-col>

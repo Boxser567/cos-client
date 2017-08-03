@@ -53,7 +53,7 @@
                                    :disabled="eableBtn1()">设置HTTP头
                         </el-button>
                     </div>
-                    <span class="area">{{ options.region | getArea}}</span>
+                    <span class="area">{{ options.Region | getArea }}</span>
                 </div>
             </div>
         </div>

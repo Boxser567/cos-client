@@ -71,6 +71,18 @@ Util.String = {
     })
     return text
   },
+  setArray: function (arr) {
+    if (arr.constructor !== Array) return ''
+    let str = ''
+    arr.forEach((n, i) => {
+      if (arr.length - 1 === i) {
+        str += n
+      } else {
+        str += n + '\n'
+      }
+    })
+    return str
+  },
 
   getExt: function (filename) {
     filename = String(filename)
@@ -147,7 +159,7 @@ Util.RegExp = {
   PhoneNumber: /^((0\d{2,3})-)?(\d{7,8})(-(\d{3,}))?$|^(13|15|18)[0-9]{9}$/,
   MobileNumber: /^(0|86|17951)?1\d{10}$/,
   QQ: /^\d{1,10}$/,
-  DOMAIN:/^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$/,
+  DOMAIN: /^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$/,
   Date: /^((?!0000)[0-9]{4}-((0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])|(0[13-9]|1[0-2])-(29|30)|(0[13578]|1[02])-31)|([0-9]{2}(0[48]|[2468][048]|[13579][26])|(0[48]|[2468][048]|[13579][26])00)-02-29)$/,
   HTTPStrict: /((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?|www+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)/gi,
   POUND_TOPIC: /^#([^\/|\\|\:|\*|\?|\"|<|>|\|]+?)#/,
@@ -183,7 +195,7 @@ Util.Validation = {
   isQQNum: function (str) {
     return Util.RegExp.QQ.test(str)
   },
-  isDomain:function (str) {
+  isDomain: function (str) {
     return Util.RegExp.DOMAIN.test(str)
   },
   isDate: function (str) {

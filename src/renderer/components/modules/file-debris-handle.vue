@@ -5,7 +5,7 @@
                :visible.sync="isShow"
                :before-close="closeDialog">
 
-        <el-form label-width="160px">
+        <el-form label-width="180px">
             <el-form-item label="*  来源 AllowedOrigins">
                 <el-input
                         type="textarea"
@@ -74,10 +74,13 @@
           MaxAgeSeconds: 5
         }
       }
-
     },
-    created () {
-
+    watch: {
+      'openMode': {
+        handler: function (val) {
+          if (val && val.type === 'edit') this.editRender()
+        }
+      }
     },
     computed: {
       disableBtn(){
@@ -87,32 +90,51 @@
       }
     },
     methods: {
+      editRender(){
+        if (this.openMode.type === 'edit') {
+          let dataObj = this.openMode.data[0], myObj = {}
+          for (let key in dataObj) {
+            if (['AllowedHeaders', 'AllowedOrigins', 'ExposeHeaders'].indexOf(key) > -1) {
+              let j = [].concat(dataObj[key])
+              myObj[key] = j.join('\n')
+            } else {
+              myObj[key] = dataObj[key]
+            }
+          }
+          this.form = myObj
+        }
+      },
       submit () {
-        let AllowedOrigins = util.String.getArray(this.form.AllowedOrigins)
-        let AllowedHeaders = util.String.getArray(this.form.AllowedHeaders)
-        let ExposeHeaders = util.String.getArray(this.form.ExposeHeaders)
+        let AllowedOrigins = util.String.getArray(this.form.AllowedOrigins),
+          AllowedHeaders = util.String.getArray(this.form.AllowedHeaders),
+          ExposeHeaders = util.String.getArray(this.form.ExposeHeaders),
+          flag = null
         AllowedOrigins.forEach((n, i) => {
           if (!util.Validation.isDomain(n)) {
             this.$message(`来源Origin第${i}行 输入格式有误`)
-            return
+            flag = true
           }
         })
+        if (flag) return
         if (!util.Validation.isNonNegativeNum(this.form.MaxAgeSeconds)) {
           this.$message('max-age必须为非负整数')
-          return
+          return false
         }
         let obj = {
-          AllowedOrigins: AllowedOrigins,
-          AllowedMethods: this.form.AllowedMethods,
-          AllowedHeaders: AllowedHeaders,
-          ExposeHeaders: ExposeHeaders,
-          MaxAgeSeconds: this.form.MaxAgeSeconds
+          type: this.openMode.type,
+          index: this.openMode.index,
+          data: {
+            AllowedOrigins: AllowedOrigins,
+            AllowedMethods: this.form.AllowedMethods,
+            AllowedHeaders: AllowedHeaders,
+            ExposeHeaders: ExposeHeaders,
+            MaxAgeSeconds: this.form.MaxAgeSeconds
+          }
         }
         this.$emit('submitForm', obj)
         this.closeDialog()
       },
       closeDialog () {
-        this.form = null
         this.form = {
           AllowedOrigins: null,
           AllowedMethods: [],
@@ -120,8 +142,8 @@
           ExposeHeaders: null,
           MaxAgeSeconds: 5
         }
+        this.$emit('submitForm')
         this.$emit('update:isShow', false)
-
       },
 
     }

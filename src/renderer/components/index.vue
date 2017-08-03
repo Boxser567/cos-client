@@ -28,7 +28,7 @@
 
             <div class="loading" v-if="bloading"><i class="el-icon-loading"></i></div>
 
-            <div class="load-progress" @click="openProgressWindow"> 查看进程
+            <div class="load-progress" @click="openProgressWindow"> 传输队列
                 {{ run.upload || run.download ? 'run' : 'stop' }}
             </div>
 
