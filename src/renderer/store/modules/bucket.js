@@ -26,12 +26,8 @@ const mutations = {
 
   bucketActive (state, bucketName) {
     for (let key in state.bucketList) {
-      state.bucketList[key].forEach(x => {
-        if (x.Name === bucketName) {
-          x.active = true
-        } else {
-          x.active = false
-        }
+      state.bucketList[key].forEach(b => {
+        b.active = b.Name === bucketName
       })
     }
   }
@@ -155,7 +151,6 @@ const actions = {
     })
   },
 
-
   getObjectACL ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.getObjectAcl(params, function (err, data) {
@@ -191,7 +186,6 @@ const actions = {
           reject(err)
         } else {
           resolve(data)
-          dispatch('menulist/getFileList', params, {root: true})
         }
       })
     })

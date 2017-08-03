@@ -30,7 +30,7 @@ const router = new Router({
               component: require('@/components/container/container')
             },
             {
-              path: '/file/:bucket',
+              path: '/file/:Bucket',
               name: 'filepage',
               component: require('@/components/modules/file')
             }

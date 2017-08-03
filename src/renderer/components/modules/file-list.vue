@@ -90,7 +90,8 @@
           Region: this.options.Region,
           Key: this.options.Prefix + this.folderName + '/'
         }
-        this.$store.dispatch('bucket/putObject', parms).then(() => {
+        this.$store.dispatch('menulist/mkDir', parms).then(() => {
+          this.$store.dispatch('menulist/getFileList')
           this.$store.commit('menulist/newFolder', false)
           this.folderName = '新建文件夹'
         })
@@ -113,9 +114,9 @@
         this.$router.push({
           path: '/file/' + this.options.Bucket,
           query: {
-            Bucket: this.options.Bucket,
             Region: this.options.Region,
-            Prefix: file.Prefix
+            Prefix: file.Prefix,
+            keyWord: ''
           }
         })
       },
@@ -127,10 +128,10 @@
           return
         }
 
+        // 右键选中多个文件
         if (this.selectFile &&
           this.selectFile.length > 1 &&
           this.selectFile.some(x => x.Name === cfile.Name)) {
-          // 右键选中多个文件
           let array = this.selectFile.map(n => !!n.dir)
 
           if (array.includes(false) && (!array.includes(true))) {
@@ -141,7 +142,6 @@
           return
         }
 
-        this.$store.commit('menulist/unSelectFile')
         this.$store.commit('menulist/selectFile', {file: cfile, index: index})
 
         if (cfile.dir) {
