@@ -133,7 +133,6 @@
       selectBucket (b) {
         this.selectBT = b.Name
         this.$store.commit('bucket/bucketActive', b.Name)
-        this.$store.commit('menulist/unSelectFile')
         this.$router.push({
           path: '/file/' + b.Name,
           query: {

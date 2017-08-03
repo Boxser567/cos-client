@@ -144,7 +144,6 @@ const actions = {
     })
   },
 
-
   getObjectACL ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.getObjectAcl(params, function (err, data) {
@@ -180,7 +179,6 @@ const actions = {
           reject(err)
         } else {
           resolve(data)
-          dispatch('menulist/getFileList', params, {root: true})
         }
       })
     })

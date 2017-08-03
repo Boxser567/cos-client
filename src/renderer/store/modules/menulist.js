@@ -92,108 +92,83 @@ const mutations = {
     state.options = val
   },
 
-  fileloading (state, val) { // 文件加载
+  fileloading (state, val) {
     state.fileloading = val.loading
   },
-
-  selectFile (state, val) { // 选择文件
-    if (!state.filelist) return
-
-    if (val.key) { // 判断shiftkey
-      if (state.selectFile && state.selectFile.length > 1) {
-        // 取最后一个的索引 和本次选择的索引组合
-      } else if (state.selectFile && state.selectFile.length === 1) {
-        let selectID = state.filelist.findIndex((n) => n.Name === state.selectFile[0].Name)
-        let thisArr = [selectID, val.index]
-        if (selectID === val.index) return
-        if (selectID > val.index) {
-          thisArr.reverse()
-        }
-        state.selectFile = []
-        for (let i = thisArr[0]; i <= thisArr[1]; i++) {
+  // 选择文件
+  selectFile (state, val) {
+    if (!val.key) {
+      state.filelist.forEach((n, i) => {
+        n.active = val.index === i
+      })
+      state.selectFile = [val.file]
+    }
+    if (state.selectFile.length === 0) {
+      let arr = []
+      for (let i = 0; i <= val.index; i++) {
+        state.filelist[i].active = true
+        arr.push(state.filelist[i])
+      }
+      state.selectFile = arr
+      return
+    }
+    for (let i = 0; ; i++) {
+      if (i === val.index && !state.filelist[i].active) {
+        let arr = []
+        for (; !state.filelist[i].active; i++) {
           state.filelist[i].active = true
-          state.selectFile.push(state.filelist[i])
+          arr.push(state.filelist[i])
         }
-        state.filelist.push()
-      } else {
-        state.filelist.forEach(function (item, index) {
-          if (index <= val.index) {
-            item.active = true
-            state.selectFile.push(item)
-          }
-        })
+        state.selectFile = arr.concat(state.selectFile)
+        return
       }
-    } else {
-      let chooseArr = []
-      if (state.selectFile && state.selectFile.length) {
-        state.selectFile.forEach((s) => {
-          chooseArr.push(s.Name)
-        })
-        state.filelist.forEach((n) => {
-          if (chooseArr.indexOf(n.Name) > -1) {
-            n.active = false
-          }
-        })
+      if (state.filelist[i].active) {
+        let arr = []
+        for (; i <= val.index; i++) {
+          state.filelist[i].active = true
+          arr.push(state.filelist[i])
+        }
+        state.selectFile = arr
+        for (; i < state.filelist.length; i++) {
+          state.filelist[i].active = false
+        }
+        return
       }
-      state.filelist[val.index].active = true
-      state.selectFile = []
-      state.selectFile.push(val.file)
     }
   },
 
   unSelectFile (state) { // 取消选中文件
-    if (!state.selectFile) return
-    if (state.selectFile.length === 0 || state.filelist.length === 0) return
-    state.selectFile.forEach(function (item) {
-      let x = state.filelist.findIndex(n => n.Name === item.Name)
-      if (state.filelist[x]) {
-        state.filelist[x].active = false
-        // Vue.set(state.filelist[x], 'active', false)
-      }
+    state.filelist && state.filelist.forEach(f => {
+      f.active = false
     })
     state.selectFile = []
   },
-
-  getFileList (state, data) { // 获取当前文件列表
-    // console.log('当前文件列表', data)
-    let index = null
-    if (data.objects.length) {
-      data.objects.forEach(function (item, idx) {
-        if (item.Name === '') index = idx
-        item.active = false
-      })
-    }
-    if (data.dirs.length) {
-      data.dirs.forEach(function (d) {
-        d.active = false
-        d.dir = true
-      })
-    }
-    if (index !== null) data.objects.splice(index, 1)
-    state.filelist = data.objects.concat(data.dirs)
+  // 获取当前文件列表
+  getFileList (state, data) {
+    let list = []
+    data.dirs.forEach(d => {
+      d.active = false
+      d.dir = true
+      list.push(d)
+    })
+    data.objects.forEach(obj => {
+      if (obj.Name) {
+        obj.active = false
+        list.push(obj)
+      }
+    })
+    state.filelist = list
+    state.selectFile = []
   },
 
   searchFileList (state, data) { // 搜索文件
-    let index = null
-    if (data.objects.length) {
-      data.objects.forEach(function (item, idx) {
-        if (item.Name === '') index = idx
-        item.active = false
-      })
-    }
-    if (data.dirs.length) {
-      data.dirs.forEach(function (d) {
-        d.active = false
-        d.dir = true
-      })
-    }
-    if (index !== null) data.objects.splice(index, 1)
-    let Arr = data.objects.concat(data.dirs)
-    state.filelist = Arr.filter((n) => {
-      if (n.Name.indexOf(data.keywords) > -1) {
-        return n
+    state.filelist = data.objects.filter(obj => {
+      if (obj && obj.Name.indexOf(data.keywords) > -1) {
+        obj.active = false
+        return obj
       }
     })
+    state.selectFile = []
   },
 
   newFolder (state, val) {
@@ -214,20 +189,30 @@ const mutations = {
 const actions = {
   async getFileList ({commit, rootGetters}, params) {
     commit('fileloading', {loading: true})
-    let data
     try {
-      data = await listDir(rootGetters.cos, params)
       if (params.Page) {
-        data.keywords = params.Keywords
-        commit('searchFileList', data)
+        let objects = await searchDir(rootGetters.cos, params)
+        commit('searchFileList', {
+          objects,
+          keywords: params.Keywords
+        })
       } else {
+        let data = await listDir(rootGetters.cos, params)
         commit('getFileList', data)
       }
     } catch (e) {
       console.error(e)
     }
     commit('fileloading', {loading: false})
-    return data
+  },
+
+  mkDir ({rootGetters}, params) {
+    return new Promise((resolve, reject) => {
+      params.Body = Buffer.from('')
+      rootGetters.cos.putObject(params, function (err, data) {
+        err ? reject(err) : resolve(data)
+      })
+    })
   },
 
   uploadFile ({state}) {
@@ -309,6 +294,27 @@ async function listDir (cos, params) {
     params.Marker = result.NextMarker
   } while (result.IsTruncated === 'true')
   return {dirs, objects}
+}
+
+async function searchDir (cos, params) {
+  let objects = []
+  let result
+  let pflen = params.Prefix ? params.Prefix.length : 0
+
+  do {
+    result = await new Promise((resolve, reject) => {
+      cos.getBucket(params, (err, result) => { err ? reject(err) : resolve(result) })
+    })
+
+    result.Contents.forEach(v => {
+      if (v.Key.substr(-1) !== '/') {
+        objects.push(Object.assign({Name: v.Key.slice(pflen)}, v))
+      }
+    })
+
+    params.Marker = result.NextMarker
+  } while (result.IsTruncated === 'true')
+  return objects
 }
 
 export default {
