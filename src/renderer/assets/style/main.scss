@@ -61,9 +61,9 @@
     position: relative;
     .history {
       padding-left: 20px;
-      width: 50px;
+      width: 40px;
       display: inline-block;
-      margin-top: 14px;
+      margin-top: 9px;
       i {
         color: #20a0ff;
         padding: 4px 4px;
@@ -73,11 +73,17 @@
           border-left: 1px solid #fff;
         }
       }
+      .back {
+        display: inline-block;
+        width: 21px;
+        height: 21px;
+        background: url("../../static/images/icon_back.png") no-repeat center center;
+      }
     }
     .nav-bar {
       position: absolute;
       top: 12px;
-      left: 70px;
+      left: 60px;
       right: 20px;
       bottom: 10px;
       border: 1px solid #e8e8e8;
@@ -254,6 +260,9 @@
       height: 32px;
       line-height: 32px;
       color: $fontColor;
+      &:nth-child(odd) {
+        background: #f8f8f8;
+      }
       &.active {
         background: $fileActive !important;
       }
@@ -336,13 +345,15 @@
       margin: 2px 0px;
       cursor: pointer;
       color: #5b6678;
-      border-bottom: 2px solid $rightSidebarBgColor;
       text-align: center;
       font-size: 13px;
+      &:hover{
+        background: $hoverbg;
+      }
       &.active {
         z-index: 5;
-        color: #2277da;
-        border-bottom: 2px solid #2277da;
+        color: #fff;
+        background: $activebg;
       }
     }
     .el-speed {

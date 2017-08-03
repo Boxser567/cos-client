@@ -1,19 +1,17 @@
 /*
 Error: Invalid US-ASCII character "\xE5"
-        on line 3 of vars.scss
+        on line 1 of vars.scss
         from line 1 of globals.scss
 
-1: 
-2: 
-3: //左侧背景色
-4: $leftSidebarBgColor: #f0f6f6;
-5: 
-6: //右侧背景色
-7: $rightSidebarBgColor: #f6f8fa;
-8: 
+1: //左侧背景色
+2: $leftSidebarBgColor: #f0f6f6;
+3: 
+4: //右侧背景色
+5: $rightSidebarBgColor: #f6f8fa;
+6: 
 
 Backtrace:
-vars.scss:3
+vars.scss:1
 globals.scss:1
 /Library/Ruby/Gems/2.0.0/gems/sass-3.4.22/lib/sass/util.rb:1300:in `rescue in block in find_encoding_error'
 /Library/Ruby/Gems/2.0.0/gems/sass-3.4.22/lib/sass/util.rb:1297:in `block in find_encoding_error'
@@ -66,4 +64,4 @@ globals.scss:1
 body:before {
   white-space: pre;
   font-family: monospace;
-  content: "Error: Invalid US-ASCII character \"\xE5\"\A         on line 3 of vars.scss\A         from line 1 of globals.scss\A \A 1: \A 2: \A 3: //左侧背景色\A 4: $leftSidebarBgColor: #f0f6f6;\A 5: \A 6: //右侧背景色\A 7: $rightSidebarBgColor: #f6f8fa;\A 8: "; }
+  content: "Error: Invalid US-ASCII character \"\xE5\"\A         on line 1 of vars.scss\A         from line 1 of globals.scss\A \A 1: //左侧背景色\A 2: $leftSidebarBgColor: #f0f6f6;\A 3: \A 4: //右侧背景色\A 5: $rightSidebarBgColor: #f6f8fa;\A 6: "; }

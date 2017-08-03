@@ -58,13 +58,16 @@
         }
       })
       this.$store.getters.bus.$on('globleError', (resp) => {
-        if (resp) {
-          let error = resp.error
-          this.$notify.error({
-            title: 'Error',
-            message: `无法${error.src}，因为${error.message}`
-          })
+        if (!resp) return
+        let errorMsg = resp.error
+        if (resp.statusCode) {
+          errorMsg = resp.error.Message
         }
+        this.$notify.error({
+          title: 'Error',
+          message: errorMsg
+        })
+
       })
     },
     data () {

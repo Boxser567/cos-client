@@ -3,25 +3,27 @@
         <div class="head">
             <div class="top-row">
                 <div class="history">
-                    <i class="el-icon-arrow-left" @click="goForward"></i>
-                    <i class="el-icon-arrow-right" @click="backForward"></i>
+                    <i class="back" @click="goForward"></i>
+                    <!--<i class="el-icon-arrow-left" @click="goForward"></i>-->
+                    <!--<i class="el-icon-arrow-right" @click="backForward"></i>-->
                 </div>
 
-                <div class="nav-bar">
+                <div class="nav-bar" @click="iptFocus($event)">
                     <div class="nav">
-                        <ul v-show="!inputFocus">
+                        <ul v-show="!keyWord && !inputFocus">
                             <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
                         </ul>
 
-                        <div class="search-inbar" v-show="inputFocus">
+                        <div class="search-inbar" v-show="keyWord || inputFocus">
                             在<span>{{currentFolder}}</span>中搜索
                         </div>
                     </div>
 
-                    <input type="text" v-model="keyWord" @focus="inputFocus = true" @blur="inputFocus = false"
+                    <input type="text" id="iptSearch" v-model="keyWord" @focus="inputFocus = true"
+                           @blur="inputFocus = false"
                            @keyup.enter="searchFn">
-                    <i class="el-icon-close" v-show="keyWord" @click="searchCancelFn"></i>
-                    <i class="el-icon-search" v-show="!keyWord" @click="searchFn"></i>
+                    <i class="el-icon-close" v-show="keyWord" @click.stop="searchCancelFn"></i>
+                    <i class="el-icon-search" v-show="!keyWord" @click.stop="searchFn"></i>
                 </div>
             </div>
 
@@ -168,6 +170,8 @@
       },
 
       searchFn () {
+        let elem = document.getElementById('iptSearch')
+        elem.blur()
         if (!this.keyWord) return
         this.$router.push({
           path: '/file/' + this.options.Bucket,
@@ -257,6 +261,13 @@
       goForward () {
         this.$router.go(-1)
       },
+
+      iptFocus(e){
+        e.stopPropagation()
+        let elem = document.getElementById('iptSearch')
+        elem.focus()
+      },
+//
 
       backForward () {
         this.$router.go(1)

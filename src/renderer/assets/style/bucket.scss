@@ -14,6 +14,7 @@
 
 .bucket-opt {
   margin: 0 20px;
+  margin-top: 25px;
   border-bottom: 1px solid #ddd;
   ul {
     margin: 0 auto;
@@ -51,6 +52,8 @@
   left: 0;
   right: 0;
   overflow: auto;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
   &.active {
     height: 45px;
     overflow: hidden;
@@ -66,6 +69,21 @@
   text-indent: 20px;
   font-size: 14px;
   height: 40px;
+  line-height: 40px;
+  i {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    position: relative;
+    top: 5px;
+    left: 3px;
+  }
+  .icon {
+    background: url("../../static/images/icon_progress.png") no-repeat center center;
+  }
+  .icon_proing {
+    background: url("../../static/images/icon_proing.gif") no-repeat center center;
+  }
 }
 
 .loading {
@@ -238,17 +256,17 @@
 .dialog-bucket-cors-add {
   width: 700px;
   top: 20px !important;
-  textarea{
+  textarea {
     width: 270px;
   }
-  .max-age{
+  .max-age {
     width: 100px;
     display: inline-block;
   }
-  .el-form-item__label{
+  .el-form-item__label {
     padding-right: 28px;
   }
-  .el-dialog__body{
+  .el-dialog__body {
     padding-bottom: 0;
   }
 }

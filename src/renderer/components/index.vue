@@ -1,7 +1,10 @@
 <template>
     <div class="index">
         <div class="slide-left">
-            <div class="bucket-tl"><span>AppID：</span> {{getKey}}</div>
+            <!--<div class="bucket-tl">-->
+            <!--<span>AppID：</span> {{getKey}}-->
+            <!--<img src="../../../static/images/logo.png" alt="">-->
+            <!--</div>-->
 
             <div class="bucket-opt">
                 <ul>
@@ -29,7 +32,10 @@
             <div class="loading" v-if="bloading"><i class="el-icon-loading"></i></div>
 
             <div class="load-progress" @click="openProgressWindow"> 传输队列
-                {{ run.upload || run.download ? 'run' : 'stop' }}
+
+                <i class="icon" v-show="run.upload || run.download ? false : true"></i>
+                <!--icon_proing-->
+                <i class="icon_proing" v-show="run.upload || run.download ? true : false"></i>
             </div>
 
         </div>

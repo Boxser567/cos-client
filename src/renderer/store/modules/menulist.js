@@ -197,8 +197,8 @@ const actions = {
         let data = await listDir(rootGetters.cos, state.options)
         commit('getFileList', data)
       }
-    } catch (e) {
-      console.error(e)
+    } catch (err) {
+      rootGetters.bus.$emit('globleError', err)
     }
     commit('fileloading', {loading: false})
   },
@@ -207,6 +207,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       params.Body = Buffer.from('')
       rootGetters.cos.putObject(params, function (err, data) {
+        if (err) rootGetters.bus.$emit('globleError', err)
         err ? reject(err) : resolve(data)
       })
     })
