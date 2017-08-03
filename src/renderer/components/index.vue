@@ -2,8 +2,8 @@
     <div class="index">
         <div class="slide-left">
             <!--<div class="bucket-tl">-->
-            <!--<span>AppID：</span> {{getKey}}-->
-            <!--<img src="../../../static/images/logo.png" alt="">-->
+                <!--<span>AppID：</span>-->
+                <!--<img src="../../../static/images/logo.png" alt="">-->
             <!--</div>-->
 
             <div class="bucket-opt">
@@ -15,15 +15,15 @@
             </div>
 
             <div class="bucket">
-                <div class="bucket-group" v-for="(value, key) in bucketList" :class="{ active:false }">
+                <div class="bucket-group">
                     <div class="bucket-item">
-                        <div class="item" v-for="b in value"
-                             @click="selectBucket(b)"
-                             @contextmenu="openMenu(b)"
-                             :key="b.Name"
-                             :class="{ 'active':b.active }"
-                             :title="b.Name">
-                            <a>{{b.Name}} <i class="el-icon-arrow-down" @click.stop="openMenu(b)"></i></a>
+                        <div class="item" v-for="bkt in bucketList"
+                             @click="selectBucket(bkt)"
+                             @contextmenu="openMenu(bkt)"
+                             :key="bkt.Name"
+                             :class="{ 'active':bkt.active }"
+                             :title="bkt.Name">
+                            <a>{{bkt.Name}} <i class="el-icon-arrow-down" @click.stop="openMenu(bkt)"></i></a>
                         </div>
                     </div>
                 </div>
@@ -33,9 +33,9 @@
 
             <div class="load-progress" @click="openProgressWindow"> 传输队列
 
-                <i class="icon" v-show="run.upload || run.download ? false : true"></i>
+                <i class="icon" v-show="!run.upload && !run.download"></i>
                 <!--icon_proing-->
-                <i class="icon_proing" v-show="run.upload || run.download ? true : false"></i>
+                <i class="icon_proing" v-show="run.upload || run.download"></i>
             </div>
 
         </div>
@@ -96,12 +96,7 @@
 
     computed: {
       ...mapState('bucket', ['bucketList']),
-      ...mapState('menulist', ['options']),
-      getKey () {
-        for (let key in this.bucketList) {
-          return key
-        }
-      }
+      ...mapState('menulist', ['options'])
     },
 
     watch: {

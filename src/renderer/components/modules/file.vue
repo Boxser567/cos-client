@@ -3,12 +3,11 @@
         <div class="head">
             <div class="top-row">
                 <div class="history">
-                    <i class="back" @click="goForward"></i>
-                    <!--<i class="el-icon-arrow-left" @click="goForward"></i>-->
-                    <!--<i class="el-icon-arrow-right" @click="backForward"></i>-->
+                    <i class="back" :disabled="canGoBack()" @click="goBack"></i>
+                    <i class="el-icon-arrow-right" v-show="canGoForward()" @click="goForward"></i>
                 </div>
 
-                <div class="nav-bar" @click="iptFocus($event)">
+                <div class="nav-bar" @click.stop="iptFocus()">
                     <div class="nav">
                         <ul v-show="!keyWord && !inputFocus">
                             <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
@@ -19,8 +18,7 @@
                         </div>
                     </div>
 
-                    <input type="text" id="iptSearch" v-model="keyWord" @focus="inputFocus = true"
-                           @blur="inputFocus = false"
+                    <input type="text" v-model="keyWord" v-focus="inputFocus"
                            @keyup.enter="searchFn">
                     <i class="el-icon-close" v-show="keyWord" @click.stop="searchCancelFn"></i>
                     <i class="el-icon-search" v-show="!keyWord" @click.stop="searchFn"></i>
@@ -84,7 +82,9 @@
   import fileAdress from './file-adress'
   import fileLimit from './file-limit.vue'
   import setHttpHead from './set-http-head.vue'
+  import { remote } from 'electron'
   import { mapState } from 'vuex'
+  let webContents = remote.getCurrentWebContents()
   export default {
     name: 'filepage',
     components: {fileList, fileAdress, fileLimit, setHttpHead},
@@ -170,8 +170,7 @@
       },
 
       searchFn () {
-        let elem = document.getElementById('iptSearch')
-        elem.blur()
+        this.inputFocus = false
         if (!this.keyWord) return
         this.$router.push({
           path: '/file/' + this.options.Bucket,
@@ -181,10 +180,6 @@
             keyWord: this.keyWord
           }
         })
-//        this.$store.dispatch('menulist/getFileList', Object.assign({
-//          Page: 'file',
-//          Keywords: this.keyWord
-//        }, this.options))
       },
 
       searchCancelFn () {
@@ -258,19 +253,40 @@
         }
       },
 
+      goBack () {
+        this.$router.back()
+      },
+
       goForward () {
-        this.$router.go(-1)
+        this.$router.forward()
       },
 
-      iptFocus(e){
-        e.stopPropagation()
-        let elem = document.getElementById('iptSearch')
-        elem.focus()
+      canGoBack () {
+        return webContents.canGoBack()
       },
-//
 
-      backForward () {
-        this.$router.go(1)
+      canGoForward () {
+        return webContents.canGoForward()
+      },
+
+      iptFocus () {
+        this.inputFocus = true
+      }
+    },
+    directives: {
+      focus: {
+        bind (el, binding) {
+          el.addEventListener('focus', () => {
+            binding.value = true
+          })
+          el.addEventListener('blur', () => {
+            binding.value = false
+          })
+          binding.value ? el.focus() : el.blur()
+        },
+        update (el, binding) {
+          binding.value ? el.focus() : el.blur()
+        }
       }
     }
   }

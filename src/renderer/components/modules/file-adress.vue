@@ -61,12 +61,6 @@
       ...mapState('menulist', ['selectFile', 'options']),
       config () {
         return this.$store.state.config
-      },
-      getKey () {
-        let list = this.$store.state.bucket.bucketList
-        for (let key in list) {
-          return key
-        }
       }
     },
     methods: {
@@ -89,7 +83,7 @@
             }
           })
           if (this.isPublic) {
-            this.iptText = `http://${parms.Bucket}-${this.getKey}.${parms.Region}.myqcloud.com/${parms.Key}`
+            this.iptText = `http://${parms.Bucket}-${this.appid}.${parms.Region}.myqcloud.com/${parms.Key}`
           }
         })
       },
@@ -108,7 +102,7 @@
         }
         this.$store.dispatch('bucket/getAuth', pms).then(data => {
           data = encodeURIComponent(data)
-          let auth = `http://${this.options.Bucket}-${this.getKey}.${this.options.Region}.myqcloud.com/${this.selectFile[0].Key}`
+          let auth = `http://${this.options.Bucket}-${this.config.cos.AppId}.${this.options.Region}.myqcloud.com/${this.selectFile[0].Key}`
           this.iptText = `${auth}?sign=${data}`
           this.isPublic = true
         })

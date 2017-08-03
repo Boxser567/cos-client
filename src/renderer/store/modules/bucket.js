@@ -10,26 +10,19 @@ const state = {
 
 const mutations = {
   getMuService (state, Buckets) {
-    console.log('bucket列表', Buckets)
-    let appid = ''
     for (let bkt of Buckets) {
       let ss = bkt.Name.split('-')
       bkt.Name = ss[0]
       bkt.AppId = ss[1]
-      appid = ss[1]
       bkt.active = false
     }
-    let bucketList = {}
-    bucketList[appid] = Buckets
-    state.bucketList = bucketList
+    state.bucketList = Buckets
   },
 
   bucketActive (state, bucketName) {
-    for (let key in state.bucketList) {
-      state.bucketList[key].forEach(b => {
-        b.active = b.Name === bucketName
-      })
-    }
+    state.bucketList.forEach(b => {
+      b.active = b.Name === bucketName
+    })
   }
 }
 

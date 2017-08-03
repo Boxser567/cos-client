@@ -56,13 +56,11 @@
 </template>
 
 <script>
-  import { mapState } from 'vuex'
   export default{
     name: 'add-bucket',
     props: ['dialogAddVisible'],
     data () {
       return {
-        appid: null,
         myform: {
           bucketName: '',
           limit: 'public-read',
@@ -86,17 +84,12 @@
       }
     },
     computed: {
-      ...mapState('bucket', ['bucketList', 'currentBucket'])
+      appid () {
+        return this.$store.state.config.cos.AppId
+      }
     },
-    created () {
-      this.fetchData()
-    },
+    created () {},
     methods: {
-      fetchData () {
-        for (let key in this.bucketList) {
-          this.appid = key
-        }
-      },
       renderData () {
         this.myform.bucketName = ''
         this.myform.limit = 'public-read'
@@ -126,6 +119,5 @@
         this.$emit('closeBucket')
       }
     }
-
   }
 </script>
