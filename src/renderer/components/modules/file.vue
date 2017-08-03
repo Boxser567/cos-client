@@ -88,17 +88,23 @@
     components: {fileList, fileAdress, fileLimit, setHttpHead},
     beforeRouteEnter (to, from, next) {
       next(vm => {
-        vm.$store.commit('menulist/options', to.query)
-        vm.$store.dispatch('menulist/getFileList', Object.assign({}, to.query))
+        vm.$store.commit('menulist/options', {
+          Bucket: to.params.Bucket,
+          Region: to.query.Region,
+          Prefix: to.query.Prefix
+        })
+        vm.$store.dispatch('menulist/getFileList', to.query.keyWord)
+        vm.keyWord = to.query.keyWord
       })
     },
     beforeRouteUpdate (to, from, next) {
-      let options = to.query
-      if (to.path !== from.path) {
-        this.keyWord = ''
-      }
-      this.$store.commit('menulist/options', options)
-      this.$store.dispatch('menulist/getFileList', Object.assign({}, options))
+      this.$store.commit('menulist/options', {
+        Bucket: to.params.Bucket,
+        Region: to.query.Region,
+        Prefix: to.query.Prefix
+      })
+      this.$store.dispatch('menulist/getFileList', to.query.keyWord)
+      this.keyWord = to.query.keyWord
       next()
     },
     created () {},
@@ -154,19 +160,27 @@
         this.$router.push({
           path: '/file/' + this.options.Bucket,
           query: {
-            Bucket: this.options.Bucket,
             Region: this.options.Region,
-            Prefix
+            Prefix,
+            keyWord: ''
           }
         })
       },
 
       searchFn () {
         if (!this.keyWord) return
-        this.$store.dispatch('menulist/getFileList', Object.assign({
-          Page: 'file',
-          Keywords: this.keyWord
-        }, this.options))
+        this.$router.push({
+          path: '/file/' + this.options.Bucket,
+          query: {
+            Region: this.options.Region,
+            Prefix: this.options.Prefix,
+            keyWord: this.keyWord
+          }
+        })
+//        this.$store.dispatch('menulist/getFileList', Object.assign({
+//          Page: 'file',
+//          Keywords: this.keyWord
+//        }, this.options))
       },
 
       searchCancelFn () {
@@ -217,7 +231,7 @@
           await this.$store.dispatch('deleteObjects', params)
 
           // 删除完成后刷新文件列表
-          await this.$store.dispatch('menulist/getFileList', Object.assign({}, this.options))
+          await this.$store.dispatch('menulist/getFileList', this.keyWord)
         } catch (e) {
           if (e !== 'cancel') console.error(e)
         }

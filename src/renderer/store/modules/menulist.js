@@ -163,7 +163,7 @@ const mutations = {
 
   searchFileList (state, data) { // 搜索文件
     state.filelist = data.objects.filter(obj => {
-      if (obj && obj.Name.indexOf(data.keywords) > -1) {
+      if (obj && obj.Name.indexOf(data.keyWord) > -1) {
         obj.active = false
         return obj
       }
@@ -187,17 +187,14 @@ const mutations = {
 }
 
 const actions = {
-  async getFileList ({commit, rootGetters}, params) {
+  async getFileList ({commit, state, rootGetters}, keyWord) {
     commit('fileloading', {loading: true})
     try {
-      if (params.Page) {
-        let objects = await searchDir(rootGetters.cos, params)
-        commit('searchFileList', {
-          objects,
-          keywords: params.Keywords
-        })
+      if (keyWord) {
+        let objects = await searchDir(rootGetters.cos, state.options)
+        commit('searchFileList', {objects, keyWord})
       } else {
-        let data = await listDir(rootGetters.cos, params)
+        let data = await listDir(rootGetters.cos, state.options)
         commit('getFileList', data)
       }
     } catch (e) {

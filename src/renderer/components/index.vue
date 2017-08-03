@@ -73,7 +73,6 @@
     data () {
       return {
         bloading: false,
-        selectBT: null,
         rightChooseBucket: null,
         dialogAddVisible: false,
         dialogManageVisible: false,
@@ -90,10 +89,19 @@
     components: {addBucket, protoManage, setting, fileDebris, fileLimit},
 
     computed: {
-      ...mapState('bucket', ['bucketList', 'currentBucket']),
+      ...mapState('bucket', ['bucketList']),
+      ...mapState('menulist', ['options']),
       getKey () {
         for (let key in this.bucketList) {
           return key
+        }
+      }
+    },
+
+    watch: {
+      options (nv, ov) {
+        if (nv.Bucket !== ov.Bucket) {
+          this.$store.commit('bucket/bucketActive', nv.Bucket)
         }
       }
     },
@@ -125,20 +133,18 @@
       fetchData () {
         this.bloading = true
         this.$store.dispatch('bucket/getService').then(() => {
-          if (this.selectBT) this.$store.commit('bucket/bucketActive', this.selectBT)
+          if (this.options.Bucket) this.$store.commit('bucket/bucketActive', this.options.Bucket)
           this.bloading = false
         })
       },
 
       selectBucket (b) {
-        this.selectBT = b.Name
-        this.$store.commit('bucket/bucketActive', b.Name)
         this.$router.push({
           path: '/file/' + b.Name,
           query: {
-            Bucket: b.Name,
             Region: b.Location,
-            Prefix: ''
+            Prefix: '',
+            keyWord: ''
           }
         })
       },

@@ -26,12 +26,8 @@ const mutations = {
 
   bucketActive (state, bucketName) {
     for (let key in state.bucketList) {
-      state.bucketList[key].forEach(x => {
-        if (x.Name === bucketName) {
-          x.active = true
-        } else {
-          x.active = false
-        }
+      state.bucketList[key].forEach(b => {
+        b.active = b.Name === bucketName
       })
     }
   }
