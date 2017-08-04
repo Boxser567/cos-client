@@ -7,7 +7,7 @@
                     <!--<i class="el-icon-arrow-right" v-show="canGoForward()" @click="goForward"></i>-->
                 </div>
 
-                <div class="nav-bar" @click.stop="inputFocus = true">
+                <div class="nav-bar" @click.self="inputFocus = true">
                     <div class="nav">
                         <ul v-show="!search.active && !inputFocus">
                             <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
@@ -18,9 +18,12 @@
                         </div>
                     </div>
 
-                    <input v-model="keyWord" v-focus="inputFocus" @keyup.enter="doSearch">
-                    <i class="el-icon-search" v-show="!search.active" @click.stop="doSearch"></i>
-                    <i class="el-icon-close" v-show="search.active" @click.stop="cancelSearch"></i>
+                    <input v-model="keyWord" v-focus="inputFocus"
+                           @focus="inputFocus = true"
+                           @blur="inputFocus = false;keyWord=''"
+                           @keyup.enter="doSearch">
+                    <i class="el-icon-search" v-show="!search.active" @click="doSearch"></i>
+                    <i class="el-icon-close" v-show="search.active" @keyup.esc="cancelSearch" @click="cancelSearch"></i>
                 </div>
             </div>
 
@@ -281,19 +284,8 @@
       }
     },
     directives: {
-      focus: {
-        bind (el, binding) {
-          el.addEventListener('focus', () => {
-            binding.value = true
-          })
-          el.addEventListener('blur', () => {
-            binding.value = false
-          })
-          binding.value ? el.focus() : el.blur()
-        },
-        update (el, binding) {
-          binding.value ? el.focus() : el.blur()
-        }
+      focus (el, binding) {
+        binding.value ? el.focus() : el.blur()
       }
     }
   }
