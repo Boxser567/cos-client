@@ -3,24 +3,24 @@
         <div class="head">
             <div class="top-row">
                 <div class="history">
-                    <!--<i class="back" :disabled="canGoBack()" @click="goBack"></i>-->
+                    <i class="back" v-show="canGoBack()" @click="goBack"></i>
                     <!--<i class="el-icon-arrow-right" v-show="canGoForward()" @click="goForward"></i>-->
                 </div>
 
                 <div class="nav-bar" @click.self="inputFocus = true">
                     <div class="nav">
                         <ul v-show="!search.active && !inputFocus">
-                            <li v-for="n in navList" @click.stop="goFilePath(n.Prefix)">{{ n.name }}</li>
+                            <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
                         </ul>
 
                         <div class="search-inbar" v-show="search.active || inputFocus">
-                            在<span>{{currentFolder}}</span>中搜索
+                            在<span>{{currentFolder.name}}</span>中搜索
                         </div>
                     </div>
 
-                    <input v-model="keyWord" v-focus="inputFocus"
+                    <input v-show="inputFocus||search.active" v-model="keyWord" v-focus="inputFocus"
                            @focus="inputFocus = true"
-                           @blur="inputFocus = false;keyWord=''"
+                           @blur="inputFocus = false"
                            @keyup.enter="doSearch">
                     <i class="el-icon-search" v-show="!search.active" @click="doSearch"></i>
                     <i class="el-icon-close" v-show="search.active" @keyup.esc="cancelSearch" @click="cancelSearch"></i>
@@ -120,7 +120,8 @@
       ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo', 'options', 'search']),
       navList () {
         let list = [{name: this.options.Bucket, Prefix: ''}]
-        this.currentFolder = this.options.Bucket
+        this.currentFolder = {name: this.options.Bucket, Prefix: ''}
+        this.parentFolder = null
         if (this.options.Prefix) {
           this.options.Prefix.split('/').reduce((Prefix, name) => {
             if (!name) return Prefix
@@ -128,7 +129,10 @@
             list.push({Prefix, name})
             return Prefix
           }, '')
-          this.currentFolder = list[list.length - 1].name
+          this.currentFolder = list[list.length - 1]
+          if (list.length - 2 >= 0) {
+            this.parentFolder = list[list.length - 2]
+          }
         }
         return list
       },
@@ -155,7 +159,8 @@
       return {
         keyWord: '',
         inputFocus: false,
-        currentFolder: '',
+        currentFolder: null,
+        parentFolder: null,
         dialogSetHttpHead: false,
         dialogFileAdress: false,
         dialogFileLimit: false,
@@ -261,8 +266,8 @@
       fileEvents (types) {
         switch (types) {
           case 'upload':
-//            this.$store.dispatch('menulist/uploadFile')  //单文件上传功能
-            //呼出上传窗口
+            // this.$store.dispatch('menulist/uploadFile')  //单文件上传功能
+            // 呼出上传窗口
             this.dialogFileupload = true
             return
           case 'download':
@@ -274,7 +279,14 @@
       },
 
       goBack () {
-        this.$router.back()
+        this.$router.push({
+          path: '/file/' + this.options.Bucket,
+          query: {
+            Region: this.options.Region,
+            Prefix: this.parentFolder.Prefix,
+            keyWord: ''
+          }
+        })
       },
 
       goForward () {
@@ -282,7 +294,7 @@
       },
 
       canGoBack () {
-        return webContents.canGoBack()
+        return this.parentFolder
       },
 
       canGoForward () {
