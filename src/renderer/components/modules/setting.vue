@@ -82,6 +82,9 @@
         this.closeDialog()
       },
       closeDialog () {
+        this.upMax = 0
+        this.upAsy = 0
+        this.downMax = 0
         this.$emit('closeDiolog')
       }
     }

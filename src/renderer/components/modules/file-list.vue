@@ -5,7 +5,12 @@
             <div class="size">大小</div>
             <div class="time">更新时间</div>
         </div>
-        <div class="list-info" id="menuinfo" @click.self="fileContentClick()" @contextmenu.self="openMenu()">
+        <div class="list-info" id="menuinfo"
+             @dragover.prevent="onDragover"
+             @drop.prevent="onDrop"
+             @dragleave.prevent="onDragLeave"
+             :class=" { 'dropable': dropable } "
+             @click.self="fileContentClick()" @contextmenu.self="openMenu()">
 
             <div class="loading" v-if="fileloading">
                 <i class="el-icon-loading"></i>
@@ -112,7 +117,8 @@
           folders: ['download_file', 'copy_file', 'delete_file', 'set_limit'],
           blanks: ['upload_file', 'new_folder', 'download_list'],
           groupFile: ['download_file', 'copy_file', 'delete_file', 'set_http']
-        }
+        },
+        dropable: false
       }
     },
 
@@ -129,6 +135,22 @@
     },
 
     methods: {
+      onDragover(){
+        this.dropable = true
+      },
+      onDragLeave(){
+        this.dropable = false
+      },
+      onDrop(e){
+        this.dropable = false
+        let files = e.dataTransfer.files
+        if (files.length === 0) return
+        files = Array.from(files)
+        let fileArray = files.map(n => {
+          return n.path
+        })
+        this.$store.dispatch('menulist/uploadFileByDrag', fileArray)
+      },
       addFolderFn: function () { // 新建文件夹
         let parms = {
           Bucket: this.options.Bucket,

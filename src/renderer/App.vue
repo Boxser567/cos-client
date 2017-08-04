@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <div id="app" @dragover.prevent="onDragover" @drop.prevent="onDrop">
         <router-view></router-view>
     </div>
 </template>
@@ -7,9 +7,14 @@
 <script>
   export default {
     name: 'exitPage',
-    created () {},
+    created () {
+    },
     data () {
       return {}
+    },
+    methods: {
+      onDragover(){},
+      onDrop(){}
     }
   }
 </script>

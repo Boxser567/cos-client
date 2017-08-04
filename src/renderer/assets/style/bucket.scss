@@ -296,3 +296,43 @@
     height: 60px;
   }
 }
+
+.dilog-setting {
+  h2 {
+    font-size: 15px;
+    color: #333;
+    font-weight: normal;
+  }
+  .el-col-9 {
+    font-size: 13px;
+  }
+  .download {
+    margin-top: 15px;
+  }
+}
+
+.dialog-upload {
+  top: 25% !important;
+  .drop-content {
+    text-align: center;
+    border: 1px dashed #dcdcdc;
+    padding: 40px;
+    background: #f7f7f7;
+    border-radius: 8px;
+    &:hover {
+      border: 1px dashed $activebg2;
+    }
+    &.active {
+      border: 1px dashed $activebg2;
+      background: #f2ffe8;
+    }
+    i {
+      font-size: 60px;
+      color: #828282;
+    }
+    p {
+      font-size: 14px;
+      margin-top: 8px;
+    }
+  }
+}

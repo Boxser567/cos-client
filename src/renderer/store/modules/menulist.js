@@ -178,8 +178,15 @@ const actions = {
       properties: ['openFile', 'openDirectory', 'multiSelections']
     }, FileNames => {
       if (!FileNames) return
+      console.log('FileNames', FileNames)
       ipcRenderer.send('NewUploadTasks', Object.assign({FileNames}, state.options))
     })
+  },
+
+  uploadFileByDrag({state}, fileArr) {
+    if (!fileArr) return
+    console.log('fileArr1', fileArr, state.options)
+    ipcRenderer.send('NewUploadTasks', Object.assign({FileNames: fileArr}, state.options))
   },
 
   downloadFile ({state}) {
