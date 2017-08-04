@@ -3,25 +3,24 @@
         <div class="head">
             <div class="top-row">
                 <div class="history">
-                    <i class="back" :disabled="canGoBack()" @click="goBack"></i>
-                    <i class="el-icon-arrow-right" v-show="canGoForward()" @click="goForward"></i>
+                    <!--<i class="back" :disabled="canGoBack()" @click="goBack"></i>-->
+                    <!--<i class="el-icon-arrow-right" v-show="canGoForward()" @click="goForward"></i>-->
                 </div>
 
-                <div class="nav-bar" @click.stop="iptFocus()">
+                <div class="nav-bar" @click.stop="inputFocus = true">
                     <div class="nav">
-                        <ul v-show="!keyWord && !inputFocus">
+                        <ul v-show="!search.active && !inputFocus">
                             <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
                         </ul>
 
-                        <div class="search-inbar" v-show="keyWord || inputFocus">
+                        <div class="search-inbar" v-show="search.active || inputFocus">
                             在<span>{{currentFolder}}</span>中搜索
                         </div>
                     </div>
 
-                    <input type="text" v-model="keyWord" v-focus="inputFocus"
-                           @keyup.enter="searchFn">
-                    <i class="el-icon-close" v-show="keyWord" @click.stop="searchCancelFn"></i>
-                    <i class="el-icon-search" v-show="!keyWord" @click.stop="searchFn"></i>
+                    <input v-model="keyWord" v-focus="inputFocus" @keyup.enter="doSearch">
+                    <i class="el-icon-search" v-show="!search.active" @click.stop="doSearch"></i>
+                    <i class="el-icon-close" v-show="search.active" @click.stop="cancelSearch"></i>
                 </div>
             </div>
 
@@ -84,6 +83,7 @@
   import setHttpHead from './set-http-head.vue'
   import { remote } from 'electron'
   import { mapState } from 'vuex'
+
   let webContents = remote.getCurrentWebContents()
   export default {
     name: 'filepage',
@@ -111,7 +111,7 @@
     },
     created () {},
     computed: {
-      ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo', 'options']),
+      ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo', 'options', 'search']),
       navList () {
         let list = [{name: this.options.Bucket, Prefix: ''}]
         this.currentFolder = this.options.Bucket
@@ -169,7 +169,7 @@
         })
       },
 
-      searchFn () {
+      doSearch () {
         this.inputFocus = false
         if (!this.keyWord) return
         this.$router.push({
@@ -182,8 +182,19 @@
         })
       },
 
-      searchCancelFn () {
+      cancelSearch () {
+        this.inputFocus = false
         this.keyWord = ''
+        if (this.search.active) {
+          this.$router.push({
+            path: '/file/' + this.options.Bucket,
+            query: {
+              Region: this.options.Region,
+              Prefix: this.options.Prefix,
+              keyWord: ''
+            }
+          })
+        }
       },
 
       controlObj (val) {
@@ -267,10 +278,6 @@
 
       canGoForward () {
         return webContents.canGoForward()
-      },
-
-      iptFocus () {
-        this.inputFocus = true
       }
     },
     directives: {

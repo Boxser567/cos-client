@@ -49,9 +49,53 @@
 <script>
   import { mapState } from 'vuex'
   import { remote } from 'electron'
+
   const {Menu, MenuItem} = remote
 
-  const menu = new Menu()
+  let menu
+
+  const contextMenu = [
+    {
+      key: 'upload_file',
+      name: '上传文件'
+    },
+    {
+      key: 'new_folder',
+      name: '创建文件夹'
+    },
+    {
+      key: 'download_file',
+      name: '下载'
+    },
+    {
+      key: 'copy_file',
+      name: '复制'
+    },
+    {
+      key: 'delete_file',
+      name: '删除'
+    },
+    {
+      key: 'get_address',
+      name: '获取地址'
+    },
+    {
+      key: 'set_http',
+      name: '设置HTTP头'
+    },
+    {
+      key: 'set_limit',
+      name: '设置权限'
+    },
+    {
+      key: 'paste_file',
+      name: '粘贴'
+    },
+    {
+      key: 'download_list',
+      name: '下载当前目录'
+    }
+  ]
 
   export default {
     name: 'filelist-page',
@@ -73,12 +117,13 @@
     },
 
     computed: {
-      ...mapState('menulist', ['fileRightList', 'filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles', 'options'])
+      ...mapState('menulist', ['filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles', 'options', 'search'])
     },
 
     created () {
+      menu = new Menu()
       let vue = this
-      for (let item of this.fileRightList) {
+      for (let item of contextMenu) {
         menu.append(new MenuItem({label: item.name, click () { vue.rightClickFn(item.key) }}))
       }
     },
@@ -124,6 +169,7 @@
       openMenu (cfile, index) {
         if (!cfile) {
           this.$store.commit('menulist/unSelectFile')
+          if (this.search.active) return
           this.popMenu('blanks')
           return
         }
@@ -152,12 +198,13 @@
       },
 
       popMenu (type) {
-        for (let m of this.fileRightList) {
+        for (let i = 0; i < contextMenu.length; i++) {
+          let m = contextMenu[i]
           if (m.key === 'paste_file') {
-            menu.items[m.index - 1].visible = !!this.copyFiles.list.length
+            menu.items[i].visible = !!this.copyFiles.list.length
             continue
           }
-          menu.items[m.index - 1].visible = this.menu[type].includes(m.key)
+          menu.items[i].visible = this.menu[type].includes(m.key)
         }
         menu.popup(remote.getCurrentWindow(), {async: true})
       },
@@ -192,13 +239,9 @@
             this.$store.commit('menulist/copyFiles')
             break
           case 'paste_file': // 粘贴
-            if (this.options.Bucket === this.copyFiles.src.Bucket &&
-              this.options.Prefix === this.copyFiles.src.Prefix) {
+            this.$store.dispatch('menulist/pasteFiles').catch((e) => {
+              console.error(e)
               this.$message('路径相同，不能操作')
-              return
-            }
-            this.$store.dispatch('menulist/pasteFiles').then(() => {
-              this.$store.commit('menulist/copyFilesNone')
             })
             break
           case 'download_list':

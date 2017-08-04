@@ -10,76 +10,18 @@ const state = {
     Prefix: ''
   },
 
+  search: {
+    active: false,
+    keyWord: ''
+  },
+
   filelist: null,
 
   fileloading: true,
 
   selectFile: [],
-
-  fileRightList: [
-    {
-      key: 'upload_file',
-      name: '上传文件',
-      index: 1,
-      isActive: false
-    },
-    {
-      key: 'new_folder',
-      name: '创建文件夹',
-      index: 2,
-      isActive: false
-    },
-    {
-      key: 'download_file',
-      name: '下载',
-      index: 3,
-      isActive: false
-    },
-    {
-      key: 'copy_file',
-      name: '复制',
-      index: 4,
-      isActive: false
-    },
-    {
-      key: 'delete_file',
-      name: '删除',
-      index: 5,
-      isActive: false
-    },
-    {
-      key: 'get_address',
-      name: '获取地址',
-      index: 6,
-      isActive: false
-    },
-    {
-      key: 'set_http',
-      name: '设置HTTP头',
-      index: 7,
-      isActive: false
-    },
-    {
-      key: 'set_limit',
-      name: '设置权限',
-      index: 8,
-      isActive: false
-    },
-    {
-      key: 'paste_file',
-      name: '粘贴',
-      index: 9,
-      isActive: false
-    },
-    {
-      key: 'download_list',
-      name: '下载当前目录',
-      index: 10,
-      isActive: false
-    }
-  ],
-
-  newFolder: false, // 新建文件夹
+  // 新建文件夹
+  newFolder: false,
 
   copyFiles: {
     list: [],
@@ -159,16 +101,32 @@ const mutations = {
     })
     state.filelist = list
     state.selectFile = []
+    state.search = {
+      active: false,
+      keyWord: ''
+    }
   },
-
-  searchFileList (state, data) { // 搜索文件
-    state.filelist = data.objects.filter(obj => {
+  // 搜索文件
+  searchFileList (state, data) {
+    let arr = data.dirs.filter(obj => {
+      if (obj && obj.Name.indexOf(data.keyWord) > -1) {
+        obj.active = false
+        obj.dir = true
+        return obj
+      }
+    })
+    let arr1 = data.objects.filter(obj => {
       if (obj && obj.Name.indexOf(data.keyWord) > -1) {
         obj.active = false
         return obj
       }
     })
+    state.filelist = arr.concat(arr1)
     state.selectFile = []
+    state.search = {
+      active: true,
+      keyWord: data.keyWord
+    }
   },
 
   newFolder (state, val) {
@@ -191,8 +149,9 @@ const actions = {
     commit('fileloading', {loading: true})
     try {
       if (keyWord) {
-        let objects = await searchDir(rootGetters.cos, state.options)
-        commit('searchFileList', {objects, keyWord})
+        let data = await listDir(rootGetters.cos, state.options)
+        data.keyWord = keyWord
+        commit('searchFileList', data)
       } else {
         let data = await listDir(rootGetters.cos, state.options)
         commit('getFileList', data)
@@ -249,7 +208,13 @@ const actions = {
   },
 
   pasteFiles ({dispatch, state}) {
-    if (state.copyFiles.list.length < 1) return Promise.resolve()
+    if (!state.copyFiles.list.length) return Promise.resolve()
+
+    if (state.options.Bucket === state.copyFiles.src.Bucket &&
+      state.options.Prefix === state.copyFiles.src.Prefix) {
+      return Promise.reject(new Error('same path'))
+    }
+
     let parms = {
       src: state.copyFiles.src,
       dst: state.options,
