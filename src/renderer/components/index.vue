@@ -128,7 +128,7 @@
       openProgressWindow () {
         const url = (process.env.NODE_ENV === 'development'
           ? `http://localhost:9080/#/progress` : `file://${__dirname}/index.html#/progress`)
-        window.open(url, '_blank', 'title=918291,height=450, width=794,resizable=no')
+        window.open(url, '_blank', 'title=传输队列,height=450, width=794,resizable=no,frame=false')
       },
 
       fetchData () {

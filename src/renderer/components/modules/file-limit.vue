@@ -73,6 +73,7 @@
                         </template>
                     </el-table-column>
                     <el-table-column
+                            width="299"
                             label="权限">
                         <template scope="scope">
                             <div v-if="scope.row.edit===0 || scope.row.edit===2"> {{getLimit(scope.row)}}</div>
@@ -158,9 +159,6 @@
     },
     methods: {
       renderData () {
-        this.userData = []
-        this.activeName = 'first'
-        this.commonData[0].pb_limit = 'private'
         this.parameters = {
           Bucket: this.options.Bucket || this.options.bucket.Bucket,
           Region: this.options.Region || this.options.bucket.Region
@@ -340,6 +338,10 @@
         }
       },
       closeDialog () {
+        this.userData = []
+        this.activeName = 'first'
+        this.commonData[0].pb_limit = 'private'
+        this.Owner = null
         this.$emit('update:isShow', false)
       }
     }

@@ -10,7 +10,7 @@
                 <div class="nav-bar" @click.stop="inputFocus = true">
                     <div class="nav">
                         <ul v-show="!search.active && !inputFocus">
-                            <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
+                            <li v-for="n in navList" @click.stop="goFilePath(n.Prefix)">{{ n.name }}</li>
                         </ul>
 
                         <div class="search-inbar" v-show="search.active || inputFocus">
@@ -73,6 +73,8 @@
                      @closeDialog="dialogFileAdress = false"></file-adress>
 
         <set-http-head :isShow="dialogSetHttpHead" @closeDialog="dialogSetHttpHead = false"></set-http-head>
+
+        <file-upload :isShow.sync="dialogFileupload"></file-upload>
     </div>
 </template>
 
@@ -81,13 +83,14 @@
   import fileAdress from './file-adress'
   import fileLimit from './file-limit.vue'
   import setHttpHead from './set-http-head.vue'
+  import fileUpload from './dialog/drap-file.vue'
   import { remote } from 'electron'
   import { mapState } from 'vuex'
 
   let webContents = remote.getCurrentWebContents()
   export default {
     name: 'filepage',
-    components: {fileList, fileAdress, fileLimit, setHttpHead},
+    components: {fileList, fileAdress, fileLimit, setHttpHead, fileUpload},
     beforeRouteEnter (to, from, next) {
       next(vm => {
         vm.$store.commit('menulist/options', {
@@ -153,6 +156,7 @@
         dialogSetHttpHead: false,
         dialogFileAdress: false,
         dialogFileLimit: false,
+        dialogFileupload: false,
         limitOption: null
       }
     },
@@ -254,7 +258,9 @@
       fileEvents (types) {
         switch (types) {
           case 'upload':
-            this.$store.dispatch('menulist/uploadFile')
+//            this.$store.dispatch('menulist/uploadFile')  //单文件上传功能
+            //呼出上传窗口
+            this.dialogFileupload = true
             return
           case 'download':
             this.$store.dispatch('menulist/downloadFile')
