@@ -1,10 +1,8 @@
 <template>
-
     <el-dialog title="跨域访问CORS添加规则" size="large"
                custom-class="dialog-bucket-cors-add"
                :visible.sync="isShow"
                :before-close="closeDialog">
-
         <el-form label-width="180px">
             <el-form-item label="*  来源 AllowedOrigins">
                 <el-input
@@ -53,16 +51,10 @@
             <el-button size="small" @click="closeDialog">关 闭</el-button>
         </div>
     </el-dialog>
-
 </template>
 
-
 <script>
-
-  import util from '../../assets/util'
-
   export default {
-
     props: ['isShow', 'openMode'],
     data () {
       return {
@@ -83,16 +75,15 @@
       }
     },
     computed: {
-      disableBtn(){
-        if (!this.form.AllowedOrigins || !this.form.AllowedMethods.length || (this.form.MaxAgeSeconds === ''))
-          return true
-        return false
+      disableBtn () {
+        return !this.form.AllowedOrigins || !this.form.AllowedMethods.length || (this.form.MaxAgeSeconds === '')
       }
     },
     methods: {
-      editRender(){
+      editRender () {
         if (this.openMode.type === 'edit') {
-          let dataObj = this.openMode.data[0], myObj = {}
+          let dataObj = this.openMode.data[0]
+          let myObj = {}
           for (let key in dataObj) {
             if (['AllowedHeaders', 'AllowedOrigins', 'ExposeHeaders'].indexOf(key) > -1) {
               let j = [].concat(dataObj[key])
@@ -104,19 +95,20 @@
           this.form = myObj
         }
       },
+
       submit () {
-        let AllowedOrigins = util.String.getArray(this.form.AllowedOrigins),
-          AllowedHeaders = util.String.getArray(this.form.AllowedHeaders),
-          ExposeHeaders = util.String.getArray(this.form.ExposeHeaders),
-          flag = null
+        let AllowedOrigins = str2arr(this.form.AllowedOrigins)
+        let AllowedHeaders = str2arr(this.form.AllowedHeaders)
+        let ExposeHeaders = str2arr(this.form.ExposeHeaders)
+        let flag = null
         AllowedOrigins.forEach((n, i) => {
-          if (!util.Validation.isDomain(n)) {
+          if (!/^[*-\w\d]+(\.[-\w\d]+)+$/.test(n)) {
             this.$message(`来源Origin第${i}行 输入格式有误`)
             flag = true
           }
         })
         if (flag) return
-        if (!util.Validation.isNonNegativeNum(this.form.MaxAgeSeconds)) {
+        if (!this.form.MaxAgeSeconds > 0) {
           this.$message('max-age必须为非负整数')
           return false
         }
@@ -134,6 +126,7 @@
         this.$emit('submitForm', obj)
         this.closeDialog()
       },
+
       closeDialog () {
         this.form = {
           AllowedOrigins: null,
@@ -144,9 +137,15 @@
         }
         this.$emit('submitForm')
         this.$emit('update:isShow', false)
-      },
-
+      }
     }
+  }
 
+  function str2arr (str) {
+    if (!str) return []
+    let arr = str.split('\n')
+    return arr.filter(n => {
+      if (n !== '') return n
+    })
   }
 </script>

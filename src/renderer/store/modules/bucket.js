@@ -27,19 +27,6 @@ const mutations = {
 }
 
 const actions = {
-  // cosSetting({commit, rootGetters}, params){
-  //   return new Promise((resolve, reject) => {
-  //     rootGetters.cos.putBucket(params.pms, function (err, data) {
-  //       if (err) {
-  //         // cos.bus.$emit('globleError', err)
-  //         return
-  //       } else {
-  //         resolve(data)
-  //       }
-  //     })
-  //   })
-  // },
-
   getAuth ({rootGetters}, param) {
     return Promise.resolve(sdkUtil.getAuth(param))
   },
@@ -49,7 +36,8 @@ const actions = {
       rootGetters.cos.getService((err, data) => {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
-        }else{
+          reject(err)
+        } else {
           commit('getMuService', data.Buckets)
           resolve(data)
         }
@@ -63,6 +51,7 @@ const actions = {
       rootGetters.cos.putBucket(params.pms, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -75,6 +64,7 @@ const actions = {
       rootGetters.cos.deleteBucket(parms, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -87,6 +77,7 @@ const actions = {
       rootGetters.cos.getBucketAcl(params, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -99,6 +90,7 @@ const actions = {
       rootGetters.cos.putBucketAcl(params, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -111,6 +103,7 @@ const actions = {
       rootGetters.cos.getBucketCors(params, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -123,17 +116,20 @@ const actions = {
       rootGetters.cos.putBucketCors(params, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
       })
     })
   },
-  deleteBucketCORS({rootGetters}, params) {
+
+  deleteBucketCORS ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       rootGetters.cos.deleteBucketCors(params, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -146,6 +142,7 @@ const actions = {
       rootGetters.cos.getObjectAcl(params, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -158,6 +155,7 @@ const actions = {
       rootGetters.cos.putObjectAcl(params, function (err, data) {
         if (err) {
           rootGetters.bus.$emit('globleError', err)
+          reject(err)
         } else {
           resolve(data)
         }
@@ -165,7 +163,7 @@ const actions = {
     })
   },
 
-  putObject ({dispatch, rootGetters}, params) {
+  putObject ({rootGetters}, params) {
     return new Promise((resolve, reject) => {
       params.Body = Buffer.from('')
       rootGetters.cos.putObject(params, function (err, data) {

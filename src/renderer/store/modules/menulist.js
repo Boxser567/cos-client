@@ -148,12 +148,11 @@ const actions = {
   async getFileList ({commit, state, rootGetters}, keyWord) {
     commit('fileloading', {loading: true})
     try {
+      let data = await listDir(rootGetters.cos, state.options)
       if (keyWord) {
-        let data = await listDir(rootGetters.cos, state.options)
         data.keyWord = keyWord
         commit('searchFileList', data)
       } else {
-        let data = await listDir(rootGetters.cos, state.options)
         commit('getFileList', data)
       }
     } catch (err) {
@@ -183,7 +182,7 @@ const actions = {
     })
   },
 
-  uploadFileByDrag({state}, fileArr) {
+  uploadFileByDrag ({state}, fileArr) {
     if (!fileArr) return
     console.log('fileArr1', fileArr, state.options)
     ipcRenderer.send('NewUploadTasks', Object.assign({FileNames: fileArr}, state.options))

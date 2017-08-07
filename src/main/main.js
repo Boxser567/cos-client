@@ -10,8 +10,9 @@ import Cos from 'cos-nodejs-sdk-v5'
 import { DownloadTask, Tasks, UploadTask } from './task'
 import DB from './db'
 
-log.transports.console.level = 'info'
+log.transports.console.level = false
 log.transports.file.level = 'info'
+log.transports.rendererConsole.level = 'silly'
 
 let main
 

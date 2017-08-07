@@ -75,6 +75,7 @@
 <script>
   import { shell } from 'electron'
   import myHandle from './file-debris-handle.vue'
+
   export default {
 
     props: ['isShow', 'options'],
@@ -102,13 +103,10 @@
         this.$store.dispatch('bucket/getBucketCORS', this.options).then(res => {
           console.log(res)
           this.tableData = res.CORSRules
-          if (res.CORSRules.length)
-            this.isOpen = '100'
-          else
-            this.isOpen = '0'
+          this.isOpen = res.CORSRules.length ? '100' : '0'
         })
       },
-      handleRow (index) {       //编辑
+      handleRow (index) { // 编辑
         this.openMode = {
           type: 'edit',
           index: index,
@@ -116,7 +114,7 @@
         }
         this.isHandleColumn = true
       },
-      addRule(){
+      addRule () {
         this.openMode = {
           type: 'add'
         }
@@ -133,7 +131,7 @@
       openUrl () {
         shell.openExternal('https://www.qcloud.com/document/product/436/6251')
       },
-      handleForm(obj){
+      handleForm (obj) {
         if (!obj) return
         if (obj.type === 'edit') {
           this.tableData.splice(obj.index, 1, obj.data)
@@ -148,14 +146,13 @@
           Region: this.options.Region,
           CORSRules: this.tableData
         }
-        if (this.isOpen === '0') { //关闭 cors
+        if (this.isOpen === '0') { // 关闭 cors
           delete parms.CORSRules
           str = 'deleteBucketCORS'
         }
         this.$store.dispatch(`bucket/${str}`, parms).then(res => {
           this.closeDialog()
         })
-
       }
     }
 

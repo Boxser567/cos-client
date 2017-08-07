@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow, Menu } from 'electron'
+import { app, BrowserWindow, Menu, shell } from 'electron'
 import Main from './main'
 /**
  * Set `__static` path to static files in production
@@ -39,7 +39,7 @@ function createWindow () {
 
 function buildApplicationMenu () {
   if (process.platform === 'darwin') {
-    var template = [
+    let template = [
       {
         label: app.getName(),
         submenu: [
@@ -91,12 +91,12 @@ function buildApplicationMenu () {
         submenu: [
           {
             label: 'More',
-            click () { require('electron').shell.openExternal('https://www.qcloud.com/document/product/436') }
+            click () { shell.openExternal('https://www.qcloud.com/document/product/436') }
           }
         ]
       }
     ]
-    var menu = Menu.buildFromTemplate(template)
+    let menu = Menu.buildFromTemplate(template)
     Menu.setApplicationMenu(menu)
   } else {
     Menu.setApplicationMenu(null)

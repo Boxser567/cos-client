@@ -13,8 +13,8 @@
       return {}
     },
     methods: {
-      onDragover(){},
-      onDrop(){}
+      onDragover () {},
+      onDrop () {}
     }
   }
 </script>

@@ -31,13 +31,13 @@
     },
     computed: {},
     methods: {
-      onDragover(){
+      onDragover () {
         this.dropActive = true
       },
-      onDragLeave(){
+      onDragLeave () {
         this.dropActive = false
       },
-      onDrop(e){
+      onDrop (e) {
         this.dropActive = false
         let files = e.dataTransfer.files
         if (files.length === 0) return
@@ -47,7 +47,7 @@
         })
         this.$store.dispatch('menulist/uploadFileByDrag', fileArray)
       },
-      closeDialog(){
+      closeDialog () {
         this.$emit('update:isShow', false)
       }
     }

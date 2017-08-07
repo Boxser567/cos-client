@@ -1,20 +1,19 @@
 <template>
-
     <div>
         <router-view></router-view>
 
         <delete-error :isShow.sync="deleteError" :errorMsg="errorMsg"></delete-error>
         <delete-content :isShow.sync="deleteContent" :errorContent="errorContent"></delete-content>
     </div>
-
 </template>
-
 
 <script>
   import { ipcRenderer } from 'electron'
+  import log from 'electron-log'
   import deleteError from './modules/dialog/deleteError.vue'
   import deleteContent from './modules/dialog/deleteContent.vue'
   import indexPage from './index.vue'
+
   export default {
     name: 'main-page',
     created () {
@@ -57,17 +56,16 @@
           this.deleteContent = true
         }
       })
-      this.$store.getters.bus.$on('globleError', (resp) => {
-        if (!resp) return
-        let errorMsg = resp.error
-        if (resp.statusCode) {
-          errorMsg = resp.error.Message
+      this.$store.getters.bus.$on('globleError', (err) => {
+        log.error(err)
+        let errorMsg = err.message
+        if (err.statusCode) {
+          errorMsg = err.error.Message
         }
         this.$notify.error({
           title: 'Error',
           message: errorMsg
         })
-
       })
     },
     data () {

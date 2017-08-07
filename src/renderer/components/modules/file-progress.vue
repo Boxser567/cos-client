@@ -9,7 +9,7 @@
                     <li :class="{'active' : tabList[1].iscur}" @click="tabFn(1)">
                         {{ tabList[1].name }} {{ downloadCount }}
                     </li>
-                    <li :class="{'active' : tabList[2].iscur}" @click="openLog">
+                    <li :class="{'active' : tabList[2].iscur}" @click="tabFn(2)">
                         {{ tabList[2].name }}
                     </li>
                 </ul>
@@ -29,13 +29,14 @@
                     <progress-list :list="downloadList" :type="'download'"
                                    @speed="val => downloadSpeed = val"></progress-list>
                 </div>
-                <!--<div class="third" v-show=" tabList[2].iscur ">-->
-                    <!--<div class="title-bar">-->
-                        <!--<div class="el-button-group">-->
-                            <!--<el-button size="small" @click="openLog" :plain="true">打开日志列表</el-button>-->
-                        <!--</div>-->
-                    <!--</div>-->
-                <!--</div>-->
+                <div class="third" v-show=" tabList[2].iscur ">
+                    <div class="title-bar">
+                        <div class="el-button-group">
+                            <el-button size="small" @click="openLog" :plain="true">打开日志列表</el-button>
+                        </div>
+                    </div>
+                    <div ref="log"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -71,6 +72,16 @@
       ipcRenderer.on('GetDownloadTasks-data', (event, data) => {
         // console.log('GetDownloadTasks-data', data.length)
         this.downloadList = data
+      })
+    },
+    mounted () {
+      ipcRenderer.on('__ELECTRON_LOG_RENDERER__', (event, level, text) => {
+        let el = this.$refs.log
+        let p = document.createElement('p').appendChild(document.createTextNode(text))
+        el.appendChild(p)
+        if (el.childElementCount > 1000) {
+          el.removeChild(el.firstChild)
+        }
       })
     },
     components: {progressList},
