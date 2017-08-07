@@ -189,7 +189,7 @@ const actions = {
     ipcRenderer.send('NewUploadTasks', Object.assign({FileNames: fileArr}, state.options))
   },
 
-  downloadFile ({state}) {
+  downloadFile ({state}, pms) {
     if (!state.selectFile) return
     remote.dialog.showOpenDialog({
       buttonLabel: '选择',
@@ -202,7 +202,11 @@ const actions = {
         Dirs: [],
         Keys: []
       }, state.options)
-      state.selectFile.forEach(n => {
+      let arrList = state.selectFile
+      if (pms && pms === 'list') {
+        arrList = state.filelist
+      }
+      arrList.forEach(n => {
         if (n.dir) {
           parms.Dirs.push(n.Prefix)
         } else {

@@ -20,13 +20,13 @@
 
             </div>
             <div class="el-button-group">
-                <el-button size="small" :plain="true" @click="send('begin','all')">全部开始
+                <el-button size="small" :disabled="btnAllDis" :plain="true" @click="send('begin','all')">全部开始
                 </el-button>
-                <el-button size="small" :plain="true" @click="send('pause','all')">全部暂停
+                <el-button size="small" :disabled="btnAllDis" :plain="true" @click="send('pause','all')">全部暂停
                 </el-button>
-                <el-button size="small" :plain="true" @click="cancelAll()">全部取消
+                <el-button size="small" :disabled="btnAllDis" :plain="true" @click="cancelAll()">全部取消
                 </el-button>
-                <el-button size="small" :plain="true" @click="clearAll()">清空已完成</el-button>
+                <el-button size="small" :disabled="btnAllDis" :plain="true" @click="clearAll()">清空已完成</el-button>
             </div>
         </div>
         <virtual-scroller class="scroller progress-file" :items="showList" item-height="40" content-tag="div">
@@ -154,6 +154,10 @@
           }
         }
         return check(st)
+      },
+      btnAllDis(){
+        if (!this.showList.length) return true
+        return false
       }
     },
     watch: {

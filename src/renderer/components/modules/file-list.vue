@@ -21,11 +21,12 @@
                 <span>没有文件</span>
             </div>
 
-            <div class="new-file" v-show="newFolder">
+            <div class="new-file" v-if="newFolder">
                 <img src="../../../../static/images/file-icon/folder64x64.png" alt="">
                 <el-row>
                     <el-col :span="12">
-                        <el-input size="small" v-model="folderName"></el-input>
+                        <el-input size="small" id="inputAddFolder"
+                                  v-model="folderName" v-focus="true"></el-input>
                     </el-col>
                     <el-col :span="8">
                         <el-button size="small" @click="addFolderFn">确定</el-button>
@@ -125,7 +126,7 @@
     computed: {
       ...mapState('menulist', ['filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles', 'options', 'search'])
     },
-
+    
     created () {
       menu = new Menu()
       let vue = this
@@ -233,17 +234,17 @@
       // 右键菜单点击事件
       rightClickFn (item) {
         switch (item) {
-          case 'upload_file' : // 上传文件
-            this.$store.dispatch('menulist/uploadFile')
+          case 'upload_file' :   // 上传文件
+            this.$emit('sendObj', 'upload_file')
             break
-          case 'new_folder': // 新建文件夹
-            this.$store.commit('menulist/newFolder', true)
+          case 'new_folder':     // 新建文件夹
+            this.$emit('sendObj', 'new_folder')
             break
           case 'new_folder_cancel':
             this.$store.commit('menulist/newFolder', false)
             break
           case 'download_file':
-            this.$store.dispatch('menulist/downloadFile')
+            this.$emit('sendObj', 'download_file')
             break
           case 'delete_file':
             this.$emit('sendObj', 'delete_file')
@@ -258,7 +259,7 @@
             this.$emit('sendObj', 'set_limit')
             break
           case 'copy_file': // 复制
-            this.$store.commit('menulist/copyFiles')
+            this.$emit('sendObj', 'copy_file')
             break
           case 'paste_file': // 粘贴
             this.$store.dispatch('menulist/pasteFiles').catch((e) => {
@@ -266,10 +267,23 @@
               this.$message('路径相同，不能操作')
             })
             break
-          case 'download_list':
+          case 'download_list':  //下载当前目录
+            this.$emit('sendObj', 'download_list')
             break
           default:
             this.$message('请重启客户端后重试！')
+        }
+      }
+    },
+    directives: {
+      focus: {
+        inserted(el, binding){
+          //if (binding.value === binding.oldValue) return
+          let ipt = el.getElementsByTagName('input')
+          if (ipt[0]) {
+            ipt[0].focus()
+            ipt[0].select()
+          }
         }
       }
     }

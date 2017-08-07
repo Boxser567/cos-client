@@ -25,7 +25,7 @@
                                 <p v-for="item in scope.row.AllowedOrigins">{{item}}</p>
                             </template>
                         </el-table-column>
-                        <el-table-column label="操作 Methods" width="160">
+                        <el-table-column label="操作 Methods" width="130">
                             <template scope="scope">
                                 <p v-for="item in scope.row.AllowedMethods">{{item}}</p>
                             </template>
@@ -45,7 +45,7 @@
                                 <p>{{scope.row.MaxAgeSeconds}}</p>
                             </template>
                         </el-table-column>
-                        <el-table-column label="操作" fixed="right" width="90">
+                        <el-table-column label="操作" width="99">
                             <template scope="scope">
                                 <div class="done">
                                     <el-button @click.native.prevent="handleRow(scope.$index)" type="text" size="small">

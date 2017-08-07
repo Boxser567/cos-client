@@ -30,19 +30,21 @@
             <div class="bottom-row">
                 <div class="file-opts">
                     <div class="el-button-group">
-                        <el-button size="small" class="upload" @click="fileEvents('upload')">
+                        <el-button size="small" class="upload" @click="controlObj('upload_file')">
                             <span class="el-icon-plus"></span> 上传文件
                         </el-button>
                     </div>
 
                     <div class="el-button-group">
-                        <el-button size="small" @click="fileEvents('newFolder')">创建文件夹</el-button>
+                        <el-button size="small" @click="controlObj('new_folder')">创建文件夹</el-button>
                     </div>
 
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true" @click="fileEvents('download')" :disabled="btnDisabedA">下载
+                        <el-button size="small" :plain="true" @click="controlObj('download_file')"
+                                   :disabled="btnDisabedA">下载
                         </el-button>
-                        <el-button size="small" :plain="true" @click="copyObj" :disabled="btnDisabedA">复制
+                        <el-button size="small" :plain="true" @click="controlObj('copy_file')" :disabled="btnDisabedA">
+                            复制
                         </el-button>
                         <el-button size="small" :plain="true" @click="deleteObj" :disabled="btnDisabedA">删除
                         </el-button>
@@ -211,6 +213,15 @@
 
       controlObj (val) {
         switch (val) {
+          case 'upload_file':
+            this.dialogFileupload = true
+            break
+          case 'download_file':
+            this.$store.dispatch('menulist/downloadFile')
+            break
+          case 'new_folder':
+            this.$store.commit('menulist/newFolder', true)
+            break
           case 'delete_file':
             this.deleteObj()
             break
@@ -222,13 +233,20 @@
             }
             this.dialogFileLimit = true
             break
+          case 'copy_file':
+            this.$store.commit('menulist/copyFiles')
+            break
           case 'get_address':
             this.dialogFileAdress = true
             break
           case 'set_http':
             this.dialogSetHttpHead = true
             break
+          case 'download_list':
+            this.$store.dispatch('menulist/downloadFile','list')
+            break
           default :
+            this.$message('出错')
             break
         }
       },
@@ -256,25 +274,6 @@
           await this.$store.dispatch('menulist/getFileList', this.keyWord)
         } catch (e) {
           if (e !== 'cancel') console.error(e)
-        }
-      },
-
-      copyObj () {
-        this.$store.commit('menulist/copyFiles')
-      },
-
-      fileEvents (types) {
-        switch (types) {
-          case 'upload':
-            // this.$store.dispatch('menulist/uploadFile')  //单文件上传功能
-            // 呼出上传窗口
-            this.dialogFileupload = true
-            return
-          case 'download':
-            this.$store.dispatch('menulist/downloadFile')
-            return
-          case 'newFolder':
-            this.$store.commit('menulist/newFolder', true)
         }
       },
 

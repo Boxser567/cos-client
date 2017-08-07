@@ -9,7 +9,7 @@
                     <li :class="{'active' : tabList[1].iscur}" @click="tabFn(1)">
                         {{ tabList[1].name }} {{ downloadCount }}
                     </li>
-                    <li :class="{'active' : tabList[2].iscur}" @click="tabFn(2)">
+                    <li :class="{'active' : tabList[2].iscur}" @click="openLog">
                         {{ tabList[2].name }}
                     </li>
                 </ul>
@@ -29,13 +29,13 @@
                     <progress-list :list="downloadList" :type="'download'"
                                    @speed="val => downloadSpeed = val"></progress-list>
                 </div>
-                <div class="third" v-show=" tabList[2].iscur ">
-                    <div class="title-bar">
-                        <div class="el-button-group">
-                            <el-button size="small" @click="openLog" :plain="true">打开日志列表</el-button>
-                        </div>
-                    </div>
-                </div>
+                <!--<div class="third" v-show=" tabList[2].iscur ">-->
+                    <!--<div class="title-bar">-->
+                        <!--<div class="el-button-group">-->
+                            <!--<el-button size="small" @click="openLog" :plain="true">打开日志列表</el-button>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</div>-->
             </div>
         </div>
     </div>
