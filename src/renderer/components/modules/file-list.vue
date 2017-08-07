@@ -35,19 +35,23 @@
                 </el-row>
             </div>
 
-            <div class="list file-list-info" v-if="filelist.length" :class="{ active:f.active }"
-                 v-for="(f, $index) in filelist"
-                 @click="itemSelect($event, $index, f)"
-                 @dblclick="goFolder(f)"
-                 @contextmenu="openMenu(f, $index)"
-                 :key="f.Name">
-                <div class="name">
-                    <img :src="f | getFileImg" alt="">
-                    <p>{{ f.Name }}</p>
-                </div>
-                <div class="size">{{ f.Size | bitSize }}</div>
-                <div class="time">{{ f.LastModified | getDate }}</div>
-            </div>
+            <virtual-scroller v-if="filelist && filelist.length" style="height: 100%"
+                              :items="filelist" item-height="40" content-tag="div">
+                <template scope="props">
+                    <div class="list file-list-info" :class="{ active:props.item.active }"
+                         @click="itemSelect($event, props.itemIndex, props.item)"
+                         @dblclick="goFolder(props.item)"
+                         @contextmenu="openMenu(props.item, props.itemIndex)"
+                         :key="props.item.Key">
+                        <div class="name">
+                            <img :src="props.item | getFileImg" alt="">
+                            <p>{{ props.item.Name }}</p>
+                        </div>
+                        <div class="size">{{ props.item.Size | bitSize }}</div>
+                        <div class="time">{{ props.item.LastModified | getDate }}</div>
+                    </div>
+                </template>
+            </virtual-scroller>
         </div>
     </div>
 </template>
@@ -136,13 +140,13 @@
     },
 
     methods: {
-      onDragover(){
+      onDragover () {
         this.dropable = true
       },
-      onDragLeave(){
+      onDragLeave () {
         this.dropable = false
       },
-      onDrop(e){
+      onDrop (e) {
         this.dropable = false
         let files = e.dataTransfer.files
         if (files.length === 0) return
