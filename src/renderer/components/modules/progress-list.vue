@@ -155,9 +155,8 @@
         }
         return check(st)
       },
-      btnAllDis(){
-        if (!this.showList.length) return true
-        return false
+      btnAllDis () {
+        return !this.showList.length
       }
     },
     watch: {

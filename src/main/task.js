@@ -338,8 +338,8 @@ UploadTask.prototype.start = function () {
   }
 
   return (this.params.UploadId ? this.getMultipartListPart() : this.multipartInit())
-    .then(this.uploadSlice.bind(this))
-    .then(this.multipartComplete.bind(this))
+    .then(::this.uploadSlice)
+    .then(::this.multipartComplete)
     .catch(err => {
       err.params = this.params
       throw err
