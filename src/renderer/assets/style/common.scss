@@ -13,7 +13,7 @@ body, html {
   height: 100%;
   width: 100%;
   //font: 12px/1.5 "Helvetica Neue",Helvetica,Arial,"Microsoft Yahei","Hiragino Sans GB","Heiti SC","WenQuanYi Micro Hei",sans-serif;
-  font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
+  font-family: PingFangSC-Regular , Helvetica Neue, Helvetica, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
   overflow: auto;
   color: $fontColor;
   font-weight: 400;
@@ -21,7 +21,8 @@ body, html {
   user-select: none;
   cursor: default;
 }
-#app{
+
+#app {
   position: absolute;
   top: 0;
   left: 0;
@@ -59,6 +60,6 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(207,210,215,.6);
+  background-color: rgba(207, 210, 215, .6);
   border-radius: 10px;
 }

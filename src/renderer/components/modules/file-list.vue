@@ -2,8 +2,8 @@
     <div class="file-list">
         <div class="list header">
             <div class="name">文件名</div>
+            <div class="time">创建时间</div>
             <div class="size">大小</div>
-            <div class="time">更新时间</div>
         </div>
         <div class="list-info" id="menuinfo"
              @dragover.prevent="onDragover"
@@ -22,7 +22,7 @@
             </div>
 
             <div class="new-file" v-if="newFolder">
-                <img src="../../../../static/images/file-icon/folder64x64.png" alt="">
+                <img src="../../../../static/images/file-icon/folder32x32.png" alt="">
                 <el-row>
                     <el-col :span="12">
                         <el-input size="small" id="inputAddFolder"
@@ -35,8 +35,8 @@
                 </el-row>
             </div>
 
-            <virtual-scroller v-if="filelist && filelist.length" style="height: 100%"
-                              :items="filelist" item-height="40" content-tag="div">
+            <virtual-scroller v-if="filelist && filelist.length"
+                              :items="filelist" item-height="32" content-tag="div">
                 <template scope="props">
                     <div class="list file-list-info" :class="{ active:props.item.active }"
                          @click="itemSelect($event, props.itemIndex, props.item)"
@@ -47,8 +47,8 @@
                             <img :src="props.item | getFileImg" alt="">
                             <p>{{ props.item.Name }}</p>
                         </div>
-                        <div class="size">{{ props.item.Size | bitSize }}</div>
                         <div class="time">{{ props.item.LastModified | getDate }}</div>
+                        <div class="size">{{ props.item.Size | bitSize }}</div>
                     </div>
                 </template>
             </virtual-scroller>

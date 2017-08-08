@@ -2,28 +2,23 @@
     <div class="slide-right">
         <div class="head">
             <div class="top-row">
-                <div class="history">
-                    <i class="back" v-show="canGoBack()" @click="goBack"></i>
-                    <!--<i class="el-icon-arrow-right" v-show="canGoForward()" @click="goForward"></i>-->
+                <div class="nav"  v-show="!search.active && !inputFocus">
+                    <div class="history">
+                        <i class="back" v-show="canGoBack()" @click="goBack"></i>
+                    </div>
+                    <ul>
+                        <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
+                    </ul>
+                    <i class="el-icon-search" v-show="!search.active" @click="doSearch"></i>
                 </div>
 
-                <div class="nav-bar" @click.self="inputFocus = true">
-                    <div class="nav">
-                        <ul v-show="!search.active && !inputFocus">
-                            <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
-                        </ul>
-
-                        <div class="search-inbar" v-show="search.active || inputFocus">
-                            在<span>{{currentFolder.name}}</span>中搜索
-                        </div>
-                    </div>
-
-                    <input v-show="inputFocus||search.active" v-model="keyWord" v-focus="inputFocus"
-                           @focus="inputFocus = true"
-                           @blur="inputFocus = false"
-                           @keyup.enter="doSearch">
-                    <i class="el-icon-search" v-show="!search.active" @click="doSearch"></i>
-                    <i class="el-icon-close" v-show="search.active" @keyup.esc="cancelSearch" @click="cancelSearch"></i>
+                <div class="search-bar"  v-show="search.active || inputFocus">
+                    <input v-model="keyWord" v-focus="inputFocus" placeholder="搜索当前目录文档"
+                    @focus="inputFocus = true"
+                    @blur="inputFocus = false"
+                    @keyup.enter="doSearch">
+                    <i class="el-icon-search"></i>
+                    <i class="el-icon-close"  @keyup.esc="cancelSearch" @click="cancelSearch"></i>
                 </div>
             </div>
 
@@ -31,11 +26,8 @@
                 <div class="file-opts">
                     <div class="el-button-group">
                         <el-button size="small" class="upload" @click="controlObj('upload_file')">
-                            <span class="el-icon-plus"></span> 上传文件
+                            上传文件
                         </el-button>
-                    </div>
-
-                    <div class="el-button-group">
                         <el-button size="small" @click="controlObj('new_folder')">创建文件夹</el-button>
                     </div>
 
@@ -51,16 +43,10 @@
                         <el-button size="small" :plain="true" @click="controlObj('set_limit')" :disabled="btnDisabedB">
                             设置权限
                         </el-button>
-                    </div>
-
-                    <div class="el-button-group">
                         <el-button size="small" :plain="true"
                                    @click="controlObj('get_address')" :disabled="btnDisabedC">
                             获取地址
                         </el-button>
-                    </div>
-
-                    <div class="el-button-group">
                         <el-button size="small" :plain="true" @click="dialogSetHttpHead = true"
                                    :disabled="btnDisabedB">设置HTTP头
                         </el-button>
@@ -243,7 +229,7 @@
             this.dialogSetHttpHead = true
             break
           case 'download_list':
-            this.$store.dispatch('menulist/downloadFile','list')
+            this.$store.dispatch('menulist/downloadFile', 'list')
             break
           default :
             this.$message('出错')

@@ -1,27 +1,35 @@
 
 .bucket-tl {
   display: block;
-  color: #000;
-  height: 32px;
-  line-height: 32px;
-  padding-left: 20px;
-  background: rgba(255, 255, 255, .1);
-  margin-top: 10px;
+  color: #fff;
+  height: 46.5px;
+  background: $leftSidebarBgColor2;
+  margin-top: 0px;
   text-indent: 3px;
-  font-size: 16px;
-  user-select: initial
+  font-size: 20px;
+  text-align: center;
+  img {
+    position: relative;
+    top: 4px;
+  }
+  span, img {
+    display: inline-block;
+  }
+  padding-top: 33.5px;
+
 }
 
 .bucket-opt {
-  margin: 0 20px;
-  margin-top: 25px;
-  border-bottom: 1px solid #ddd;
+  padding: 15px 9px;
+  background: $leftSidebarBgColor2;
   ul {
     margin: 0 auto;
     text-align: center;
   }
   li {
     display: inline-block;
+    width: 65px;
+    text-align: center;
     i {
       margin-right: 5px;
       color: #2277da;
@@ -34,31 +42,33 @@
       }
     }
     a {
-      color: $fontColor;
-      display: block;
-      padding: 6px 4px;
-      font-size: 14px;
+      display: inline-block;
+      width: 100%;
+      color: #fff;
+      font-size: 13px;
+      padding: 6px 0;
+      opacity: 0.6;
     }
     a:hover {
-      color: #333;
+      opacity: 1
     }
   }
 }
 
 .bucket-group {
   position: absolute;
-  top: 77px;
+  top: 140px;
   bottom: 40px;
   left: 0;
   right: 0;
   overflow: auto;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,.2);
+  }
   &.active {
     height: 45px;
     overflow: hidden;
   }
-
 }
 
 .load-progress {
@@ -67,9 +77,12 @@
   left: 0;
   right: 0;
   text-indent: 20px;
-  font-size: 14px;
+  font-size: 13px;
   height: 40px;
   line-height: 40px;
+  background: $leftSidebarBgColor2;
+  //border-bottom: 2px solid #575757;
+  color: #fff;
   i {
     width: 18px;
     height: 18px;
@@ -77,6 +90,50 @@
     position: relative;
     top: 5px;
     left: 3px;
+  }
+  @keyframes linemove {
+    50% {
+      .p1{
+        left: 95px;
+      }
+    }
+    100%{
+      .p1{
+        left: 0px;
+      }
+      //.p2{
+      //  left: 170px;
+      //}
+      //.p3{
+      //  left: 230px;
+      //}
+    }
+  }
+  .move {
+    height: 2px;
+    background: #3c4046;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0px;
+    //animation: linemove 2s linear 2s infinite;
+    span {
+      position: absolute;
+      width: 40px;
+      height: 100%;
+      display: inline-block;
+      background: $activebg;
+    }
+    .p1{
+      left: 20px;
+    }
+    .p2{
+      left: 95px;
+    }
+    .p3{
+      left: 170px;
+    }
+
   }
   .icon {
     background: url("../../static/images/icon_progress.png") no-repeat center center;
@@ -100,45 +157,44 @@
 }
 
 .bucket-item {
-  margin: 11px 0;
   position: relative;
   .item {
-
     position: relative;
-    color: $fontColor;
-    margin-bottom: 5px;
+    color: #fff;
+    opacity: .6;
     a {
       width: 160px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      padding: 8px 20px;
+      padding: 16.5px 20px;
       display: block;
-      font-size: 14px;
+      font-size: 13px;
       i {
-        position: absolute;
-        top: 6px;
-        right: 12px;
-        font-size: 12px;
-        padding: 5px;
-        display: none;
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        background: $activebg;
+        position: relative;
+        top: -2px;
+      }
+      span {
+        display: inline-block;
+        padding-left: 5px;
       }
     }
     &.active {
       background: $activebg !important;
-      color: #fff;
+      opacity: 1;
       i {
-        display: inline-block;
+        background: #fff;
       }
     }
     &:hover {
-      background: #d5e2ef;
-      i {
-        display: inline-block;
-      }
+      opacity: 1;
+      background: $leftSidebarBgColor2;
     }
   }
-
 }
 
 .dilog-addbucket {

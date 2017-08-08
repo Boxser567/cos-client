@@ -114,7 +114,7 @@ function getFileImg (file) {
       suffix = 'other'
     }
   }
-  suffix = './static/images/file-icon/' + suffix + '64x64.png'
+  suffix = './static/images/file-icon/' + suffix + '32x32.png'
   return suffix
 }
 

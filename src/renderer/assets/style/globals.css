@@ -4,11 +4,11 @@ Error: Invalid US-ASCII character "\xE5"
         from line 1 of globals.scss
 
 1: //左侧背景色
-2: $leftSidebarBgColor: #f0f6f6;
-3: 
-4: //右侧背景色
-5: $rightSidebarBgColor: #f6f8fa;
-6: 
+2: $leftSidebarBgColor: #1f2c33;
+3: $leftSidebarBgColor2: #1b272e;
+4: 
+5: //右侧背景色
+6: $rightSidebarBgColor: #f6f8fa;
 
 Backtrace:
 vars.scss:1
@@ -64,4 +64,4 @@ globals.scss:1
 body:before {
   white-space: pre;
   font-family: monospace;
-  content: "Error: Invalid US-ASCII character \"\xE5\"\A         on line 1 of vars.scss\A         from line 1 of globals.scss\A \A 1: //左侧背景色\A 2: $leftSidebarBgColor: #f0f6f6;\A 3: \A 4: //右侧背景色\A 5: $rightSidebarBgColor: #f6f8fa;\A 6: "; }
+  content: "Error: Invalid US-ASCII character \"\xE5\"\A         on line 1 of vars.scss\A         from line 1 of globals.scss\A \A 1: //左侧背景色\A 2: $leftSidebarBgColor: #1f2c33;\A 3: $leftSidebarBgColor2: #1b272e;\A 4: \A 5: //右侧背景色\A 6: $rightSidebarBgColor: #f6f8fa;"; }

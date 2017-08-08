@@ -1,10 +1,10 @@
 <template>
     <div class="index">
         <div class="slide-left">
-            <!--<div class="bucket-tl">-->
-                <!--<span>AppID：</span>-->
-                <!--<img src="../../../static/images/logo.png" alt="">-->
-            <!--</div>-->
+            <div class="bucket-tl">
+                <img src="../../../static/images/logo.png" width="23" alt="">
+                <span>COS控制台</span>
+            </div>
 
             <div class="bucket-opt">
                 <ul>
@@ -14,28 +14,32 @@
                 </ul>
             </div>
 
-            <div class="bucket">
-                <div class="bucket-group">
-                    <div class="bucket-item">
-                        <div class="item" v-for="bkt in bucketList"
-                             @click="selectBucket(bkt)"
-                             @contextmenu="openMenu(bkt)"
-                             :key="bkt.Name"
-                             :class="{ 'active':bkt.active }"
-                             :title="bkt.Name">
-                            <a>{{bkt.Name}} <i class="el-icon-arrow-down" @click.stop="openMenu(bkt)"></i></a>
-                        </div>
+            <div class="bucket-group">
+                <div class="bucket-item">
+                    <div class="item" v-for="bkt in bucketList"
+                         @click="selectBucket(bkt)"
+                         @contextmenu="openMenu(bkt)"
+                         :key="bkt.Name"
+                         :class="{ 'active':bkt.active }"
+                         :title="bkt.Name">
+                        <a>
+                            <i class="point"></i>
+                            <span>{{bkt.Name}}</span>
+                        </a>
                     </div>
                 </div>
             </div>
 
             <div class="loading" v-if="bloading"><i class="el-icon-loading"></i></div>
 
-            <div class="load-progress" @click="openProgressWindow"> 传输队列
-
+            <div class="load-progress" @click="openProgressWindow">
                 <i class="icon" v-show="!run.upload && !run.download"></i>
-                <!--icon_proing-->
-                <i class="icon_proing" v-show="run.upload || run.download"></i>
+                传输队列
+                <p class="move">
+                    <span class="p1"></span>
+                    <span class="p2"></span>
+                    <span class="p3"></span>
+                </p>
             </div>
 
         </div>
