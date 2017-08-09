@@ -308,12 +308,13 @@ function UploadTask (cos, name, params, option = {}) {
       let loaded0 = 0
       this.progress.On = () => {
         let time1 = Date.now()
-        if (time1 < time0 + 100) return
+        if (time1 < time0 + 800) return
+        let loaded1 = 0
+        this.progress.list.forEach(piece => {
+          loaded1 += piece.loaded || 0
+        })
         setImmediate(() => {
-          let loaded1 = 0
-          this.progress.list.forEach(piece => {
-            loaded1 += piece.loaded || 0
-          })
+          if (loaded1 === loaded0) return
           this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
           this.progress.loaded = loaded1
           time0 = time1
