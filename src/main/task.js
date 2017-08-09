@@ -101,7 +101,7 @@ Tasks.prototype.next = async function () {
           this.emit('cancel', task)
         } else {
           task.status = TaskStatus.ERROR
-          task.error = err
+          task.errorMsg = err.message || err.error ? err.error.Message : 'unknown'
           this.emit('error', task, err)
         }
       }
@@ -130,7 +130,7 @@ Tasks.prototype.initRefresh = function () {
         status: t.status,
         modify: t.modify
       }
-      if (t.status === TaskStatus.ERROR) data.error = t.error
+      if (t.status === TaskStatus.ERROR) data.errorMsg = t.errorMsg
       s.push(Object.assign(data, t.exports()))
       t.modify = false
     })
