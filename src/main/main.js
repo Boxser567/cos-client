@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { ipcMain } from 'electron'
 import log from 'electron-log'
+import promisify from 'util.promisify'
 import Cos from 'cos-nodejs-sdk-v5'
 import { DownloadTask, Tasks, UploadTask } from './task'
 import DB from './db'
@@ -222,6 +223,15 @@ Main.prototype.init = async function () {
     for (let name of arg.FileNames) {
       for (let item of uploadGenerator(name, arg.Prefix)) {
         try {
+          if (item.isDir) {
+            promisify(::cos.putObject)({
+              Bucket: arg.Bucket,
+              Region: arg.Region,
+              Key: item.key,
+              Body: Buffer.from('')
+            })
+            continue
+          }
           let task = await new UploadTask(cos, item.name, {
             Bucket: arg.Bucket,
             Region: arg.Region,
@@ -346,8 +356,8 @@ Main.prototype.init = async function () {
 
   this.close = function () {
     if (!uploads || !downloads) return Promise.resolve()
-    uploads.pause([], true)
-    downloads.pause([], true)
+    uploads.pause([], true, false)
+    downloads.pause([], true, false)
     let cfg = Object.assign({}, config)
     delete cfg.cos
     return Promise.all([
@@ -366,26 +376,28 @@ function* uploadGenerator (name, prefix) {
   }
 
   if (!fs.statSync(name).isDirectory()) {
-    yield {name, key: prefix + path.basename(name)}
+    yield {name, key: prefix + path.basename(name), isDir: false}
     return
   }
 
-  let dirLen = path.dirname(name).length + 1
-  src.push(name)
+  yield {name, key: prefix + path.basename(name) + '/', isDir: true}
 
-  while (src.length) {
-    let dir = src.pop()
+  let dirLen = path.dirname(name).length + 1
+  let dir = name
+  do {
     let subsrc = []
     for (let name of fs.readdirSync(dir)) {
       name = path.join(dir, name)
       if (fs.statSync(name).isDirectory()) {
         subsrc.unshift(name)
+        yield {name, key: prefix + name.substr(dirLen).replace('\\', '/') + '/', isDir: true}
         continue
       }
-      yield {name, key: prefix + name.substr(dirLen).replace('\\', '/')}
+      yield {name, key: prefix + name.substr(dirLen).replace('\\', '/'), isDir: false}
     }
     src.push(...subsrc)
-  }
+    dir = src.pop()
+  } while (dir)
 }
 
 function* downloadGenerator (downloadPath, prefix, contents) {
