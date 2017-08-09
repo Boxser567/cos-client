@@ -4,25 +4,39 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
-        .view {  height: 32px;  line-height: 32px;  width: 100%; }
-        .view >div{display: inline-block; padding: 5px 20px}
-        .p1 p {  width: 200px;  text-overflow: ellipsis;  overflow: hidden;  white-space: nowrap; padding: 0; margin: 0}
-        .clearfix {
-            zoom:1
+        .waveWrapper {
+            position: relative;
         }
-        .clearfix:after{
-            display:block; content:''; clear:both; height:0; visibility:hidden;
+
+        .banner {
+            height: 40px;
+        }
+
+        .wave1 {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: rgba(255, 255, 255, .3);
+            z-index: 3;
+        }
+
+        .wave2 {
+            position: absolute;
+            height: 40px;
+            left: 0;
+            right: 0;
+            background: #abddb1;
         }
     </style>
 </head>
 <body>
 
-<div class="view clearfix">
-    http://files-kopstudio.oss-cn-shanghai.aliyuncs.com/app.json
-    http://98764.oss-cn-shenzhen.aliyuncs.com/karma-e2e.conf.js?OSSAccessKeyId=LTAIl4unPGlJOUR7&Expires=1501578111&Signature=k%2F1HLDXaQMSN3mo5cyBjBFB%2BgMk%3D
-    <div class="p2">8988989898</div>
-    <div class="p3"><a >操作</a></div>
-    <div class="p1"><p>579a4d4asd84as54das4hgfgh4w8er6w4ejh45k55687</p></div>
+<div class="waveWrapper waveAnimation">
+    <div class="banner">
+        <div class="wave1">aaaaaaaaaaaa</div>
+        <div class="wave2">bbbbbbbbbbbbb</div>
+    </div>
 </div>
 
 

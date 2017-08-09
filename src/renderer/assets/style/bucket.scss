@@ -6,17 +6,16 @@
   background: $leftSidebarBgColor2;
   margin-top: 0px;
   text-indent: 3px;
-  font-size: 20px;
   text-align: center;
-  img {
-    position: relative;
-    top: 4px;
-  }
-  span, img {
+  font-size: 18px;
+  i {
+    vertical-align: middle;
+    width: 32px;
+    height: 32px;
     display: inline-block;
+    background: url("../../static/images/logo-min.png") no-repeat center center / contain;
   }
   padding-top: 33.5px;
-
 }
 
 .bucket-opt {
@@ -32,14 +31,20 @@
     text-align: center;
     i {
       margin-right: 5px;
-      color: #2277da;
-      &.fresh {
-        width: 14px;
-        height: 14px;
-        display: inline-block;
-        vertical-align: middle;
-        background: url("../../static/images/fresh.png") no-repeat center center;
-      }
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      vertical-align: middle;
+
+    }
+    .fresh {
+      background: url("../../static/images/fresh.png") no-repeat center center;
+    }
+    .el-new {
+      background: url("../../static/images/new.png") no-repeat center center;
+    }
+    .el-setting {
+      background: url("../../static/images/set.png") no-repeat center center;
     }
     a {
       display: inline-block;
@@ -47,10 +52,14 @@
       color: #fff;
       font-size: 13px;
       padding: 6px 0;
-      opacity: 0.6;
+      span {
+        opacity: 0.6;
+      }
     }
     a:hover {
-      opacity: 1
+      span {
+        opacity: 1
+      }
     }
   }
 }
@@ -63,7 +72,7 @@
   right: 0;
   overflow: auto;
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(255,255,255,.2);
+    background-color: rgba(255, 255, 255, .2);
   }
   &.active {
     height: 45px;
@@ -88,17 +97,17 @@
     height: 18px;
     display: inline-block;
     position: relative;
-    top: 5px;
+    top: 3.5px;
     left: 3px;
   }
   @keyframes linemove {
     50% {
-      .p1{
+      .p1 {
         left: 95px;
       }
     }
-    100%{
-      .p1{
+    100% {
+      .p1 {
         left: 0px;
       }
       //.p2{
@@ -124,22 +133,19 @@
       display: inline-block;
       background: $activebg;
     }
-    .p1{
+    .p1 {
       left: 20px;
     }
-    .p2{
+    .p2 {
       left: 95px;
     }
-    .p3{
+    .p3 {
       left: 170px;
     }
 
   }
   .icon {
     background: url("../../static/images/icon_progress.png") no-repeat center center;
-  }
-  .icon_proing {
-    background: url("../../static/images/icon_proing.gif") no-repeat center center;
   }
 }
 
@@ -148,11 +154,13 @@
   font-size: 24px;
   z-index: 9999;
   position: absolute;
-  top: 75px;
+  top: 140px;
+  bottom: 40px;
   left: 0;
   right: 0;
   bottom: 40px;
-  background: rgba(255, 255, 255, .4);
+  background: rgba(255, 255, 255, .1);
+  color: $activebg2;
   padding-top: 40px;
 }
 
@@ -167,7 +175,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      padding: 16.5px 20px;
+      padding: 13px 20px;
       display: block;
       font-size: 13px;
       i {

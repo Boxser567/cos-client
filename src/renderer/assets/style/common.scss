@@ -13,7 +13,7 @@ body, html {
   height: 100%;
   width: 100%;
   //font: 12px/1.5 "Helvetica Neue",Helvetica,Arial,"Microsoft Yahei","Hiragino Sans GB","Heiti SC","WenQuanYi Micro Hei",sans-serif;
-  font-family: PingFangSC-Regular , Helvetica Neue, Helvetica, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
+  font-family: PingFangSC-Regular, Helvetica Neue, Helvetica, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
   overflow: auto;
   color: $fontColor;
   font-weight: 400;
@@ -29,6 +29,20 @@ body, html {
   right: 0;
   bottom: 0;
   overflow: hidden;
+}
+
+.el-button-group {
+  button {
+    background: none;
+    &:first-child {
+      border-top-left-radius: 2px;
+      border-bottom-left-radius: 2px;
+    }
+    &:last-child {
+      border-top-right-radius: 2px;
+      border-bottom-right-radius: 2px;
+    }
+  }
 }
 
 ul {

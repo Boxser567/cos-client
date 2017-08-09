@@ -2,15 +2,15 @@
     <div class="index">
         <div class="slide-left">
             <div class="bucket-tl">
-                <img src="../../../static/images/logo.png" width="23" alt="">
+                <i></i>
                 <span>COS控制台</span>
             </div>
 
             <div class="bucket-opt">
                 <ul>
-                    <li><a @click="dialogAddVisible = true"><i class="el-icon-plus"></i>新建</a></li>
-                    <li><a @click="dialogSettingVisible=true"><i class="el-icon-setting"></i>设置</a></li>
-                    <li><a @click="fetchData"><i class="fresh"></i>刷新</a></li>
+                    <li><a @click="dialogAddVisible = true"><i class="el-new"></i> <span>新建</span> </a></li>
+                    <li><a @click="dialogSettingVisible=true"><i class="el-setting"></i> <span>设置</span> </a></li>
+                    <li><a @click="fetchData"><i class="fresh"></i> <span>刷新</span> </a></li>
                 </ul>
             </div>
 

@@ -7,17 +7,14 @@
                         {{ tabList[0].name }} {{ uploadCount }}
                     </li>
                     <li :class="{'active' : tabList[1].iscur}" @click="tabFn(1)">
-                        {{ tabList[1].name }} {{ downloadCount }}
+                        {{ tabList[1].name }} <span> {{ downloadCount }}</span>
                     </li>
                     <li :class="{'active' : tabList[2].iscur}" @click="tabFn(2)">
                         {{ tabList[2].name }}
                     </li>
                 </ul>
 
-                <div class="el-speed">
-                    <p> 上传速度: <span>{{uploadSpeed | bitSpeed}}</span></p>
-                    <p> 下载速度: <span>{{downloadSpeed | bitSpeed}}</span></p>
-                </div>
+
             </div>
 
             <div class="el-side-content">
@@ -35,8 +32,12 @@
                             <el-button size="small" @click="openLog" :plain="true">打开日志列表</el-button>
                         </div>
                     </div>
-                    <div ref="log"></div>
+                    <div class="log" ref="log"></div>
                 </div>
+            </div>
+            <div class="el-speed">
+                <p> 上传速度: {{uploadSpeed | bitSpeed}} </p>
+                <p> 下载速度: {{downloadSpeed | bitSpeed}} </p>
             </div>
         </div>
     </div>
@@ -77,8 +78,12 @@
     mounted () {
       ipcRenderer.on('__ELECTRON_LOG_RENDERER__', (event, level, text) => {
         let el = this.$refs.log
-        let p = document.createElement('p').appendChild(document.createTextNode(text))
-        el.appendChild(p)
+        let node = document.createTextNode(text)
+        let dom = document.createElement('div')
+        dom.appendChild(node)
+        dom.setAttribute('class', level)
+        el.appendChild(dom)
+        console.log('log', dom, el)
         if (el.childElementCount > 1000) {
           el.removeChild(el.firstChild)
         }

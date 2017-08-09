@@ -5,42 +5,68 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: url("../../static/images/bg-login.png") no-repeat center center;
+  background: url("../../static/images/bg-login2.jpg") no-repeat center center;
   background-size: cover;
+  .line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin-top: -150px;
+    height: 132px;
+    background: url("../../static/images/line.png") center center / contain;
+  }
 }
 
-.login-form, .locked-form {
-  width: 320px;
-  padding: 40px;
+.login-form {
+  width: 300px;
   position: absolute;
+  text-align: center;
+  margin-top: 80px;
   left: 50%;
   top: 50%;
-  margin-top: -225.5px;
-  margin-left: -200px;
-  text-align: center;
-  padding: 0 40px;
-  img {
-    width: 124px;
-  }
+  margin-top: -200px;
+  margin-left: -150px;
   input {
-    border: 1px solid #fff;
-    color: #000;
-    background: rgba(255, 255, 255, .1);
+    border: 1px solid #a9a7b4;
+    color: #fff;
+    background: #141530;
+    text-align: center;
     &::-webkit-input-placeholder {
-      color: #fff;
+      color: #a9a7b4;
+      text-align: left;
+      text-indent: 13px;
     }
+  }
+  .el-input__inner {
+    height: 46px;
+  }
+  .el-input__inner:focus {
+    border: 1px solid #0370fb;
+  }
+
+  .tl {
+    font-size: 20px;
+    color: #fff;
+    padding-top: 24px;
+    padding-bottom: 30px;
   }
 
   button {
     width: 100%;
-    background: rgb(150, 204, 77);
     font-weight: 500;
     font-size: 15px;
-    border-color: #96CC4D;
+    border-color: #4394fb;
+    background: #0370fb;
+    padding: 14.5px 0;
+  }
+  .el-button--primary {
+    margin-top: 4px;
+    border-radius: 2px;
   }
   .el-button--primary:focus, .el-button--primary:hover {
-    background: #aee64f;
-    border-color: #96CC4D;
+    background: #036ae2;
+    border-color: #3f82e5;
   }
   .el-checkbox {
     display: inline-block;
@@ -50,12 +76,15 @@
       border-color: #96CC4D;
     }
   }
+  .el-form-item {
+    margin-bottom: 12px;
+  }
   .el-select {
     display: inline-block;
     width: 120px;
     margin-left: 58px;
     color: #fff;
-    .el-input.is-disabled .el-input__inner{
+    .el-input.is-disabled .el-input__inner {
       background: rgba(255, 255, 255, 0.1);
     }
     .el-input__icon {

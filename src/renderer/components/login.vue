@@ -1,8 +1,10 @@
 <template>
     <div class="login-bg">
         <button @click="debug">debug</button>
+        <div class="line"></div>
         <el-form class="login-form">
             <img src="../../../static/images/logo.png" alt="">
+            <div class="tl">COS控制台</div>
             <el-form-item>
                 <el-input type="text" v-model="AppId" size="large" placeholder="App ID"></el-input>
             </el-form-item>

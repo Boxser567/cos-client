@@ -53,32 +53,17 @@
 
 //左侧头部样式
 .head {
-  //background: $rightSidebarBgColor;
+  background: $rightSidebarBgColor;
   .top-row {
     height: 43px;
     padding-top: 24px;
     margin-left: 20px;
     margin-right: 20px;
     position: relative;
-    .history {
-      width: 40px;
-      float: left;
-      i {
-        color: #20a0ff;
-        padding: 4px 4px;
-        font-size: 12px;
-        float: left;
-      }
-      .back {
-        display: inline-block;
-        width: 21px;
-        height: 21px;
-        background: url("../../static/images/icon_back.png") no-repeat center center;
-      }
-    }
+
     .nav {
       border-bottom: 1px solid $borderColor;
-      padding-bottom: 14px;
+      padding-bottom: 16px;
       ul {
         display: inline-block;
         width: calc(100% - 70px);
@@ -130,11 +115,23 @@
         float: right;
         font-size: 20px;
       }
+      .back {
+        float: left;
+        width: 16px;
+        height: 16px;
+        padding-right: 10px;
+        background: url("../../static/images/back.png") no-repeat center left;
+      }
+      i {
+        margin-top: 3px;
+      }
     }
     .search-bar {
       border-bottom: 1px solid #aacdf6;
       padding-bottom: 7px;
       input {
+        position: relative;
+        top: -5px;
         height: 36px;
         display: inline-block;
         width: calc(100% - 100px);
@@ -152,7 +149,6 @@
         color: #aebac8;
         cursor: pointer;
         padding-right: 10px;
-        padding-top: 9px;
       }
       .el-icon-search {
         float: left;
@@ -166,7 +162,8 @@
   }
 
   .bottom-row {
-    padding: 29.5px 0;
+    padding-top: 30px;
+    padding-bottom: 20px;
     border-bottom: 1px solid $borderColor;
     padding-left: 20px;
     padding-right: 20px;
@@ -175,6 +172,7 @@
     }
     .file-opts {
       .el-button--small {
+        background: none;
         padding: 8px 9px;
         border: 1px solid #8c95a4;
         font-size: 12px;
@@ -185,7 +183,7 @@
         cursor: default;
       }
       .upload {
-        background: #2277da;
+        background: $activebg2;
         color: #fff;
         border-color: #2277da;
         .el-icon-plus {
@@ -212,7 +210,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 158px;
+  top: 149.5px;
   bottom: 0;
   overflow: hidden;
   .list {
@@ -225,7 +223,6 @@
     &.header {
       font-size: 12px;
       padding: 5.5px 20px;
-      background: #fff;
       color: #8c95a4;
       .time {
         border-left: 1px solid $borderColor;
@@ -246,7 +243,7 @@
   }
   .list-info {
     overflow-x: overlay;
-    background: #fff;
+    background: $rightSidebarBgColor;
     position: absolute;
     top: 30px;
     left: 0;
@@ -272,15 +269,15 @@
       }
     }
     .list {
-      height: 32px;
-      line-height: 32px;
+      height: 34px;
+      line-height: 34px;
       color: $fontColor;
       &:nth-child(odd) {
         background: #f1f1f1;
       }
       &.active {
         color: #fff;
-        background: $fileActive !important;
+        background: $activebg2 !important;
       }
       &:hover {
         background: #EAECF2;
@@ -290,16 +287,26 @@
       position: relative;
       padding: 5px 0;
       img {
-        width: 32px;
+        width: 20px;
         position: absolute;
         left: 20px;
         top: 5px;
       }
       .el-row {
-        padding-left: 60px;
+        padding-left: 54px;
+        .el-input__inner{
+          height: 24px;
+          font-size: 13px;
+        }
       }
       .el-col-8 {
-        padding-left: 15px;
+        &:nth-child(2){
+          padding-left: 15px;
+        }
+        .el-button--small{
+          padding: 4px 9px;
+          margin-left: 5px;
+        }
       }
 
     }
@@ -333,7 +340,7 @@
   left: 0;
   bottom: 0;
   z-index: 99;
-  background: #fff;
+  background: #f9fbfe;
   transition: all .5s;
   &.list-none {
     height: 40px;
@@ -341,8 +348,8 @@
   .el-side-head {
     font-size: 12px;
     padding: 20px 0;
-    padding-top: 7px;
-    background: $rightSidebarBgColor;
+    padding-top: 30px;
+    background: #f0f1f4;
     border-right: 1px solid $borderColor;
     width: 180px;
     position: absolute;
@@ -358,11 +365,15 @@
       position: relative;
       z-index: 1;
       padding: 8px 20px;
+      padding-left: 30px;
       margin: 2px 0px;
       cursor: pointer;
       color: #5b6678;
-      text-align: center;
+      text-align: left;
       font-size: 13px;
+      span {
+        color: #9c9c9c;
+      }
       &:hover {
         background: $hoverbg;
       }
@@ -370,82 +381,68 @@
         z-index: 5;
         color: #fff;
         background: $activebg;
-      }
-    }
-    .el-speed {
-      position: absolute;
-      bottom: 10px;
-      left: 0;
-      right: 0;
-      text-indent: 20px;
-      span {
-        padding: 0 4px;
-        text-align: center;
-        display: inline-block;
-      }
-      i {
-        position: absolute;
-        top: 5px;
-        right: 10px;
-        text-align: center;
-        width: 20px;
-        height: 20px;
-        display: inline-block;
-        transform: rotate(90deg);
-        color: #afbbc9;
-        font-size: 12px;
-        transition: all .5s;
-        &.active {
-          transform: rotate(-90deg);
+        span {
+          color: #fff;
+          opacity: .6;
         }
       }
     }
+
   }
   .el-side-content {
     position: absolute;
     top: 0;
     left: 181px;
     right: 0;
-    bottom: 0;
+    bottom: 34px;
+    border-bottom: 1px solid $borderColor;
     .title-bar {
       padding: 10px 20px;
+      padding-left: 60px;
+      padding-top: 20px;
+      padding-bottom: 10px;
       border-bottom: 1px solid $borderColor;
 
       .el-button {
-        color: #2277da;
+        color: #607086;
+        background: none;
+        border-color: $borderColor;
         font-size: 11px;
       }
       .el-button.is-disabled.is-plain, .el-button.is-disabled.is-plain:focus, .el-button.is-disabled.is-plain:hover {
         color: #bfcbd9;
+        cursor: default;
       }
       .select-btn {
-        margin-right: 20px;
+        margin-right: 40px;
         .el-button {
           &:not(:first-child) {
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 4px;
+            border-top-right-radius: 2px;
+            border-bottom-right-radius: 2px;
           }
         }
       }
     }
     .progress-file {
+      height: 357px;
       overflow: auto;
-      height: 400px;
-      .progress-bar {
-        &:hover {
-          background: #eaf3fd;
-        }
-        &.active {
-          background: $fileActive;
-        }
-      }
 
     }
     .progress-bar {
       position: relative;
-      padding: 2px 0;
-      padding-left: 58px;
-      font-size: 12px;
+      font-size: 13px;
+      height: 36px;
+      border-bottom: 1px solid $borderColor;
+      .content {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        .el-col-12 {
+          text-indent: 58px;
+        }
+      }
       img {
         width: 28px;
         height: 28px;
@@ -453,6 +450,27 @@
         top: 4px;
         left: 20px;
       }
+      .diff {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: -1;
+        &.p {
+          background: #d6f2dd;
+        }
+        &.s {
+          background: #ddd;
+        }
+        &.r {
+          background: #eaf3fe;
+        }
+        &.e {
+          background: #ffc4b8;
+        }
+      }
+
       .el-progress__text {
         margin-left: 15px;
       }
@@ -461,19 +479,19 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        padding-top: 4px;
+        height: 32px;
+        line-height: 32px;
       }
       .el-col-4 {
         text-align: center;
-        color: $fontColor;
         height: 32px;
         line-height: 32px;
-        padding-top: 4px;
         i {
           cursor: pointer;
           display: inline-block;
           width: 24px;
           height: 24px;
+          margin-top: 3.5px;
         }
         .close {
           background: url("../../static/images/cancel.png") no-repeat center center;
@@ -488,9 +506,40 @@
           background: url("../../static/images/begin.png") no-repeat center center;
         }
       }
+
+      &:hover {
+        background: #eaf3fd;
+      }
+      &.active {
+        color: #fff;
+        .content {
+          background: $activebg2;
+        }
+      }
+    }
+    .log {
+      height: 360px;
+      font-size: 11px;
+      overflow: auto;
+      padding-left: 15px;
+      background: #f7f7f7;
     }
   }
 
+  .el-speed {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: right;
+    padding-right: 20px;
+    p {
+      display: inline-block;
+      font-size: 13px;
+      color: #9c9c9c;
+      margin-left: 25px;
+    }
+  }
 }
 
 .virtual-scroller[data-v-303cd025]:not(.page-mode) {

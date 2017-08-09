@@ -106,6 +106,12 @@ const mutations = {
       keyWord: ''
     }
   },
+  goSearch(state, val){
+    state.search = {
+      active: val,
+      keyWord: ''
+    }
+  },
   // 搜索文件
   searchFileList (state, data) {
     let arr = data.dirs.filter(obj => {
@@ -184,7 +190,6 @@ const actions = {
 
   uploadFileByDrag ({state}, fileArr) {
     if (!fileArr) return
-    console.log('fileArr1', fileArr, state.options)
     ipcRenderer.send('NewUploadTasks', Object.assign({FileNames: fileArr}, state.options))
   },
 

@@ -33,33 +33,45 @@
             <template scope="props">
                 <div class="progress-bar" :key="props.item.id" :class="{ active: props.item.active }"
                      @click="select($event, props.item)">
-                    <img :src="props.item | getFileImg" alt="">
-                    <el-row>
-                        <el-col :span="12">
-                            <p class="tl">{{props.item.Key}}</p>
-                            <el-progress :stroke-width="2"
-                                         :percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>
-                        </el-col>
-                        <el-col :span="4">
-                            {{props.item.size | bitSize}}
-                        </el-col>
-                        <el-col :span="4">
-                            <span v-if="props.item.status=='wait'">等待中</span>
-                            <span v-if="props.item.status=='pause'">暂停</span>
-                            <span v-if="props.item.status=='complete'">完成</span>
-                            <span v-if="props.item.status=='run'"> {{props.item.speed | bitSpeed}} </span>
-                            <span v-if="props.item.status=='error'">出错</span>
-                        </el-col>
-                        <el-col :span="4">
-                            <i v-if="props.item.status == 'pause'" class="begin"
-                               @click="send('begin', 'one', props.item.id)"></i>
-                            <i v-if="props.item.status == 'run'" class="pause"
-                               @click="send('pause', 'one', props.item.id)"></i>
-                            <i v-if="props.item.status == 'error'" class="error"
-                               @click="send('begin', 'one', props.item.id)"></i>
-                            <i class="close" @click="send('delete', 'one', props.item.id)"></i>
-                        </el-col>
-                    </el-row>
+                    <div class="content">
+                        <img :src="props.item | getFileImg" alt="">
+                        <el-row>
+                            <el-col :span="12">
+                                <p class="tl">{{props.item.Key}}</p>
+                                <!--<el-progress :stroke-width="2"-->
+                                <!--:percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>-->
+                            </el-col>
+                            <el-col :span="4">
+                                {{props.item.size | bitSize}}
+                            </el-col>
+                            <el-col :span="4">
+                                <span v-if="props.item.status=='wait'">等待中</span>
+                                <span v-if="props.item.status=='pause'">暂停</span>
+                                <span v-if="props.item.status=='complete'">完成</span>
+                                <span v-if="props.item.status=='run'"> {{props.item.speed | bitSpeed}} </span>
+                                <span v-if="props.item.status=='error'">出错</span>
+                            </el-col>
+                            <el-col :span="4">
+                                <i v-if="props.item.status == 'pause'" class="begin"
+                                   @click="send('begin', 'one', props.item.id)"></i>
+                                <i v-if="props.item.status == 'run'" class="pause"
+                                   @click="send('pause', 'one', props.item.id)"></i>
+                                <i v-if="props.item.status == 'error'" class="error"
+                                   @click="send('begin', 'one', props.item.id)"></i>
+                                <i class="close" @click="send('delete', 'one', props.item.id)"></i>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <div class="diff p" :style="{ width: props.item.strokeWidth }"
+                         v-if="props.item.status =='pause'"></div>
+                    <!---->
+                    <div class="diff r"
+                         :style="{ width: props.item.strokeWidth }"
+                         v-if="props.item.status=='run'"></div>
+                    <div class="diff e"
+                         :style="{ width: props.item.strokeWidth}"
+                         v-if="props.item.status=='error'"></div>
                 </div>
             </template>
         </virtual-scroller>
@@ -188,6 +200,8 @@
             this.normaliseList[i].size = v.size
             this.normaliseList[i].loaded = v.loaded
             this.normaliseList[i].speed = v.speed
+            this.normaliseList[i].strokeWidth = v.size === 0 ? 0 : parseInt(v.loaded / v.size * 100) + '%'
+            console.log( this.normaliseList[i].strokeWidth)
           }
           i++
         }
@@ -272,10 +286,13 @@
         }
       },
       cancelAll () {
-        ipcRenderer.send(this.channels.delete, {
-          all: true,
-          onlyNotComplete: true
-        })
+        this.$confirm('确定全部取消吗？').then(()=>{
+          ipcRenderer.send(this.channels.delete, {
+            all: true,
+            onlyNotComplete: true
+          })
+        }).catch(()=>{})
+
       },
       clearAll () {
         ipcRenderer.send(this.channels.delete, {

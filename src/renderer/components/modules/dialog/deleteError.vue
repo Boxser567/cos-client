@@ -11,7 +11,6 @@
             <!--<span>这是一段信息 {{errorMsg}} </span>-->
             <div class="tl">
                 操作进度: {{errorMsg ? errorMsg.data.done : '' }}/{{errorMsg ? errorMsg.data.total : '' }}
-                {{errorMsg}}
             </div>
             <el-progress v-if="getProgress" :percentage="getProgress" :stroke-width="8"></el-progress>
             <div slot="footer" class="dialog-footer">

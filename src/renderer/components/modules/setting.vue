@@ -58,8 +58,11 @@
         downMax: 0
       }
     },
-    created () {
-      this.fetchData()
+    watch: {
+      'dialogSettingVisible': function (val) {
+        if (val)
+          this.fetchData()
+      }
     },
     methods: {
       fetchData () {
@@ -78,14 +81,13 @@
           }
         }
         this.$store.dispatch('setConfig', parms)
-        console.log(this.$store.state.config)
         this.closeDialog()
       },
       closeDialog () {
+        this.$emit('closeDiolog')
         this.upMax = 0
         this.upAsy = 0
         this.downMax = 0
-        this.$emit('closeDiolog')
       }
     }
 

@@ -12,7 +12,7 @@
                 <el-row>
                     <el-col :span="12">
                         <p class="tl">{{file.Key}}</p>
-                        <el-progress :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>
+                        <!--<el-progress :percentage="(file.loaded/file.size * 100) | getInteger"></el-progress>-->
                     </el-col>
                     <el-col :span="4">
                         {{file.size | bitSize}}
@@ -25,14 +25,19 @@
                         <span v-if="file.item.status=='error'">出错</span>
                     </el-col>
                     <el-col :span="4">
-                        <i class="el-icon-caret-right" v-if="file.item.status=='pause'"
-                           @click="uploadFileCtrl($event,'begin',file.item.id)"></i>
-                        <i v-if="file.status == 'run'" @click="uploadFileCtrl($event,'pause',file.item.id)"> || </i>
-                        <i v-if="file.status=='error'" class="el-icon-warning"
-                           @click="uploadFileCtrl($event,'begin',file.item.id)"></i>
-                        <i class="el-icon-close" @click="uploadFileCtrl($event,'cancel',file.item.id)"></i>
+                        <div class="bar">
+                            <i class="el-icon-caret-right" v-if="file.item.status=='pause'"
+                               @click="uploadFileCtrl($event,'begin',file.item.id)"></i>
+                            <i v-if="file.status == 'run'" @click="uploadFileCtrl($event,'pause',file.item.id)"> || </i>
+                            <i v-if="file.status=='error'" class="el-icon-warning"
+                               @click="uploadFileCtrl($event,'begin',file.item.id)"></i>
+                            <i class="el-icon-close" @click="uploadFileCtrl($event,'cancel',file.item.id)"></i>
+                        </div>
                     </el-col>
                 </el-row>
+                <div class="diff p" :style="width: { (file.loaded/file.size * 100) | getInteger }" v-if="file.item.status=='pause'"></div>
+                <div class="diff r" :style="width: { (file.loaded/file.size * 100) | getInteger }"  v-if="file.item.status=='run'"></div>
+                <div class="diff e" :style="width: { (file.loaded/file.size * 100) | getInteger }"  v-if="file.item.status=='error'"></div>
             </div>
         </VirtualList>
     </div>

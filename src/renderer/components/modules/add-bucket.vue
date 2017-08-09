@@ -86,6 +86,9 @@
     computed: {
       appid () {
         return this.$store.state.config.cos.AppId
+      },
+      bucketList(){
+        return this.$store.state.bucket.bucketList
       }
     },
     created () {},
@@ -96,6 +99,19 @@
         this.myform.areaDef = 'cn-south'
       },
       submitForm () {
+        console.log('bucketList', this.bucketList)
+        let flag = false
+        if (this.bucketList.length) {
+          this.bucketList.forEach(n => {
+            if (n.Name === this.myform.bucketName) {
+              flag = true
+            }
+          })
+        }
+        if (flag) {
+          this.$message.error('bucket名称重复!')
+          return
+        }
         if (this.myform.bucketName.length > 40) {
           this.$message.error('bucket不能超过40字符!')
           return

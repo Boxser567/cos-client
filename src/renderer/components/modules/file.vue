@@ -2,23 +2,18 @@
     <div class="slide-right">
         <div class="head">
             <div class="top-row">
-                <div class="nav"  v-show="!search.active && !inputFocus">
-                    <div class="history">
-                        <i class="back" v-show="canGoBack()" @click="goBack"></i>
-                    </div>
+                <div class="nav" v-show="!search.active">
                     <ul>
                         <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
                     </ul>
-                    <i class="el-icon-search" v-show="!search.active" @click="doSearch"></i>
+                    <i class="back" @click="goBack"></i>
+                    <i class="el-icon-search" @click="actionSearch"></i>
                 </div>
 
-                <div class="search-bar"  v-show="search.active || inputFocus">
-                    <input v-model="keyWord" v-focus="inputFocus" placeholder="搜索当前目录文档"
-                    @focus="inputFocus = true"
-                    @blur="inputFocus = false"
-                    @keyup.enter="doSearch">
-                    <i class="el-icon-search"></i>
-                    <i class="el-icon-close"  @keyup.esc="cancelSearch" @click="cancelSearch"></i>
+                <div class="search-bar" v-show="search.active">
+                    <input v-model="keyWord" id="inputFocus" placeholder="搜索当前目录文档" @keyup.enter="doSearch">
+                    <i class="el-icon-search" @click="doSearch"></i>
+                    <i class="el-icon-close" @keyup.esc="cancelSearch" @click="cancelSearch"></i>
                 </div>
             </div>
 
@@ -47,9 +42,9 @@
                                    @click="controlObj('get_address')" :disabled="btnDisabedC">
                             获取地址
                         </el-button>
-                        <el-button size="small" :plain="true" @click="dialogSetHttpHead = true"
-                                   :disabled="btnDisabedB">设置HTTP头
-                        </el-button>
+                        <!--<el-button size="small" :plain="true" @click="dialogSetHttpHead = true"-->
+                                   <!--:disabled="btnDisabedB">设置HTTP头-->
+                        <!--</el-button>-->
                     </div>
                     <span class="area">{{ options.Region | getArea }}</span>
                 </div>
@@ -168,9 +163,14 @@
           }
         })
       },
-
+      actionSearch(){
+        this.$store.commit('menulist/goSearch', true)
+        setTimeout(() => {
+          let elem = document.getElementById('inputFocus')
+          elem.focus()
+        }, 10)
+      },
       doSearch () {
-        this.inputFocus = false
         if (!this.keyWord) return
         this.$router.push({
           path: '/file/' + this.options.Bucket,
@@ -183,9 +183,9 @@
       },
 
       cancelSearch () {
-        this.inputFocus = false
         this.keyWord = ''
         if (this.search.active) {
+          this.$store.commit('menulist/goSearch', false)
           this.$router.push({
             path: '/file/' + this.options.Bucket,
             query: {
@@ -264,6 +264,7 @@
       },
 
       goBack () {
+        if (!this.parentFolder || !this.parentFolder.Prefix) return
         this.$router.push({
           path: '/file/' + this.options.Bucket,
           query: {
@@ -286,10 +287,10 @@
         return webContents.canGoForward()
       }
     },
-    directives: {
-      focus (el, binding) {
-        binding.value ? el.focus() : el.blur()
-      }
-    }
+//    directives: {
+//      focus (el, binding) {
+//        binding.value ? el.focus() : el.blur()
+//      }
+//    }
   }
 </script>

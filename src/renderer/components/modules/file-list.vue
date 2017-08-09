@@ -24,7 +24,7 @@
             <div class="new-file" v-if="newFolder">
                 <img src="../../../../static/images/file-icon/folder32x32.png" alt="">
                 <el-row>
-                    <el-col :span="12">
+                    <el-col :span="8">
                         <el-input size="small" id="inputAddFolder"
                                   v-model="folderName" v-focus="true"></el-input>
                     </el-col>
@@ -36,7 +36,7 @@
             </div>
 
             <virtual-scroller v-if="filelist && filelist.length"
-                              :items="filelist" item-height="32" content-tag="div">
+                              :items="filelist" item-height="34" content-tag="div">
                 <template scope="props">
                     <div class="list file-list-info" :class="{ active:props.item.active }"
                          @click="itemSelect($event, props.itemIndex, props.item)"
@@ -118,10 +118,10 @@
           list: null,
           top: 0,
           left: 0,
-          files: ['download_file', 'copy_file', 'delete_file', 'get_address', 'set_http', 'set_limit'],
-          folders: ['download_file', 'copy_file', 'delete_file', 'set_limit'],
+          files: ['download_file', 'copy_file', 'delete_file', 'get_address',  'set_limit'], //'set_http',
+          folders: ['download_file', 'copy_file', 'delete_file'],
           blanks: ['upload_file', 'new_folder', 'download_list'],
-          groupFile: ['download_file', 'copy_file', 'delete_file', 'set_http']
+          groupFile: ['download_file', 'copy_file', 'delete_file']  //'set_http'
         },
         dropable: false
       }
@@ -130,7 +130,7 @@
     computed: {
       ...mapState('menulist', ['filelist', 'fileloading', 'selectFile', 'newFolder', 'copyFiles', 'options', 'search'])
     },
-    
+
     created () {
       menu = new Menu()
       let vue = this
@@ -157,6 +157,10 @@
         this.$store.dispatch('menulist/uploadFileByDrag', fileArray)
       },
       addFolderFn: function () { // 新建文件夹
+        if (!this.folderName || this.folderName.length > 20) {
+          this.$message('可用数字、中英文及下划线组合,最多支持20字符')
+          return
+        }
         let parms = {
           Bucket: this.options.Bucket,
           Region: this.options.Region,
