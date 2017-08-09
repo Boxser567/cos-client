@@ -103,6 +103,7 @@ DB.prototype.upload = function () {
         params: t.params,
         name: t.file.fileName,
         status: t.status,
+        errorMsg: t.errorMsg || '',
         total: t.progress.total,
         loaded: t.progress.loaded,
         option: {
