@@ -2,6 +2,8 @@
  * Created by gokuai on 17/6/7.
  */
 import { ipcRenderer, remote } from 'electron'
+import log from 'electron-log'
+import promisify from 'util.promisify'
 
 const state = {
   options: {
@@ -162,18 +164,17 @@ const actions = {
         commit('getFileList', data)
       }
     } catch (err) {
+      log.error(err)
       rootGetters.bus.$emit('globleError', err)
     }
     commit('fileloading', {loading: false})
   },
 
   mkDir ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      params.Body = Buffer.from('')
-      rootGetters.cos.putObject(params, function (err, data) {
-        if (err) rootGetters.bus.$emit('globleError', err)
-        err ? reject(err) : resolve(data)
-      })
+    params.Body = Buffer.from('')
+    return promisify(::rootGetters.cos.putObject)(params).catch(err => {
+      log.error(err)
+      rootGetters.bus.$emit('globleError', err)
     })
   },
 
@@ -183,7 +184,6 @@ const actions = {
       properties: ['openFile', 'openDirectory', 'multiSelections']
     }, FileNames => {
       if (!FileNames) return
-      console.log('FileNames', FileNames)
       ipcRenderer.send('NewUploadTasks', Object.assign({FileNames}, state.options))
     })
   },
@@ -255,9 +255,7 @@ async function listDir (cos, params) {
   let pflen = params.Prefix ? params.Prefix.length : 0
 
   do {
-    result = await new Promise((resolve, reject) => {
-      cos.getBucket(params, (err, result) => { err ? reject(err) : resolve(result) })
-    })
+    result = await promisify(::cos.getBucket)(params)
 
     result.CommonPrefixes.forEach(v => {
       if (v.Prefix !== params.Prefix) {
@@ -280,9 +278,7 @@ async function searchDir (cos, params) {
   let pflen = params.Prefix ? params.Prefix.length : 0
 
   do {
-    result = await new Promise((resolve, reject) => {
-      cos.getBucket(params, (err, result) => { err ? reject(err) : resolve(result) })
-    })
+    result = await promisify(::cos.getBucket)(params)
 
     result.Contents.forEach(v => {
       if (v.Key.substr(-1) !== '/') {

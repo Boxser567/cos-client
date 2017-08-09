@@ -242,10 +242,10 @@
       // 右键菜单点击事件
       rightClickFn (item) {
         switch (item) {
-          case 'upload_file' :   // 上传文件
+          case 'upload_file' : // 上传文件
             this.$emit('sendObj', 'upload_file')
             break
-          case 'new_folder':     // 新建文件夹
+          case 'new_folder': // 新建文件夹
             this.$emit('sendObj', 'new_folder')
             break
           case 'new_folder_cancel':
@@ -275,7 +275,7 @@
               this.$message('路径相同，不能操作')
             })
             break
-          case 'download_list':  //下载当前目录
+          case 'download_list': // 下载当前目录
             this.$emit('sendObj', 'download_list')
             break
           default:
@@ -285,8 +285,8 @@
     },
     directives: {
       focus: {
-        inserted(el, binding){
-          //if (binding.value === binding.oldValue) return
+        inserted (el, binding) {
+          // if (binding.value === binding.oldValue) return
           let ipt = el.getElementsByTagName('input')
           if (ipt[0]) {
             ipt[0].focus()

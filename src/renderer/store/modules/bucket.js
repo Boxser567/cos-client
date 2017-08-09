@@ -1,8 +1,9 @@
 /**
  * Created by gokuai on 17/6/26.
  */
-
 import sdkUtil from 'cos-nodejs-sdk-v5/sdk/util'
+import log from 'electron-log'
+import promisify from 'util.promisify'
 
 const state = {
   bucketList: null
@@ -32,149 +33,105 @@ const actions = {
   },
 
   getService ({rootGetters, commit}) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.getService((err, data) => {
-        if (err) {
+    return promisify(::rootGetters.cos.getService)()
+      .then(
+        data => { commit('getMuService', data.Buckets) },
+        err => {
+          log.error(err)
           rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          commit('getMuService', data.Buckets)
-          resolve(data)
         }
-      })
-      // rootState.bus={type:'error',msg:'出错'}
-    })
+      )
   },
 
-  putBucket ({commit, rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.putBucket(params.pms, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+  putBucket ({rootGetters}, params) {
+    return promisify(::rootGetters.cos.putBucket)(params.pms)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   },
 
-  deleteBucket ({state, rootGetters}, parms) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.deleteBucket(parms, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+  deleteBucket ({rootGetters}, params) {
+    return promisify(::rootGetters.cos.deleteBucket)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   },
 
   getBucketACL ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.getBucketAcl(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+    return promisify(::rootGetters.cos.getBucketAcl)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
-  },
-
-  putBucketAcl ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.putBucketAcl(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
-      })
-    })
   },
 
   getBucketCORS ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.getBucketCors(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+    return promisify(::rootGetters.cos.getBucketCors)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   },
 
   putBucketCORS ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.putBucketCors(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+    return promisify(::rootGetters.cos.putBucketCors)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   },
 
   deleteBucketCORS ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.deleteBucketCors(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+    return promisify(::rootGetters.cos.deleteBucketCors)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   },
 
   getObjectACL ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.getObjectAcl(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+    return promisify(::rootGetters.cos.getObjectAcl)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   },
 
   putObjectACL ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      rootGetters.cos.putObjectAcl(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+    return promisify(::rootGetters.cos.putObjectAcl)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   },
 
   putObject ({rootGetters}, params) {
-    return new Promise((resolve, reject) => {
-      params.Body = Buffer.from('')
-      rootGetters.cos.putObject(params, function (err, data) {
-        if (err) {
-          rootGetters.bus.$emit('globleError', err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
+    params.Body = Buffer.from('')
+    return promisify(::rootGetters.cos.putObject)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
       })
-    })
   }
 }
 

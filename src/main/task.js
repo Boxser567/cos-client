@@ -7,6 +7,7 @@ import path from 'path'
 import crypto from 'crypto'
 import events from 'events'
 import log from 'electron-log'
+import promisify from 'util.promisify'
 
 const CHECK_ETAG = true // 是否检查分片上传每片返回的ETag
 /**
@@ -307,12 +308,13 @@ function UploadTask (cos, name, params, option = {}) {
       let loaded0 = 0
       this.progress.On = () => {
         let time1 = Date.now()
-        if (time1 < time0 + 100) return
+        if (time1 < time0 + 800) return
+        let loaded1 = 0
+        this.progress.list.forEach(piece => {
+          loaded1 += piece.loaded || 0
+        })
         setImmediate(() => {
-          let loaded1 = 0
-          this.progress.list.forEach(piece => {
-            loaded1 += piece.loaded || 0
-          })
+          if (loaded1 === loaded0) return
           this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
           this.progress.loaded = loaded1
           time0 = time1
@@ -325,142 +327,116 @@ function UploadTask (cos, name, params, option = {}) {
   })
 }
 
-// todo 添加校验
-UploadTask.prototype.start = function () {
+UploadTask.prototype.start = async function () {
   this.cancel = false
-  if (this.file.fileSize === 0) {
-    return new Promise((resolve, reject) => {
-      this.params.Body = Buffer.from('')
-      this.cos.putObject(this.params, (err, data) => {
-        err ? reject(Object.assign(err, {params: this.params})) : resolve(data)
-      })
-    })
-  }
-
-  return (this.params.UploadId ? this.getMultipartListPart() : this.multipartInit())
-    .then(this.uploadSlice.bind(this))
-    .then(this.multipartComplete.bind(this))
-    .catch(err => {
+  if (this.file.fileSize < 1 >> 17) {
+    try {
+      if (this.file.fileSize === 0) {
+        this.params.Body = Buffer.from('')
+      } else {
+        this.params.Body = fs.createReadStream(this.file.fileName)
+      }
+      await promisify(::this.cos.putObject)(this.params)
+    } catch (err) {
       err.params = this.params
       throw err
-    })
+    }
+    return
+  }
+  try {
+    this.params.UploadId ? await this.getMultipartListPart() : await this.multipartInit()
+    await this.uploadSlice()
+    await this.multipartComplete()
+  } catch (err) {
+    err.params = this.params
+    throw err
+  }
 }
 
-UploadTask.prototype.multipartInit = function () {
-  return new Promise((resolve, reject) => {
-    this.cos.multipartInit(this.params, (err, result) => {
-      if (err) { return reject(err) }
-      if (!result.UploadId) { return reject(new Error('null UploadId')) }
-      log.debug('sliceUploadFile: 创建新上传任务成功，UploadId: ', result.UploadId)
-      this.params.UploadId = result.UploadId
-      resolve()
-    })
-  })
+UploadTask.prototype.multipartInit = async function () {
+  let result = await promisify(::this.cos.multipartInit)(this.params)
+  if (!result.UploadId) throw new Error('null UploadId')
+  log.debug('sliceUploadFile: 创建新上传任务成功，UploadId: ', result.UploadId)
+  this.params.UploadId = result.UploadId
 }
 
-UploadTask.prototype.getMultipartListPart = function () {
+UploadTask.prototype.getMultipartListPart = async function () {
   let list = []
   let params = this.params
-  let p = () => new Promise((resolve, reject) => {
-    this.cos.multipartListPart(params, (err, result) => {
-      if (err) {
-        reject(err)
-        return
-      }
+  let result
+  do {
+    result = await promisify(::this.cos.multipartListPart)(params)
 
-      result.Part.forEach(part => {
-        list[part.PartNumber - 1] = {
-          PartNumber: part.PartNumber,
-          ETag: part.ETag
-        }
-      })
-
-      if (result.IsTruncated === 'true') {
-        params.PartNumberMarker = result.NextPartNumberMarker
-        p().then(resolve, reject)
-        return
+    result.Part.forEach(part => {
+      list[part.PartNumber - 1] = {
+        PartNumber: part.PartNumber,
+        ETag: part.ETag
       }
-      this.params.Parts = list
-      resolve()
     })
-  })
-  return p()
+
+    params.PartNumberMarker = result.NextPartNumberMarker
+  } while (result.IsTruncated === 'true')
+  this.params.Parts = list
 }
 
 /** @private */
-UploadTask.prototype.uploadSlice = function () {
-  return Promise.all(new Array(this.asyncLim).fill(0).map(() => this.upload()))
-    .then(() => {
-      this.progress.speed = 0
-      return Promise.resolve()
-    })
+UploadTask.prototype.uploadSlice = async function () {
+  await Promise.all(new Array(this.asyncLim).fill(0).map(() => this.upload()))
+  this.progress.speed = 0
 }
 
-UploadTask.prototype.upload = function () {
-  let item = this.file.iterator.next()
+UploadTask.prototype.upload = async function () {
   this.params.Parts = this.params.Parts || []
-  if (item.done) {
-    return Promise.resolve()
-  }
 
-  return item.value.then(result => {
+  for (let item of this.file.iterator) {
+    let result = await item
     let pg = this.progress.list[result.index - 1]
+    let pt = this.params.Parts[result.index - 1]
 
-    if (this.params.Parts[result.index - 1] &&
-      this.params.Parts[result.index - 1].ETag === `"${result.hash}"`) {
+    if (pt && pt.ETag === `"${result.hash}"`) {
       log.debug('upload: 秒传', result.index, result.hash)
       pg.loaded = pg.total
       this.progress.On()
-      return this.upload()
+      continue
     }
 
-    return new Promise((resolve, reject) => {
-      this.cos.multipartUpload(Object.assign({
-        PartNumber: result.index,
-        ContentLength: result.length,
-        Body: result.body,
-        onProgress: (data) => {
-          pg.loaded = data.loaded
-          this.progress.On()
-        }
-        // todo 在sdk更新后换成 ContentMD5
-        // ContentSha1: '"' + result.hash + '"'
-      }, this.params), (err, data) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        if (data.ETag !== `"${result.hash}"`) {
-          let e = new Error('ETag mismatch')
-          e.PartNumber = result.index
-          e.SrcMD5 = result.hash
-          e.DstData = data
-          if (CHECK_ETAG) {
-            reject(e)
-            return
-          }
-          log.warn(e)
-        }
+    let data = await promisify(::this.cos.multipartUpload)(Object.assign({
+      PartNumber: result.index,
+      ContentLength: result.length,
+      Body: result.body,
+      onProgress: (data) => {
+        pg.loaded = data.loaded
         if (this.cancel) {
-          reject(new Error('cancel'))
+          result.body.emit('error', new Error('cancel'))
+          result.body.close()
           return
         }
-        this.params.Parts[result.index - 1] = {
-          PartNumber: result.index,
-          ETag: data.ETag
-        }
-        this.upload().then(resolve, reject)
-      })
-    })
-  })
+        this.progress.On()
+      }
+      // todo 在sdk更新后换成 ContentMD5
+      // ContentSha1: '"' + result.hash + '"'
+    }, this.params))
+
+    if (data.ETag !== `"${result.hash}"`) {
+      let e = new Error('ETag mismatch')
+      e.PartNumber = result.index
+      e.SrcMD5 = result.hash
+      e.DstData = data
+      if (CHECK_ETAG) {
+        throw e
+      }
+      log.warn(e)
+    }
+    this.params.Parts[result.index - 1] = {
+      PartNumber: result.index,
+      ETag: data.ETag
+    }
+    if (this.cancel) throw new Error('cancel')
+  }
 }
 
 UploadTask.prototype.multipartComplete = function () {
-  return new Promise((resolve, reject) => {
-    this.cos.multipartComplete(this.params, (err, result) => {
-      err ? reject(err) : resolve(result)
-    })
-  })
+  return promisify(::this.cos.multipartComplete)(this.params)
 }
 
 UploadTask.prototype.stop = function () {

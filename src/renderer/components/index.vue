@@ -33,15 +33,10 @@
             <div class="loading" v-if="bloading"><i class="el-icon-loading"></i></div>
 
             <div class="load-progress" @click="openProgressWindow">
-                <i class="icon" v-show="!run.upload && !run.download"></i>
+                <i class="icon"></i>
                 传输队列
-                <p class="move">
-                    <span class="p1"></span>
-                    <span class="p2"></span>
-                    <span class="p3"></span>
-                </p>
+                <scroll-bar v-if="run.upload || run.download"></scroll-bar>
             </div>
-
         </div>
 
         <div>
@@ -73,7 +68,9 @@
   import protoManage from './modules/property-manager.vue'
   import fileDebris from './modules/file-debris.vue'
   import fileLimit from './modules/file-limit.vue'
+  import scrollBar from './modules/scroll-bar.vue'
   import { ipcRenderer, remote } from 'electron'
+
   const {Menu, MenuItem} = remote
 
   const bucketMenu = new Menu()
@@ -96,7 +93,7 @@
       }
     },
 
-    components: {addBucket, protoManage, setting, fileDebris, fileLimit},
+    components: {addBucket, protoManage, setting, fileDebris, fileLimit, scrollBar},
 
     computed: {
       ...mapState('bucket', ['bucketList']),

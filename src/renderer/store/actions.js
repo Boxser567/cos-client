@@ -4,6 +4,8 @@
 import Vue from 'vue'
 import { ipcRenderer } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
+import promisify from 'util.promisify'
+
 let cos = new Cos({})
 let bus = new Vue()
 
@@ -37,23 +39,22 @@ export const actions = {
   getConfig ({commit}) {
     commit('config', ipcRenderer.sendSync('GetConfig'))
   },
+
   setConfig ({commit, state}, config) {
     commit('config', config)
     ipcRenderer.send('SetConfig', state.config)
   },
+
   deleteObjects ({commit}, arg) {
     let del = (Key) => {
       return () => {
-        return new Promise((resolve, reject) => {
-          let params = {
-            Bucket: arg.Bucket,
-            Region: arg.Region,
-            Key
-          }
-          cos.deleteObject(params, (err, data) => {
-            err ? reject(Object.assign(err, {params})) : resolve(data)
-          })
-        })
+        let params = {
+          Bucket: arg.Bucket,
+          Region: arg.Region,
+          Key
+        }
+        return promisify(::cos.deleteObject)(params)
+          .catch(err => Promise.reject(Object.assign(err, {params})))
       }
     }
 
@@ -63,35 +64,31 @@ export const actions = {
 
     return batch(arg, 'delete', ({Key}) => del(Key))
   },
+
   copyObjects ({commit}, arg) {
     Object.assign(arg, arg.src)
 
     let copy = (Key) => {
       let item = Key.substr(arg.src.Prefix.length)
       return () => {
-        return new Promise((resolve, reject) => {
-          if (Key.substr(-1) === '/') {
-            let params = {
-              Bucket: arg.dst.Bucket,
-              Region: arg.dst.Region,
-              Key: arg.dst.Prefix + item,
-              Body: Buffer.from('')
-            }
-            cos.putObject(params, (err, data) => {
-              err ? reject(Object.assign(err, {params})) : resolve(data)
-            })
-            return
-          }
+        if (Key.substr(-1) === '/') {
           let params = {
             Bucket: arg.dst.Bucket,
             Region: arg.dst.Region,
             Key: arg.dst.Prefix + item,
-            CopySource: encodeURIComponent(`${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${Key}`)
+            Body: Buffer.from('')
           }
-          cos.putObjectCopy(params, (err, data) => {
-            err ? reject(Object.assign(err, {params})) : resolve(data)
-          })
-        })
+          return promisify(::cos.putObject)(params)
+            .catch(err => Promise.reject(Object.assign(err, {params})))
+        }
+        let params = {
+          Bucket: arg.dst.Bucket,
+          Region: arg.dst.Region,
+          Key: arg.dst.Prefix + item,
+          CopySource: encodeURIComponent(`${arg.src.Bucket}-${cos.options.AppId}.${arg.src.Region}.myqcloud.com/${Key}`)
+        }
+        return promisify(::cos.putObjectCopy)(params)
+          .catch(err => Promise.reject(Object.assign(err, {params})))
       }
     }
 
@@ -101,6 +98,7 @@ export const actions = {
 
     return batch(arg, 'copy', ({Key}) => copy(Key))
   },
+
   changeObjectsAcl ({commit}, arg) {
     // todo
     batch(arg, 'acl', ({Key}) => {
@@ -115,6 +113,7 @@ export const actions = {
       }
     })
   },
+
   debug ({commit}, arg) {
     batch(arg, 'debug', (k) => {
       return () => {
@@ -209,19 +208,11 @@ async function getContents (params, keys, dirs) {
     let result
     do {
       console.log('params', params)
-      result = await getBucket(cos, params)
+      result = await promisify(::cos.getBucket)(params)
       contents = contents.concat(result.Contents)
       params.Marker = result.NextMarker
     } while (result.IsTruncated === 'true')
     params.Marker = ''
   }
   return contents
-}
-
-function getBucket (cos, params) {
-  return new Promise((resolve, reject) => {
-    cos.getBucket(params, (err, data) => {
-      err ? reject(err) : resolve(data)
-    })
-  })
 }
