@@ -101,6 +101,7 @@ Tasks.prototype.next = async function () {
           this.emit('cancel', task)
         } else {
           task.status = TaskStatus.ERROR
+          task.error = err
           this.emit('error', task, err)
         }
       }
@@ -124,11 +125,13 @@ Tasks.prototype.initRefresh = function () {
     count = 10
     let s = []
     this.tasks.forEach(t => {
-      s.push(Object.assign({
+      let data = {
         id: t.id,
         status: t.status,
         modify: t.modify
-      }, t.exports()))
+      }
+      if (t.status === TaskStatus.ERROR) data.error = t.error
+      s.push(Object.assign(data, t.exports()))
       t.modify = false
     })
     this.emit('refresh', s)
