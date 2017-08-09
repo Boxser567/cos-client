@@ -10,8 +10,10 @@
                 custom-class="delete-content"
                 size="tiny">
             <div class="file" v-if="errorContent">
-                文件〖 {{  errorContent.error.params.Key }} 〗操作异常
-                {{errorContent }}
+                文件〖 {{ filename }} 〗操作异常
+                <div>
+                    {{errorCon}}
+                </div>
             </div>
 
             <div slot="footer" class="dialog-footer">
@@ -30,27 +32,40 @@
 
     props: ['isShow', 'errorContent'],
     data () {
-      return {}
+      return {
+        filename: null,
+        errorCon: null
+      }
+    },
+    watch: {
+      'isShow': function (val) {
+        if (val)
+          this.renderData()
+      }
     },
     created () {
 
     },
     computed: {},
     methods: {
+      renderData(){
+        this.filename = this.errorContent.error.params.Key
+        this.errorCon = this.errorContent.error.error.Message
+      },
       close () {
         this.$emit('update:isShow', false)
       },
       ignore () {
         this.errorContent.ignore()
-        this.$emit('update:isShow', false)
+        this.close()
       },
       stops () {
         this.errorContent.stop()
-        this.$emit('update:isShow', false)
+        this.close()
       },
       retry () {
         this.errorContent.retry()
-        this.$emit('update:isShow', false)
+        this.close()
       }
     }
 

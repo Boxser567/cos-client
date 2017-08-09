@@ -37,9 +37,7 @@
                         <img :src="props.item | getFileImg" alt="">
                         <el-row>
                             <el-col :span="12">
-                                <p class="tl">{{props.item.Key}}</p>
-                                <!--<el-progress :stroke-width="2"-->
-                                <!--:percentage="(props.item.loaded/props.item.size * 100) | getInteger"></el-progress>-->
+                                <p class="tl" :title="props.item.Key">{{props.item.Key}}</p>
                             </el-col>
                             <el-col :span="4">
                                 {{props.item.size | bitSize}}
@@ -53,12 +51,18 @@
                             </el-col>
                             <el-col :span="4">
                                 <i v-if="props.item.status == 'pause'" class="begin"
-                                   @click="send('begin', 'one', props.item.id)"></i>
+                                   @click.stop="send('begin', 'one', props.item.id)"></i>
                                 <i v-if="props.item.status == 'run'" class="pause"
-                                   @click="send('pause', 'one', props.item.id)"></i>
-                                <i v-if="props.item.status == 'error'" class="error"
-                                   @click="send('begin', 'one', props.item.id)"></i>
-                                <i class="close" @click="send('delete', 'one', props.item.id)"></i>
+                                   @click.stop="send('pause', 'one', props.item.id)"></i>
+
+
+                                <el-tooltip class="item" effect="dark" :content="props.item.errorMsg"
+                                            placement="bottom-end">
+                                    <i v-if="props.item.status == 'error'" class="error"
+                                       @click.stop="send('begin', 'one', props.item.id)"></i>
+                                </el-tooltip>
+
+                                <i class="close" @click.stop="send('delete', 'one', props.item.id)"></i>
                             </el-col>
                         </el-row>
                     </div>
@@ -178,6 +182,7 @@
         let speed = 0
         for (let v of val) {
           if (typeof v.speed === 'number' && v.status === 'run') speed += v.speed
+          v.strokeWidth = v.size === 0 ? '100%' : parseInt(v.loaded / v.size * 100) + '%'
           while (i < v.id) {
             if (this.normaliseList[i]) {
               dirty = true
@@ -199,8 +204,10 @@
             this.normaliseList[i].size = v.size
             this.normaliseList[i].loaded = v.loaded
             this.normaliseList[i].speed = v.speed
-            this.normaliseList[i].strokeWidth = v.size === 0 ? 0 : parseInt(v.loaded / v.size * 100) + '%'
-            console.log( this.normaliseList[i].strokeWidth)
+            this.normaliseList[i].strokeWidth = v.strokeWidth
+            if (v.status === 'error') {
+              this.$set(this.normaliseList[i], 'errorMsg', v.errorMsg)
+            }
           }
           i++
         }
@@ -285,12 +292,12 @@
         }
       },
       cancelAll () {
-        this.$confirm('确定全部取消吗？').then(()=>{
+        this.$confirm('确定全部取消吗？').then(() => {
           ipcRenderer.send(this.channels.delete, {
             all: true,
             onlyNotComplete: true
           })
-        }).catch(()=>{})
+        }).catch(() => {})
 
       },
       clearAll () {

@@ -177,6 +177,9 @@
         border: 1px solid #8c95a4;
         font-size: 12px;
         color: #607086;
+        &.is-disabled.is-plain {
+          border: 1px solid #bfcbd9 !important;
+        }
       }
       .el-button.is-disabled.is-plain, .el-button.is-disabled.is-plain:focus, .el-button.is-disabled.is-plain:hover {
         color: #bfcbd9;
@@ -252,7 +255,9 @@
     &.dropable {
       border: 1px dashed $activebg2;
     }
-
+    .virtual-scroller {
+      height: 100%;
+    }
     .name {
       img {
         width: 20px;
@@ -294,16 +299,16 @@
       }
       .el-row {
         padding-left: 54px;
-        .el-input__inner{
+        .el-input__inner {
           height: 24px;
           font-size: 13px;
         }
       }
       .el-col-8 {
-        &:nth-child(2){
+        &:nth-child(2) {
           padding-left: 15px;
         }
-        .el-button--small{
+        .el-button--small {
           padding: 4px 9px;
           margin-left: 5px;
         }
@@ -442,6 +447,12 @@
         .el-col-12 {
           text-indent: 58px;
         }
+        .el-row {
+          height: 100%;
+          .el-col {
+            height: 100%;
+          }
+        }
       }
       img {
         width: 28px;
@@ -523,6 +534,11 @@
       overflow: auto;
       padding-left: 15px;
       background: #f7f7f7;
+      user-select: initial;
+      & > div {
+        word-break: break-all;
+        margin: 5px 0;
+      }
     }
   }
 

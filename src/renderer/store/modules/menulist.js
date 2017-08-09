@@ -236,6 +236,9 @@ const actions = {
       Dirs: [],
       Keys: []
     }
+    if (state.selectFile.length === 1 && state.selectFile[0].dir) {
+      parms.dst.Prefix = state.selectFile[0].Prefix
+    }
     state.copyFiles.list.forEach(n => {
       if (n.dir) {
         parms.Dirs.push(n.Prefix)

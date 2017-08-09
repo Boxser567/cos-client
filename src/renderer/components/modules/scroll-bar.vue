@@ -68,7 +68,7 @@
     }
 
     .aqua {
-        background-color: aqua;
+        background-color: #20a0ff;
     }
 
     .black {

@@ -101,7 +101,7 @@ Tasks.prototype.next = async function () {
           this.emit('cancel', task)
         } else {
           task.status = TaskStatus.ERROR
-          task.errorMsg = err.message || err.error ? err.error.Message : 'unknown'
+          task.errorMsg = err2msg(err)
           this.emit('error', task, err)
         }
       }
@@ -332,8 +332,9 @@ function UploadTask (cos, name, params, option = {}) {
 
 UploadTask.prototype.start = async function () {
   this.cancel = false
-  if (this.file.fileSize < 1 >> 17) {
+  if (this.file.fileSize < 1 << 17) {
     try {
+      this.params.ContentLength = this.file.fileSize
       if (this.file.fileSize === 0) {
         this.params.Body = Buffer.from('')
       } else {
@@ -740,6 +741,15 @@ MockDownloadTask.prototype.exports = function () {
     loaded: this.progress.loaded,
     speed: this.progress.speed
   }
+}
+
+function err2msg (err) {
+  log.error(err)
+  if (err.message)return err.message
+  if (!err.error) return 'unknown'
+  if (typeof err.error === 'string') return err.error
+  if (err.error.Message) return err.error.Message
+  if (err.error.message) return err.error.message
 }
 
 export { TaskStatus, Tasks, UploadTask, MockUploadTask, DownloadTask, MockDownloadTask }

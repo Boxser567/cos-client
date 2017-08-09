@@ -112,7 +112,6 @@
 
     data () {
       return {
-        isShowList: false, // 右键菜单的显示
         folderName: '新建文件夹',
         menu: {
           list: null,

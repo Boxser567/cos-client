@@ -146,6 +146,10 @@
           Region: this.options.Region,
           CORSRules: this.tableData
         }
+        if (!this.tableData.length) {
+          this.$message.error('请至少添加一个规则!')
+          return
+        }
         if (this.isOpen === '0') { // 关闭 cors
           delete parms.CORSRules
           str = 'deleteBucketCORS'

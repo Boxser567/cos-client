@@ -27,6 +27,8 @@
                     </div>
 
                     <div class="el-button-group">
+                        <el-button size="small" :plain="true" @click="controlObj('refresh')">刷新
+                        </el-button>
                         <el-button size="small" :plain="true" @click="controlObj('download_file')"
                                    :disabled="btnDisabedA">下载
                         </el-button>
@@ -43,7 +45,7 @@
                             获取地址
                         </el-button>
                         <!--<el-button size="small" :plain="true" @click="dialogSetHttpHead = true"-->
-                                   <!--:disabled="btnDisabedB">设置HTTP头-->
+                        <!--:disabled="btnDisabedB">设置HTTP头-->
                         <!--</el-button>-->
                     </div>
                     <span class="area">{{ options.Region | getArea }}</span>
@@ -199,6 +201,9 @@
 
       controlObj (val) {
         switch (val) {
+          case 'refresh':
+            this.$store.dispatch('menulist/getFileList')
+            break
           case 'upload_file':
             this.dialogFileupload = true
             break

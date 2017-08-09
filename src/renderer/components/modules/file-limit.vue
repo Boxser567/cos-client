@@ -210,46 +210,62 @@
       userLimit (row, stadus) {
         let _self = this
 
+        let flag = {
+          err: false,
+          msg: null
+        }
+
         function checkName () {
           let name = row.user
           if (name === '') {
-            _self.$message('请输入添加的用户名!')
+            flag.err = true
+            flag.msg = '请输入添加的用户名!'
             return
           }
-          //          this.userData.forEach(x=>{
-          //            if(x.user===row){}
-          //          })
 
           if (name.indexOf('/') > -1) {
             console.log('主帐号/子账号')
             let arr = name.split('/')
             if (arr.length !== 2) {
-              _self.$message('帐号格式填写不正确!')
+              flag.err = true
+              flag.msg = '帐号格式填写不正确!'
               return
+
             } else {
-              //                _self.$message('主帐号与协作者帐号不对应!')
+              //_self.$message('主帐号与协作者帐号不对应!')
             }
           } else {
             let reg = /^[1-9][0-9]{4,12}$/gim
             if (!reg.test(name)) {
-              _self.$message('帐号格式填写不正确!')
+              flag.err = true
+              flag.msg = '帐号格式填写不正确!'
               return
             }
           }
           if (row.checkLimit.length === 0) {
-            _self.$message('请至少选择一个用户权限!')
+            flag.err = true
+            flag.msg = '请至少选择一个用户权限!'
+            return
           }
         }
 
         switch (stadus) {
           case 'save':
-            row.edit = 0
             checkName()
+            if (flag.err) {
+              this.$message.error(flag.msg)
+              return
+            }
+            row.edit = 0
             this.submitForm()
             break
           case 'add':
-            row.edit = 0
             checkName()
+            if (flag.err) {
+              this.$message.error(flag.msg)
+              return
+            }
+            row.edit = 0
             this.submitForm()
             break
           case 'edit':
@@ -301,12 +317,13 @@
           this.$message('请先将用户权限表单填写完整!')
           return
         }
-        parms.AccessControlPolicy = {
-          Grants: grants,
-          Owner: this.Owner
-        }
+        if (grants.length > 0)
+          parms.AccessControlPolicy = {
+            Grants: grants,
+            Owner: this.Owner
+          }
 
-        let str = 'putBucketAcl'
+        let str = 'putBucketACL'
         if (this.options.type === 'files') {
           str = 'putObjectACL'
           parms.Key = this.selectFile[0].Key

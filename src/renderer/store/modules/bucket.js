@@ -73,6 +73,16 @@ const actions = {
       })
   },
 
+  putBucketACL ({rootGetters}, params) {
+    return promisify(::rootGetters.cos.putBucketAcl)(params)
+      .catch(err => {
+        err.params = params
+        log.error(err)
+        rootGetters.bus.$emit('globleError', err)
+        return Promise.reject(err)
+      })
+  },
+
   getBucketCORS ({rootGetters}, params) {
     return promisify(::rootGetters.cos.getBucketCors)(params)
       .catch(err => {
