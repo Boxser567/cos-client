@@ -298,7 +298,6 @@
             onlyNotComplete: true
           })
         }).catch(() => {})
-
       },
       clearAll () {
         ipcRenderer.send(this.channels.delete, {

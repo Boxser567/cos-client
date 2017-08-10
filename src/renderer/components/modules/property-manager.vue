@@ -27,7 +27,7 @@
 
 
 <script>
-  export default{
+  export default {
     props: ['dialogManageVisible', 'currentBucket'],
     data () {
       return {}
@@ -41,7 +41,10 @@
     methods: {
       list () {
         if (!this.currentBucket) return
-        this.$store.dispatch('bucket/getBucketACL', this.currentBucket).then(() => {})
+        this.$store.dispatch('callCosApi', {
+          api: 'getBucketAcl',
+          params: this.currentBucket
+        })
       },
 
       closeDialog () {
@@ -52,11 +55,14 @@
         if (!this.currentBucket) return
 
         this.$confirm('确定要删除吗？删除后数据不可恢复', '提示').then(() => {
-          this.$store.dispatch('bucket/deleteBucket', this.currentBucket).then(() => {
+          this.$store.dispatch('callCosApi', {
+            api: 'deleteBucket',
+            params: this.currentBucket
+          }).then(() => {
             this.$emit('freshBucket')
             this.closeDialog()
           })
-        }).catch(() => {})
+        })
       }
     }
 

@@ -22,7 +22,6 @@
 </template>
 
 <script>
-  import { ipcRenderer, remote } from 'electron'
   export default {
     name: 'newPage',
     data () {
@@ -44,16 +43,12 @@
         })
         this.$store.dispatch('bucket/getService').then(() => {
           this.$router.replace('/index')
-        }, (err) => {
-          ipcRenderer.send('ClearAll')
-          this.$message(err.error.Message)
         })
       },
       debug () {
         this.AppId = '1253834952'
         this.SecretId = 'AKIDa4NkxzaV0Ut7Yr4sa6ScbNwMdibHb4A4'
         this.SecretKey = 'qUwCGAsRq46wZ1HLCrKbhfS8e0A8tUu8'
-        remote.getCurrentWindow().openDevTools()
       }
     }
   }

@@ -323,15 +323,26 @@ function UploadTask (cos, name, params, option = {}) {
 
 UploadTask.prototype.start = async function () {
   this.cancel = false
-  if (this.file.fileSize < 1 << 17) {
+  if (this.file.fileSize < 1 << 20) {
     try {
       this.params.ContentLength = this.file.fileSize
       if (this.file.fileSize === 0) {
         this.params.Body = Buffer.from('')
+        await retry(() => promisify(::this.cos.putObject)(this.params))
       } else {
         this.params.Body = fs.createReadStream(this.file.fileName)
+        this.params.onProgress = (data) => {
+          this.progress.loaded = data.loaded
+          this.progress.speed = data.speed
+          if (this.cancel) {
+            this.params.Body.emit('error', new Error('cancel'))
+            this.params.Body.close()
+          }
+        }
+        await promisify(::this.cos.putObject)(this.params).catch(err => {
+          throw normalizeError(err)
+        })
       }
-      await retry(() => promisify(::this.cos.putObject)(this.params))
     } catch (err) {
       err.params = this.params
       throw err
@@ -343,13 +354,9 @@ UploadTask.prototype.start = async function () {
     await this.uploadSlice()
     await this.multipartComplete()
   } catch (err) {
-    if (err instanceof Error) {
-      err.params = this.params
-      throw err
-    }
-    let e = new Error(err2msg(err))
+    let e = normalizeError(err)
     e.params = this.params
-    throw err
+    throw e
   }
 }
 
@@ -569,13 +576,8 @@ DownloadTask.prototype.start = async function () {
     let tmp = this.file.fileName + '.tmp'
     if (fs.existsSync(tmp)) fs.unlinkSync(tmp)
 
-    if (err instanceof Error) {
-      err.params = this.params
-      throw err
-    }
-    let e = new Error(err2msg(err))
+    let e = normalizeError(err)
     e.params = this.params
-    e.error = err
     throw e
   }
   this.progress.speed = 0
@@ -600,23 +602,37 @@ async function retry (fn, times = 3) {
   let err
   for (; times > 0; times--) {
     try {
-      return fn()
+      return await fn()
     } catch (e) {
-      err = e
+      err = normalizeError(e)
+      if (times > 1) log.warn(err)
     }
   }
-  if (err instanceof Error) throw err
-  let e = new Error(err2msg(err))
-  e.error = err
-  throw e
+  throw err
 }
 
-function err2msg (err) {
-  if (err instanceof Error) return err.message
-  if (!err.error) return 'unknown'
-  if (typeof err.error === 'string') return err.error
-  if (err.error instanceof Error) return err.error.message
-  if (typeof err.error.Message === 'string') return err.error.Message
+function normalizeError (err) {
+  if (err instanceof Error) return err
+  if (!err.error) {
+    let e = new Error('unknown')
+    e.error = err
+    return e
+  }
+  if (typeof err.error === 'string') {
+    let e = new Error(err.error)
+    e.error = err
+    return e
+  }
+  if (err.error instanceof Error) {
+    let e = err.error
+    e.error = err
+    return e
+  }
+  if (typeof err.error.Message === 'string') {
+    let e = new Error(err.error.Message)
+    e.error = err
+    return e
+  }
 }
 
 export { TaskStatus, Tasks, UploadTask, DownloadTask }

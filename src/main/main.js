@@ -12,7 +12,7 @@ import { DownloadTask, Tasks, UploadTask } from './task'
 import DB from './db'
 
 log.transports.console.level = false
-log.transports.file.level = 'info'
+log.transports.file.level = 'warn'
 log.transports.rendererConsole.level = 'silly'
 
 let main

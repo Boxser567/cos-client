@@ -165,7 +165,7 @@
           }
         })
       },
-      actionSearch(){
+      actionSearch () {
         this.$store.commit('menulist/goSearch', true)
         setTimeout(() => {
           let elem = document.getElementById('inputFocus')
@@ -291,7 +291,7 @@
       canGoForward () {
         return webContents.canGoForward()
       }
-    },
+    }
 //    directives: {
 //      focus (el, binding) {
 //        binding.value ? el.focus() : el.blur()

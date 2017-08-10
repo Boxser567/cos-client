@@ -100,7 +100,10 @@
     methods: {
       renderData () {
         if (!this.options) return
-        this.$store.dispatch('bucket/getBucketCORS', this.options).then(res => {
+        this.$store.dispatch('callCosApi', {
+          api: 'getBucketCors',
+          params: this.options
+        }).then(res => {
           console.log(res)
           this.tableData = res.CORSRules
           this.isOpen = res.CORSRules.length ? '100' : '0'

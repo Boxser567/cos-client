@@ -164,15 +164,15 @@
           Region: this.options.Region || this.options.bucket.Region
         }
         if (!this.parameters.Bucket || !this.parameters.Region) return
-        let parms = this.parameters
-        let str = 'getBucketACL'
+        let params = this.parameters
+        let api = 'getBucketAcl'
         if (this.options.type === 'files') {
-          str = 'getObjectACL'
-          parms.Key = this.selectFile[0].Key
+          api = 'getObjectAcl'
+          params.Key = this.selectFile[0].Key
         }
 
-        this.$store.dispatch(`bucket/${str}`, parms).then((resp) => {
-          console.log(parms, '请求参数和返回', resp)
+        this.$store.dispatch(`callCosApi`, {api, params}).then((resp) => {
+          console.log(params, '请求参数和返回', resp)
           this.Owner = resp.Owner
           resp.Grants.forEach(n => {
             if (n.Grantee.ID === 'qcs::cam::anyone:anyone') {
@@ -230,9 +230,8 @@
               flag.err = true
               flag.msg = '帐号格式填写不正确!'
               return
-
             } else {
-              //_self.$message('主帐号与协作者帐号不对应!')
+            // _self.$message('主帐号与协作者帐号不对应!')
             }
           } else {
             let reg = /^[1-9][0-9]{4,12}$/gim
@@ -245,7 +244,6 @@
           if (row.checkLimit.length === 0) {
             flag.err = true
             flag.msg = '请至少选择一个用户权限!'
-            return
           }
         }
 
@@ -295,7 +293,7 @@
         }
       },
       submitForm () {
-        let parms = Object.assign(this.parameters, {ACL: this.commonData[0].pb_limit})
+        let params = Object.assign(this.parameters, {ACL: this.commonData[0].pb_limit})
         let grants = []
         let flag = false
         this.userData.forEach(n => {
@@ -317,20 +315,21 @@
           this.$message('请先将用户权限表单填写完整!')
           return
         }
-        if (grants.length > 0)
-          parms.AccessControlPolicy = {
+        if (grants.length > 0) {
+          params.AccessControlPolicy = {
             Grants: grants,
             Owner: this.Owner
           }
-
-        let str = 'putBucketACL'
-        if (this.options.type === 'files') {
-          str = 'putObjectACL'
-          parms.Key = this.selectFile[0].Key
         }
 
-        this.$store.dispatch(`bucket/${str}`, parms).then((resp) => {
-          console.log('添加的参数', parms, resp)
+        let api = 'putBucketAcl'
+        if (this.options.type === 'files') {
+          api = 'putObjectAcl'
+          params.Key = this.selectFile[0].Key
+        }
+
+        this.$store.dispatch(`callCosApi`, {api, params}).then((resp) => {
+          console.log('添加的参数', params, resp)
           this.commonData[0].edit = 0
         })
       },

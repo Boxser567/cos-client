@@ -117,10 +117,10 @@
           list: null,
           top: 0,
           left: 0,
-          files: ['download_file', 'copy_file', 'delete_file', 'get_address',  'set_limit'], //'set_http',
+          files: ['download_file', 'copy_file', 'delete_file', 'get_address', 'set_limit'], // 'set_http',
           folders: ['download_file', 'copy_file', 'delete_file'],
           blanks: ['upload_file', 'new_folder', 'download_list'],
-          groupFile: ['download_file', 'copy_file', 'delete_file']  //'set_http'
+          groupFile: ['download_file', 'copy_file', 'delete_file'] // 'set_http'
         },
         dropable: false
       }

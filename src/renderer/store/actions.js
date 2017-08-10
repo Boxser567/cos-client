@@ -5,6 +5,7 @@ import Vue from 'vue'
 import { ipcRenderer } from 'electron'
 import Cos from 'cos-nodejs-sdk-v5'
 import promisify from 'util.promisify'
+import log from 'electron-log'
 
 let cos = new Cos({})
 let bus = new Vue()
@@ -43,6 +44,10 @@ export const actions = {
   setConfig ({commit, state}, config) {
     commit('config', config)
     ipcRenderer.send('SetConfig', state.config)
+  },
+
+  callCosApi (context, {api, params}) {
+    return retry(::cos[api], params)
   },
 
   deleteObjects ({commit}, arg) {
@@ -132,6 +137,46 @@ export const actions = {
       }
     })
   }
+}
+
+function normalizeError (err) {
+  if (err instanceof Error) return err
+  if (!err.error) {
+    let e = new Error('unknown')
+    e.error = err
+    return e
+  }
+  if (typeof err.error === 'string') {
+    let e = new Error(err.error)
+    e.error = err
+    return e
+  }
+  if (err.error instanceof Error) {
+    let e = err.error
+    e.error = err
+    return e
+  }
+  if (typeof err.error.Message === 'string') {
+    let e = new Error(err.error.Message)
+    e.error = err
+    return e
+  }
+}
+
+async function retry (fn, params, times = 3) {
+  let err
+  for (; times > 0; times--) {
+    try {
+      return await promisify(fn)(params)
+    } catch (e) {
+      err = normalizeError(e)
+      if (times > 1) log.warn(err)
+    }
+  }
+  err.params = params
+  log.error(err)
+  bus.$emit('globleError', err)
+  throw err
 }
 
 async function batch (arg, type, fn) {
