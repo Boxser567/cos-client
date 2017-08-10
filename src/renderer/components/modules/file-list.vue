@@ -19,7 +19,7 @@
             </div>
 
             <div class="file-none" v-if="filelist && filelist.length==0 && !newFolder && !fileloading"
-                 @contextmenu="openMenu()">
+                 @contextmenu.stop="openMenu()">
                 <span>没有文件</span>
             </div>
 
@@ -38,7 +38,7 @@
             </div>
 
             <virtual-scroller v-if="filelist && filelist.length"
-                              :items="filelist" item-height="34" content-tag="div" >
+                              :items="filelist" item-height="34" content-tag="div">
                 <template scope="props">
                     <div class="list file-list-info" :class="{ active:props.item.active }"
                          @click="itemSelect($event, props.itemIndex, props.item)"
@@ -163,11 +163,14 @@
           this.$message('可用数字、中英文及下划线组合,最多支持20字符')
           return
         }
+
         let parms = {
           Bucket: this.options.Bucket,
           Region: this.options.Region,
           Key: this.options.Prefix + this.folderName + '/'
         }
+        console.log(132222332, parms)
+
         this.$store.dispatch('menulist/mkDir', parms).then(() => {
           this.$store.dispatch('menulist/getFileList')
           this.$store.commit('menulist/newFolder', false)

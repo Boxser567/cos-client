@@ -172,7 +172,7 @@ const actions = {
 
   mkDir ({dispatch}, params) {
     params.Body = Buffer.from('')
-    return dispatch('callCosApi', params, {root: true})
+    return dispatch('callCosApi', {api: 'putObject', params: params}, {root: true})
   },
 
   uploadFile ({state}) {

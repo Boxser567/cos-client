@@ -29,7 +29,8 @@ function createWindow () {
     useContentSize: true,
     width: 1000,
     minWidth: 1000,
-    title: 'COS'
+    title: 'COS',
+    titleBarStyle: 'hidden-inset'
   })
 
   mainWindow.loadURL(winURL)
