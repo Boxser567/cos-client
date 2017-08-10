@@ -10,7 +10,9 @@
              @drop.prevent="onDrop"
              @dragleave.prevent="onDragLeave"
              :class=" { 'dropable': dropable } "
-             @click.self="fileContentClick()" @contextmenu.self="openMenu()">
+             @click.self="fileContentClick()"
+             @contextmenu="openMenu()"
+        >
 
             <div class="loading" v-if="fileloading">
                 <i class="el-icon-loading"></i>
@@ -36,12 +38,12 @@
             </div>
 
             <virtual-scroller v-if="filelist && filelist.length"
-                              :items="filelist" item-height="34" content-tag="div">
+                              :items="filelist" item-height="34" content-tag="div" >
                 <template scope="props">
                     <div class="list file-list-info" :class="{ active:props.item.active }"
                          @click="itemSelect($event, props.itemIndex, props.item)"
                          @dblclick="goFolder(props.item)"
-                         @contextmenu="openMenu(props.item, props.itemIndex)"
+                         @contextmenu.stop="openMenu(props.item, props.itemIndex)"
                          :key="props.item.Key">
                         <div class="name">
                             <img :src="props.item | getFileImg" alt="">
@@ -117,7 +119,7 @@
           list: null,
           top: 0,
           left: 0,
-          files: ['download_file', 'copy_file', 'delete_file', 'get_address', 'set_limit'], // 'set_http',
+          files: ['download_file', 'copy_file', 'delete_file', 'get_address', 'set_limit'], //'set_http',
           folders: ['download_file', 'copy_file', 'delete_file'],
           blanks: ['upload_file', 'new_folder', 'download_list'],
           groupFile: ['download_file', 'copy_file', 'delete_file'] // 'set_http'
@@ -156,7 +158,8 @@
         this.$store.dispatch('menulist/uploadFileByDrag', fileArray)
       },
       addFolderFn: function () { // 新建文件夹
-        if (!this.folderName || this.folderName.length > 20) {
+        let nameRge = /^[\u4e00-\u9fff\w]{1,20}$/
+        if (!nameRge.test(this.folderName)) {
           this.$message('可用数字、中英文及下划线组合,最多支持20字符')
           return
         }
@@ -228,6 +231,12 @@
       },
 
       popMenu (type) {
+        console.log(this.$refs.virtualmenu)
+        if (type === 'blanks') {
+          if (this.filelist.length === 0) {
+            this.menu[type].length = 2
+          }
+        }
         for (let i = 0; i < contextMenu.length; i++) {
           let m = contextMenu[i]
           if (m.key === 'paste_file') {
