@@ -101,7 +101,7 @@ Tasks.prototype.next = async function () {
           this.emit('cancel', task)
         } else {
           task.status = TaskStatus.ERROR
-          task.errorMsg = err2msg(err)
+          task.errorMsg = err.message
           this.emit('error', task, err)
         }
       }
@@ -282,51 +282,42 @@ function UploadTask (cos, name, params, option = {}) {
   this.asyncLim = option.asyncLim || 2
   this.cancel = false
 
-  return new Promise((resolve, reject) => {
-    fs.stat(name, (err, stats) => {
-      if (err) {
-        reject(err)
-        return
-      }
+  return promisify(fs.stat)(name).then(stats => {
+    this.file = {
+      fileName: name,
+      fileSize: stats.size,
+      sliceSize: option.sliceSize || 1 << 20
+    }
 
-      this.file = {
-        fileName: name,
-        fileSize: stats.size,
-        sliceSize: option.sliceSize || 1 << 20
-      }
+    let n = this.file.fileSize
+    this.progress.total = this.file.fileSize
+    while (n > this.file.sliceSize) {
+      this.progress.list.push({total: this.file.sliceSize})
+      n -= this.file.sliceSize
+    }
+    this.progress.list.push({total: n})
 
-      let n = this.file.fileSize
-      this.progress.total = this.file.fileSize
-      while (n > this.file.sliceSize) {
-        this.progress.list.push({total: this.file.sliceSize})
-        n -= this.file.sliceSize
-      }
-      this.progress.list.push({total: n})
+    if (this.file.fileSize !== 0) {
+      this.file.iterator = getSliceIterator(this.file)
+    }
 
-      if (this.file.fileSize !== 0) {
-        this.file.iterator = getSliceIterator(this.file)
-      }
+    let time0 = Date.now()
+    let loaded0 = 0
+    this.progress.On = () => {
+      let time1 = Date.now()
+      if (time1 < time0 + 800) return
+      let loaded1 = 0
+      this.progress.list.forEach(piece => {
+        loaded1 += piece.loaded || 0
+      })
+      if (loaded1 === loaded0) return
+      this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
+      this.progress.loaded = loaded1
+      time0 = time1
+      loaded0 = loaded1
+    }
 
-      let time0 = Date.now()
-      let loaded0 = 0
-      this.progress.On = () => {
-        let time1 = Date.now()
-        if (time1 < time0 + 800) return
-        let loaded1 = 0
-        this.progress.list.forEach(piece => {
-          loaded1 += piece.loaded || 0
-        })
-        setImmediate(() => {
-          if (loaded1 === loaded0) return
-          this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
-          this.progress.loaded = loaded1
-          time0 = time1
-          loaded0 = loaded1
-        })
-      }
-
-      resolve(this)
-    })
+    return this
   })
 }
 
@@ -340,7 +331,7 @@ UploadTask.prototype.start = async function () {
       } else {
         this.params.Body = fs.createReadStream(this.file.fileName)
       }
-      await promisify(::this.cos.putObject)(this.params)
+      await retry(() => promisify(::this.cos.putObject)(this.params))
     } catch (err) {
       err.params = this.params
       throw err
@@ -352,13 +343,18 @@ UploadTask.prototype.start = async function () {
     await this.uploadSlice()
     await this.multipartComplete()
   } catch (err) {
-    err.params = this.params
+    if (err instanceof Error) {
+      err.params = this.params
+      throw err
+    }
+    let e = new Error(err2msg(err))
+    e.params = this.params
     throw err
   }
 }
 
 UploadTask.prototype.multipartInit = async function () {
-  let result = await promisify(::this.cos.multipartInit)(this.params)
+  let result = await retry(() => promisify(::this.cos.multipartInit)(this.params))
   if (!result.UploadId) throw new Error('null UploadId')
   log.debug('sliceUploadFile: 创建新上传任务成功，UploadId: ', result.UploadId)
   this.params.UploadId = result.UploadId
@@ -369,7 +365,7 @@ UploadTask.prototype.getMultipartListPart = async function () {
   let params = this.params
   let result
   do {
-    result = await promisify(::this.cos.multipartListPart)(params)
+    result = await retry(() => promisify(::this.cos.multipartListPart)(params))
 
     result.Part.forEach(part => {
       list[part.PartNumber - 1] = {
@@ -515,85 +511,6 @@ function* getSliceIterator (file) {
  * @param  {string}   params.Bucket
  * @param  {string}   params.Region
  * @param  {string}   params.Key
- * @param  {string}   [params.UploadId] 仅续传任务需要
- *
- * @param  {object}   [option]
- * @param  {int}      option.sliceSize
- * @param  {int}      option.asyncLim
- */
-function MockUploadTask (cos, name, params, option = {}) {
-  this.params = params
-  this.file = {
-    fileName: name
-  }
-  this.asyncLim = 2
-  this.cancel = false
-  this.progress = {}
-  this.progress.loaded = 0
-  return new Promise((resolve, reject) => {
-    fs.stat(name, (err, stats) => {
-      if (err) {
-        reject(err)
-        return
-      }
-      this.file = {
-        fileName: name,
-        fileSize: stats.size,
-        sliceSize: option.sliceSize || 1 << 20
-      }
-      this.progress.total = stats.size
-      resolve(this)
-    })
-  })
-}
-
-MockUploadTask.prototype.start = function () {
-  return new Promise((resolve, reject) => {
-    this.cancel = false
-    let p = setInterval(() => {
-      if (this.cancel) {
-        this.progress.speed = 0
-        clearInterval(p)
-        reject(new Error('cancel'))
-        return
-      }
-      this.progress.loaded += 20900
-      this.progress.speed = 209000
-      if (this.progress.loaded >= this.progress.total) {
-        this.progress.loaded = this.progress.total
-        this.progress.speed = 0
-        clearInterval(p)
-        resolve()
-      }
-    }, 100)
-  })
-}
-
-MockUploadTask.prototype.stop = function () {
-  this.cancel = true
-}
-
-MockUploadTask.prototype.exports = function () {
-  return {
-    Key: this.params.Key,
-    Bucket: this.params.Bucket,
-    Region: this.params.Region,
-    FileName: this.file.fileName,
-    size: this.progress.total,
-    loaded: this.progress.loaded,
-    speed: this.progress.speed
-  }
-}
-
-/**
- *
- * @param  {object}   cos
- * @param  {string}   name
- *
- * @param  {object}   params
- * @param  {string}   params.Bucket
- * @param  {string}   params.Region
- * @param  {string}   params.Key
  *
  * @param  {object}   [option]
  * @param  {int}      option.asyncLim
@@ -610,20 +527,15 @@ function DownloadTask (cos, name, params, option = {}) {
   }
   this.progress = {loaded: 0, total: 0}
   this.cancel = false
-  return new Promise((resolve, reject) => {
-    this.cos.headObject(params, (err, result) => {
-      if (err) {
-        reject(err)
-        return
-      }
-      this.file.fileSize = parseInt(result.headers['content-length'])
-      this.progress.total = this.file.fileSize
-      resolve(this)
-    })
+
+  return retry(() => promisify(::this.cos.headObject)(params)).then(result => {
+    this.file.fileSize = parseInt(result.headers['content-length'])
+    this.progress.total = this.file.fileSize
+    return this
   })
 }
 
-DownloadTask.prototype.start = function () {
+DownloadTask.prototype.start = async function () {
   this.cancel = false
   let {dir, root} = path.parse(this.file.fileName)
   dir.split(path.sep).reduce((parentDir, childDir) => {
@@ -651,20 +563,23 @@ DownloadTask.prototype.start = function () {
     }
   })
 
-  return new Promise((resolve, reject) => {
-    this.cos.getObject(this.params, (err, result) => {
-      err ? reject(err) : resolve(result)
-    })
-  }).then(() => {
-    this.progress.speed = 0
-    fs.renameSync(this.file.fileName + '.tmp', this.file.fileName)
-    return Promise.resolve()
-  }, (err) => {
-    try {
-      fs.unlinkSync(this.file.fileName + '.tmp')
-    } catch (e) {}
-    throw err
-  })
+  try {
+    await promisify(::this.cos.getObject)(this.params)
+  } catch (err) {
+    let tmp = this.file.fileName + '.tmp'
+    if (fs.existsSync(tmp)) fs.unlinkSync(tmp)
+
+    if (err instanceof Error) {
+      err.params = this.params
+      throw err
+    }
+    let e = new Error(err2msg(err))
+    e.params = this.params
+    e.error = err
+    throw e
+  }
+  this.progress.speed = 0
+  fs.renameSync(this.file.fileName + '.tmp', this.file.fileName)
 }
 
 DownloadTask.prototype.stop = function () {
@@ -681,75 +596,27 @@ DownloadTask.prototype.exports = function () {
   }
 }
 
-/**
- *
- * @param  {object}   cos
- * @param  {string}   name
- *
- * @param  {object}   params
- * @param  {string}   params.Bucket
- * @param  {string}   params.Region
- * @param  {string}   params.Key
- *
- * @param  {object}   [option]
- * @param  {int}      option.asyncLim
- */
-function MockDownloadTask (cos, name, params, option = {}) {
-  this.params = params
-  this.file = {
-    fileName: name
+async function retry (fn, times = 3) {
+  let err
+  for (; times > 0; times--) {
+    try {
+      return fn()
+    } catch (e) {
+      err = e
+    }
   }
-  this.asyncLim = 2
-  this.cancel = false
-  this.progress = {}
-  this.progress.total = 1 << 20
-  this.progress.loaded = 0
-  return Promise.resolve(this)
-}
-
-MockDownloadTask.prototype.start = function () {
-  return new Promise((resolve, reject) => {
-    this.cancel = false
-    let p = setInterval(() => {
-      if (this.cancel) {
-        this.progress.speed = 0
-        clearInterval(p)
-        reject(new Error('cancel'))
-        return
-      }
-      this.progress.loaded += 20900
-      this.progress.speed = 209000
-      if (this.progress.loaded >= this.progress.total) {
-        this.progress.loaded = this.progress.total
-        this.progress.speed = 0
-        clearInterval(p)
-        resolve()
-      }
-    }, 100)
-  })
-}
-
-MockDownloadTask.prototype.stop = function () {
-  this.cancel = true
-}
-
-MockDownloadTask.prototype.exports = function () {
-  return {
-    Key: this.params.Key,
-    FileName: this.file.fileName,
-    size: this.progress.total,
-    loaded: this.progress.loaded,
-    speed: this.progress.speed
-  }
+  if (err instanceof Error) throw err
+  let e = new Error(err2msg(err))
+  e.error = err
+  throw e
 }
 
 function err2msg (err) {
-  log.error(err)
-  if (err.message)return err.message
+  if (err instanceof Error) return err.message
   if (!err.error) return 'unknown'
   if (typeof err.error === 'string') return err.error
-  if (err.error.Message) return err.error.Message
-  if (err.error.message) return err.error.message
+  if (err.error instanceof Error) return err.error.message
+  if (typeof err.error.Message === 'string') return err.error.Message
 }
 
-export { TaskStatus, Tasks, UploadTask, MockUploadTask, DownloadTask, MockDownloadTask }
+export { TaskStatus, Tasks, UploadTask, DownloadTask }
