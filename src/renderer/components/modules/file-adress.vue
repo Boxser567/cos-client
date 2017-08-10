@@ -69,21 +69,21 @@
         this.isPublic = null
         this.iptText = null
         this.seconds = 3600
-        let parms = {
+        let params = {
           Bucket: this.options.Bucket,
           Region: this.options.Region,
           Key: this.selectFile[0].Key
         }
 
-        this.$store.dispatch('bucket/getObjectACL', parms).then(res => {
-          console.log('getObjectACL', res)
+        this.$store.dispatch('callCosApi', {api: 'getObjectAcl', params}).then(res => {
+          console.log('getObjectAcl', res)
           res.Grants.forEach(n => {
             if (n.Grantee.ID === 'qcs::cam::anyone:anyone') {
               this.isPublic = true
             }
           })
           if (this.isPublic) {
-            this.iptText = `http://${parms.Bucket}-${this.appid}.${parms.Region}.myqcloud.com/${parms.Key}`
+            this.iptText = `http://${params.Bucket}-${this.appid}.${params.Region}.myqcloud.com/${params.Key}`
           }
         })
       },

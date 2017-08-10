@@ -108,7 +108,7 @@ const mutations = {
       keyWord: ''
     }
   },
-  goSearch(state, val){
+  goSearch (state, val) {
     state.search = {
       active: val,
       keyWord: ''
@@ -170,12 +170,9 @@ const actions = {
     commit('fileloading', {loading: false})
   },
 
-  mkDir ({rootGetters}, params) {
+  mkDir ({dispatch}, params) {
     params.Body = Buffer.from('')
-    return promisify(::rootGetters.cos.putObject)(params).catch(err => {
-      log.error(err)
-      rootGetters.bus.$emit('globleError', err)
-    })
+    return dispatch('callCosApi', params, {root: true})
   },
 
   uploadFile ({state}) {

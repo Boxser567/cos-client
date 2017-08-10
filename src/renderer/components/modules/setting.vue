@@ -60,8 +60,7 @@
     },
     watch: {
       'dialogSettingVisible': function (val) {
-        if (val)
-          this.fetchData()
+        if (val) { this.fetchData() }
       }
     },
     methods: {

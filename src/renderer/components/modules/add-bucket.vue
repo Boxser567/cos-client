@@ -56,7 +56,7 @@
 </template>
 
 <script>
-  export default{
+  export default {
     name: 'add-bucket',
     props: ['dialogAddVisible'],
     data () {
@@ -87,7 +87,7 @@
       appid () {
         return this.$store.state.config.cos.AppId
       },
-      bucketList(){
+      bucketList () {
         return this.$store.state.bucket.bucketList
       }
     },
@@ -125,7 +125,7 @@
           Region: this.myform.areaDef,
           ACL: this.myform.limit
         }
-        this.$store.dispatch('bucket/putBucket', {pms: params}).then(() => {
+        this.$store.dispatch('callCosApi', {api: 'putBucket', params}).then(() => {
           this.renderData()
           this.$emit('freshBucket')
           this.closeDialog()

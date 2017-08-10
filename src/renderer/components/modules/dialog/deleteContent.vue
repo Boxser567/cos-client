@@ -39,8 +39,7 @@
     },
     watch: {
       'isShow': function (val) {
-        if (val)
-          this.renderData()
+        if (val) { this.renderData() }
       }
     },
     created () {
@@ -48,7 +47,7 @@
     },
     computed: {},
     methods: {
-      renderData(){
+      renderData () {
         this.filename = this.errorContent.error.params.Key
         this.errorCon = this.errorContent.error.error.Message
       },
