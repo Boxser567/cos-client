@@ -30,7 +30,7 @@ function createWindow () {
     width: 1000,
     minWidth: 1000,
     title: 'COS',
-    titleBarStyle: 'hidden-inset'
+    frame: false
   })
 
   mainWindow.loadURL(winURL)
