@@ -269,7 +269,7 @@
       },
 
       goBack () {
-        if (!this.parentFolder || !this.parentFolder.Prefix) return
+        if (!this.parentFolder) return
         this.$router.push({
           path: '/file/' + this.options.Bucket,
           query: {

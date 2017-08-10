@@ -23,6 +23,7 @@
 
 <script>
   import { ipcRenderer, remote } from 'electron'
+
   export default {
     name: 'newPage',
     data () {
@@ -32,7 +33,9 @@
         SecretKey: ''
       }
     },
-    created () {},
+    created () {
+      document.getElementsByTagName('title')[0].innerHTML = 'COS'
+    },
     methods: {
       save () {
         this.$store.dispatch('setConfig', {

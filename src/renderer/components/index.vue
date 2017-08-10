@@ -109,6 +109,7 @@
     },
 
     created () {
+
       ipcRenderer.send('GetUploadTasks')
       ipcRenderer.send('GetDownloadTasks')
 

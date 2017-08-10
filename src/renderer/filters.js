@@ -1,26 +1,16 @@
 import moment from 'moment'
 
 function getDate (time) {
-  if (!time) return '-'
+  if (!time) return ''
   return moment(time).format('YYYY-MM-DD HH:mm:ss')
 }
 
-function bitSize (num, decimal) {
+function bitSize (num) {
+  let decimal = 2
   if (!num) {
-    return '-'
-  }
-  if (typeof (num) !== 'number') {
-    num = Number(num)
-  }
-  if (typeof (decimal) !== 'number') {
-    decimal = 2
-  }
-  if (num < 0) {
     return ''
   }
-  if (num === 0) {
-    return '-'
-  }
+  num -=0
   let type = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
   let j = 0
   while (num >= 1024) {

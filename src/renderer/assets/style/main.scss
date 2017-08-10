@@ -20,7 +20,7 @@
     bottom: 0;
     right: 0;
     overflow: hidden;
-    background: #f9fbfe;
+    background: #f8f8f8;
   }
 
   //右键菜单
@@ -345,7 +345,7 @@
   left: 0;
   bottom: 0;
   z-index: 99;
-  background: #f9fbfe;
+  background: #f8f8f8;
   transition: all .5s;
   &.list-none {
     height: 40px;
