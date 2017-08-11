@@ -130,7 +130,17 @@
       openProgressWindow () {
         const url = (process.env.NODE_ENV === 'development'
           ? `http://localhost:9080/#/progress` : `file://${__dirname}/index.html#/progress`)
-        window.open(url, '_blank', 'title=传输队列,height=450, width=794,resizable=no,frame=false')
+
+        let mainWindow = new remote.BrowserWindow({
+          height: 450,
+          maxHeight: 450,
+          useContentSize: true,
+          width: 794,
+          maxWidth: 794,
+          title: '传输队列',
+          frame: false
+        })
+        mainWindow.loadURL(url)
       },
 
       fetchData () {

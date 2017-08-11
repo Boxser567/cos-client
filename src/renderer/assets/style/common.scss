@@ -31,6 +31,39 @@ body, html {
   overflow: hidden;
 }
 
+.full-button {
+  position: absolute;
+  top: 0px;
+  left: 7px;
+  z-index: 9999;
+  span {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 7px;
+    line-height: 12px;
+    margin-left: 1px;
+    &:nth-child(1) {
+      background: rgb(221, 102, 93);
+    }
+    &:nth-child(2) {
+      background: rgb(240, 193, 81);
+    }
+    &:nth-child(3) {
+      background: rgb(100, 202, 87);
+    }
+  }
+  .win-btn {
+    background: #fff;
+    z-index: 99999;
+    span {
+      width: 24px;
+      height: 24px;
+      background: #fff;
+    }
+  }
+}
+
 .el-button-group {
   button {
     background: none;

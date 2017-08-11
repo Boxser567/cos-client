@@ -143,8 +143,8 @@
         }
       },
       save () {
-        let str = 'putBucketCORS'
-        let parms = {
+        let str = 'putBucketCors'
+        let params = {
           Bucket: this.options.Bucket,
           Region: this.options.Region,
           CORSRules: this.tableData
@@ -154,10 +154,10 @@
           return
         }
         if (this.isOpen === '0') { // 关闭 cors
-          delete parms.CORSRules
-          str = 'deleteBucketCORS'
+          delete params.CORSRules
+          str = 'deleteBucketCors'
         }
-        this.$store.dispatch(`bucket/${str}`, parms).then(res => {
+        this.$store.dispatch('callCosApi', {api: str, params}).then(res => {
           this.closeDialog()
         })
       }

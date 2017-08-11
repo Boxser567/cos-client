@@ -1,6 +1,6 @@
 <template>
     <div class="login-bg">
-        <button @click="debug">debug</button>
+        <button class="btn-debug" @click="debug">debug</button>
         <div class="line"></div>
         <el-form class="login-form">
             <img src="../../../static/images/logo.png" alt="">

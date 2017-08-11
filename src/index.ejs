@@ -1,23 +1,59 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
     <title></title>
     <% if (htmlWebpackPlugin.options.nodeModules) { %>
-      <!-- Add `node_modules/` to global paths so `require` works properly in development -->
-      <script>
-        require('module').globalPaths.push('<%= htmlWebpackPlugin.options.nodeModules.replace(/\\/g, '\\\\') %>')
-      </script>
-    <% } %>
-  </head>
-  <body>
-    <div id="app"></div>
-    <!-- Set `__static` path to static files in production -->
+    <!-- Add `node_modules/` to global paths so `require` works properly in development -->
     <script>
-      if (process.env.NODE_ENV !== 'development') window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+      require('module').globalPaths.push('<%= htmlWebpackPlugin.options.nodeModules.replace(/\\/g, '\\\\') %>')
     </script>
+    <% } %>
+</head>
 
-    <!-- webpack builds are automatically injected -->
-  </body>
+<body style="-webkit-app-region: drag">
+<div class="full-button" id="fullbtn">
+    <span onclick="closewin()"><i>x</i></span>
+    <span onclick="minimize()"><i>-</i></span>
+    <span onclick="maximize()"><i>0</i></span>
+</div>
+<script>
+
+  const electron = require('electron')
+  let win = electron.remote.getCurrentWindow()
+
+
+  function closewin () {
+    win.close()
+  }
+  function minimize () {
+    win.minimize()
+  }
+  function maximize () {
+    if (process.platform === 'darwin') {
+      if (win.isFullScreen())
+        win.setFullScreen(false)
+      else
+        win.setFullScreen(true)
+    } else {
+      if (win.isMaximized())
+        win.unmaximize()
+      else
+        win.maximize()
+    }
+
+  }
+
+
+</script>
+
+<div id="app"></div>
+<!-- Set `__static` path to static files in production -->
+<script>
+  if (process.env.NODE_ENV !== 'development') window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+</script>
+
+<!-- webpack builds are automatically injected -->
+</body>
 </html>

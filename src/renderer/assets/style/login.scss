@@ -16,6 +16,11 @@
     height: 132px;
     background: url("../../static/images/line.png") center center / contain;
   }
+  .btn-debug {
+    position: absolute;
+    top: 50%;
+    left: 200px;
+  }
 }
 
 .login-form {

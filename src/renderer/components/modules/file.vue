@@ -7,12 +7,12 @@
                         <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
                     </ul>
                     <i class="back" @click="goBack"></i>
-                    <i class="el-icon-search" @click="actionSearch"></i>
+                    <i class="el-icon-search icon-search" @click="actionSearch"></i>
                 </div>
 
                 <div class="search-bar" v-show="search.active">
                     <input v-model="keyWord" id="inputFocus" placeholder="搜索当前目录文档" @keyup.enter="doSearch">
-                    <i class="el-icon-search" @click="doSearch"></i>
+                    <i class="el-icon-search icon-search" @click="doSearch"></i>
                     <i class="el-icon-close" @keyup.esc="cancelSearch" @click="cancelSearch"></i>
                 </div>
             </div>
@@ -20,10 +20,10 @@
             <div class="bottom-row">
                 <div class="file-opts">
                     <div class="el-button-group">
-                        <el-button size="small" class="upload" @click="controlObj('upload_file')">
+                        <el-button size="small" class="upload max-width" @click="controlObj('upload_file')">
                             上传文件
                         </el-button>
-                        <el-button size="small" @click="controlObj('new_folder')">创建文件夹</el-button>
+                        <el-button size="small" class="max-width" @click="controlObj('new_folder')">创建文件夹</el-button>
                     </div>
 
                     <div class="el-button-group">
@@ -37,10 +37,10 @@
                         </el-button>
                         <el-button size="small" :plain="true" @click="deleteObj" :disabled="btnDisabedA">删除
                         </el-button>
-                        <el-button size="small" :plain="true" @click="controlObj('set_limit')" :disabled="btnDisabedB">
+                        <el-button size="small" class="max-width" :plain="true" @click="controlObj('set_limit')" :disabled="btnDisabedB">
                             设置权限
                         </el-button>
-                        <el-button size="small" :plain="true"
+                        <el-button size="small" :plain="true" class="max-width"
                                    @click="controlObj('get_address')" :disabled="btnDisabedC">
                             获取地址
                         </el-button>

@@ -83,7 +83,7 @@
             }
           })
           if (this.isPublic) {
-            this.iptText = `http://${params.Bucket}-${this.appid}.${params.Region}.myqcloud.com/${params.Key}`
+            this.iptText = `http://${this.options.Bucket}-${this.config.cos.AppId}.${this.options.Region}.myqcloud.com/${params.Key}`
           }
         })
       },

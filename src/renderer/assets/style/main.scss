@@ -56,7 +56,7 @@
   background: $rightSidebarBgColor;
   .top-row {
     height: 43px;
-    padding-top: 24px;
+    padding-top: 19px;
     margin-left: 20px;
     margin-right: 20px;
     position: relative;
@@ -111,9 +111,7 @@
         }
       }
       .el-icon-search {
-        color: #aebac8;
         float: right;
-        font-size: 20px;
       }
       .back {
         float: left;
@@ -158,12 +156,22 @@
         float: right;
       }
     }
-
+    .icon-search, .el-icon-close {
+      &:before {
+        content: ''
+      }
+      width: 20px;
+      height: 20px;
+      background: url("../../static/images/search.png") no-repeat center center;
+    }
+    .el-icon-close {
+      background: url("../../static/images/close1.png") no-repeat center center;
+    }
   }
 
   .bottom-row {
-    padding-top: 30px;
-    padding-bottom: 20px;
+    padding-top: 15px;
+    padding-bottom: 15px;
     border-bottom: 1px solid $borderColor;
     padding-left: 20px;
     padding-right: 20px;
@@ -201,6 +209,9 @@
         color: #549BEB;
         font-size: 12px;
       }
+      .max-width {
+        width: 88px;
+      }
     }
   }
 
@@ -213,7 +224,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 149.5px;
+  top: 123px;
   bottom: 0;
   overflow: hidden;
   .list {
