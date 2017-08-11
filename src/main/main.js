@@ -395,10 +395,10 @@ function* uploadGenerator (name, prefix) {
       name = path.join(dir, name)
       if (fs.statSync(name).isDirectory()) {
         subsrc.unshift(name)
-        yield {name, key: prefix + name.substr(dirLen).replace('\\', '/') + '/', isDir: true}
+        yield {name, key: prefix + name.substr(dirLen).replace(/\\/g, '/') + '/', isDir: true}
         continue
       }
-      yield {name, key: prefix + name.substr(dirLen).replace('\\', '/'), isDir: false}
+      yield {name, key: prefix + name.substr(dirLen).replace(/\\/g, '/'), isDir: false}
     }
     src.push(...subsrc)
     dir = src.pop()
