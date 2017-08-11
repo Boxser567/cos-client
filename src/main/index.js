@@ -107,6 +107,17 @@ function buildApplicationMenu () {
   }
 }
 
+const shouldQuit = app.makeSingleInstance(() => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
+  }
+})
+
+if (shouldQuit) {
+  app.quit()
+}
+
 app.on('ready', () => {
   buildApplicationMenu()
   createWindow()

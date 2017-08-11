@@ -356,8 +356,8 @@ Main.prototype.init = async function () {
 
   this.close = function () {
     if (!uploads || !downloads) return Promise.resolve()
-    uploads.pause([], true, false)
-    downloads.pause([], true, false)
+    uploads.pause([], true)
+    downloads.pause([], true)
     let cfg = Object.assign({}, config)
     delete cfg.cos
     return Promise.all([

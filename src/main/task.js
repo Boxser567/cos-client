@@ -152,29 +152,20 @@ Tasks.prototype.initRefresh = function () {
  * 对指定task发出pause指令
  * @param {int[]}   tasks
  * @param {boolean} all
- * @param {boolean} wait
  */
-Tasks.prototype.pause = function (tasks, all, wait) {
+Tasks.prototype.pause = function (tasks, all) {
   let fn = (task) => {
     if (!task) return
     switch (task.status) {
       case TaskStatus.RUN:
-        task.modify = true
         task.stop()
-        task.status = wait ? TaskStatus.WAIT : TaskStatus.PAUSE
+        // 延迟状态变更，防止多次start冲突
         break
       case TaskStatus.WAIT:
-        if (!wait) {
-          task.modify = true
-          task.status = TaskStatus.PAUSE
-        }
+        task.modify = true
+        task.status = TaskStatus.PAUSE
         break
       case TaskStatus.PAUSE:
-        if (wait) {
-          task.modify = true
-          task.status = TaskStatus.WAIT
-        }
-        break
       case TaskStatus.COMPLETE:
       case TaskStatus.ERROR:
     }
@@ -186,7 +177,7 @@ Tasks.prototype.pause = function (tasks, all, wait) {
       fn(this.findTask(id))
     })
   }
-  this.refresh(true)
+  this.refresh()
 }
 
 /**
@@ -216,7 +207,7 @@ Tasks.prototype.resume = function (tasks, all) {
       fn(this.findTask(id))
     })
   }
-  this.refresh(true)
+  this.refresh()
 }
 
 /**
@@ -256,7 +247,7 @@ Tasks.prototype.delete = function (tasks, all, onlyComplete, onlyNotComplete) {
       fn(this.findTask(id))
     })
   }
-  this.refresh(true)
+  this.refresh()
 }
 
 /**
