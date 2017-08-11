@@ -23,11 +23,6 @@ body, html {
 }
 
 #app {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   z-index: 1;
   overflow: hidden;
 }
@@ -35,10 +30,10 @@ body, html {
 .body-move {
   position: absolute;
   top: 0;
-  left: 0;
+  left: 225px;
   right: 0;
   height: 24px;
-  z-index: 99;
+  z-index: 999;
   -webkit-app-region: drag
 }
 
@@ -46,7 +41,7 @@ body, html {
   position: absolute;
   top: 0px;
   left: 7px;
-  z-index: 9999;
+  z-index: 9;
   span {
     width: 12px;
     height: 12px;

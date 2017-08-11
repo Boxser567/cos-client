@@ -1,5 +1,7 @@
 <template>
     <div class="slide-right">
+        <div class="body-move"></div>
+
         <div class="head">
             <div class="top-row">
                 <div class="nav" v-show="!search.active">

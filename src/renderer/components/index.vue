@@ -131,6 +131,18 @@
         const url = (process.env.NODE_ENV === 'development'
           ? `http://localhost:9080/#/progress` : `file://${__dirname}/index.html#/progress`)
 
+        let id = remote.getCurrentWindow().id
+
+        let windows = remote.BrowserWindow.getAllWindows()
+        if (windows.length > 1) {
+          windows.forEach(n => {
+            if (n.id !== id) {
+              n.focus()
+            }
+          })
+          return
+        }
+
         let mainWindow = new remote.BrowserWindow({
           height: 450,
           maxHeight: 450,
