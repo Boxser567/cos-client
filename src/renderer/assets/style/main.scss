@@ -119,6 +119,9 @@
         height: 16px;
         padding-right: 10px;
         background: url("../../static/images/back.png") no-repeat center left;
+        &.optic {
+          opacity: .5;
+        }
       }
       i {
         margin-top: 3px;

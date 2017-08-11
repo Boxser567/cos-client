@@ -8,7 +8,7 @@
                     <ul>
                         <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
                     </ul>
-                    <i class="back" @click="goBack"></i>
+                    <i class="back" :class="{ 'optic': !canGoBack()  }" @click="goBack"></i>
                     <i class="el-icon-search icon-search" @click="actionSearch"></i>
                 </div>
 
@@ -39,7 +39,8 @@
                         </el-button>
                         <el-button size="small" :plain="true" @click="deleteObj" :disabled="btnDisabedA">删除
                         </el-button>
-                        <el-button size="small" class="max-width" :plain="true" @click="controlObj('set_limit')" :disabled="btnDisabedB">
+                        <el-button size="small" class="max-width" :plain="true" @click="controlObj('set_limit')"
+                                   :disabled="btnDisabedB">
                             设置权限
                         </el-button>
                         <el-button size="small" :plain="true" class="max-width"

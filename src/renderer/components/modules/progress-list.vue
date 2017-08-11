@@ -54,14 +54,8 @@
                                    @click.stop="send('begin', 'one', props.item.id)"></i>
                                 <i v-if="props.item.status == 'run'" class="pause"
                                    @click.stop="send('pause', 'one', props.item.id)"></i>
-
-
-                                <el-tooltip class="item" effect="dark" :content="props.item.errorMsg"
-                                            placement="bottom-end">
-                                    <i v-if="props.item.status == 'error'" class="error"
-                                       @click.stop="send('begin', 'one', props.item.id)"></i>
-                                </el-tooltip>
-
+                                <i v-if="props.item.status == 'error'" class="error"
+                                   @click.stop="send('begin', 'one', props.item.id)" :title="props.item.errorMsg"></i>
                                 <i class="close" @click.stop="send('delete', 'one', props.item.id)"></i>
                             </el-col>
                         </el-row>

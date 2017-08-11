@@ -149,11 +149,11 @@
           Region: this.options.Region,
           CORSRules: this.tableData
         }
-        if (!this.tableData.length) {
-          this.$message.error('请至少添加一个规则!')
-          return
-        }
-        if (this.isOpen === '0') { // 关闭 cors
+//        if (!this.tableData.length) {
+//          this.$message.error('请至少添加一个规则!')
+//          return
+//        }
+        if (this.isOpen === '0' || this.tableData.length === 0) { // 关闭 cors
           delete params.CORSRules
           str = 'deleteBucketCors'
         }
