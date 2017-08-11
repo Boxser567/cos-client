@@ -368,21 +368,26 @@ Main.prototype.init = async function () {
   }
 }
 
+// 前缀如果是根目录，必须传入''，否则必须以'／'结尾
 function* uploadGenerator (name, prefix) {
   let src = []
   name = path.normalize(name)
-  if (prefix !== '') {
-    prefix = prefix.substr(-1) === '/' ? prefix : prefix + '/'
-  }
+  let p = path.parse(name)
 
   if (!fs.statSync(name).isDirectory()) {
-    yield {name, key: prefix + path.basename(name), isDir: false}
+    yield {name, key: prefix + p.base, isDir: false}
     return
   }
 
-  yield {name, key: prefix + path.basename(name) + '/', isDir: true}
+  if (p.base) {
+    yield {name, key: prefix + p.base + '/', isDir: true}
+  } else {
+    prefix += p.root === '/' ? 'root/' : p.root.split(':')[0] + '/'
+    yield {name, key: prefix, isDir: true}
+  }
 
-  let dirLen = path.dirname(name).length + 1
+  // 可以正确处理 'c:\\', '/'等根路径, 但不能处理'c:'
+  let dirLen = p.root === p.dir ? p.dir.length : p.dir.length + 1
   let dir = name
   do {
     let subsrc = []
