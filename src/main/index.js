@@ -29,10 +29,9 @@ function createWindow () {
     useContentSize: true,
     width: 1000,
     minWidth: 1000,
-    title: 'COS'
+    title: 'COS',
+    frame: false
   })
-
-    // frame: false
 
   mainWindow.loadURL(winURL)
 
