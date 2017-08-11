@@ -341,7 +341,11 @@ UploadTask.prototype.start = async function () {
     return
   }
   try {
-    this.params.UploadId ? await this.getMultipartListPart() : await this.multipartInit()
+    if (this.params.UploadId) {
+      await this.getMultipartListPart()
+    } else {
+      await this.multipartInit()
+    }
     await this.uploadSlice()
     await this.multipartComplete()
   } catch (err) {
@@ -404,11 +408,11 @@ UploadTask.prototype.upload = async function () {
       Body: result.body,
       onProgress: (data) => {
         pg.loaded = data.loaded
-        if (this.cancel) {
-          result.body.emit('error', new Error('cancel'))
-          result.body.close()
-          return
-        }
+        // if (this.cancel) {
+        //   result.body.emit('error', new Error('cancel'))
+        //   result.body.close()
+        //   return
+        // }
         this.progress.On()
       }
       // todo 在sdk更新后换成 ContentMD5
