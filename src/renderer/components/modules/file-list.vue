@@ -5,15 +5,25 @@
             <div class="time">创建时间</div>
             <div class="size">大小</div>
         </div>
+        <div class="operat-warn" v-if="operatWarn">
+            <i class="el-icon-information"></i>小技巧：使用Shift键可以实现多选操作; 拖拽本地文件到文件列表区域可以上传。<span
+                @click="neverWarn">不再提示</span>
+        </div>
         <div class="list-info" id="menuinfo"
-             @dragover.prevent="onDragover"
-             @drop.prevent="onDrop"
-             @dragleave.prevent="onDragLeave"
-             :class=" { 'dropable': dropable } "
+             :class="{ 'topx': operatWarn}"
              @click.self="fileContentClick()"
              @contextmenu="openMenu()"
+             @dragover.prevent="dropable = true"
         >
-
+            <div class="dropable" v-if="dropable"
+                 @dragleave.prevent="dropable = false"
+                 @drop.prevent="onDrop"
+            >
+                <div class="con">
+                    <i class="el-icon-upload"></i>
+                    <p>将文件拖拽到此处上传</p>
+                </div>
+            </div>
             <div class="loading" v-if="fileloading">
                 <i class="el-icon-loading"></i>
             </div>
@@ -47,7 +57,6 @@
                          :key="props.item.Key">
                         <div class="name">
                             <img :src="props.item | getFileImg" alt="">
-                            <span></span>
                             <p>{{ props.item.Name }}</p>
                         </div>
                         <div class="time">{{ props.item.LastModified | getDate }}</div>
@@ -125,7 +134,8 @@
           blanks: ['upload_file', 'new_folder', 'download_list'],
           groupFile: ['download_file', 'copy_file', 'delete_file'] // 'set_http'
         },
-        dropable: false
+        dropable: false,
+        operatWarn: true
       }
     },
 
@@ -139,17 +149,18 @@
       for (let item of contextMenu) {
         menu.append(new MenuItem({label: item.name, click () { vue.rightClickFn(item.key) }}))
       }
+
+      if (localStorage.getItem('gkOperatWarn')) {
+        this.operatWarn = false
+      }
     },
 
     methods: {
-      onDragover () {
-        this.dropable = true
-      },
-      onDragLeave () {
-        this.dropable = false
+      neverWarn(){
+        localStorage.setItem('gkOperatWarn', true)
+        this.operatWarn = false
       },
       onDrop (e) {
-        this.dropable = false
         let files = e.dataTransfer.files
         if (files.length === 0) return
         files = Array.from(files)
@@ -157,6 +168,7 @@
           return n.path
         })
         this.$store.dispatch('menulist/uploadFileByDrag', fileArray)
+        this.dropable = false
       },
       addFolderFn: function () { // 新建文件夹
         let nameRge = /^[\u4e00-\u9fff\w]{1,20}$/

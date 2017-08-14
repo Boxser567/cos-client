@@ -294,7 +294,7 @@
   h2 {
     margin-bottom: 12px;
   }
-  .el-dialog__body{
+  .el-dialog__body {
     padding: 10px 16px;
     padding-bottom: 0;
   }
@@ -380,7 +380,6 @@
 }
 
 .dialog-upload {
-  top: 25% !important;
   .drop-content {
     text-align: center;
     border: 1px dashed #dcdcdc;
@@ -401,6 +400,15 @@
     p {
       font-size: 14px;
       margin-top: 8px;
+    }
+  }
+  .draglist {
+    max-height: 300px;
+    overflow: auto;
+    width: 100%;
+    .list {
+      height: 32px;
+      line-height: 32px;
     }
   }
 }
