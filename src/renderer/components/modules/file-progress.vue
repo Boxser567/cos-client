@@ -35,7 +35,6 @@
                     <div class="log" ref="log"></div>
                 </div>
             </div>
-            <div class="body-move"></div>
             <div class="el-speed">
                 <p> 上传速度: {{uploadSpeed | bitSpeed}} </p>
                 <p> 下载速度: {{downloadSpeed | bitSpeed}} </p>

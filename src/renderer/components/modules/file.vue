@@ -1,7 +1,5 @@
 <template>
     <div class="slide-right">
-        <div class="body-move"></div>
-
         <div class="head">
             <div class="top-row">
                 <div class="nav" v-show="!search.active">
@@ -29,7 +27,7 @@
                     </div>
 
                     <div class="el-button-group">
-                        <el-button size="small" :plain="true" @click="controlObj('refresh')">刷新
+                        <el-button size="small" :plain="true" @click="controlObj('refresh')" :disabled="btnDisabed">刷新
                         </el-button>
                         <el-button size="small" :plain="true" @click="controlObj('download_file')"
                                    :disabled="btnDisabedA">下载
@@ -123,6 +121,9 @@
           }
         }
         return list
+      },
+      btnDisabed(){
+        return this.search.active
       },
       btnDisabedA () {
         return !this.selectFile || !this.selectFile.length

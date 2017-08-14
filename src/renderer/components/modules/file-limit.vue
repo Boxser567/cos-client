@@ -62,7 +62,7 @@
             </el-tab-pane>
 
             <el-tab-pane label="用户权限" name="second">
-                <el-table :data="userData" border style="width: 100%; display: block;">
+                <el-table :data="userData" max-height="320" border style="width: 100%; display: block;">
                     <el-table-column
                             label="用户"
                             width="180">
@@ -119,7 +119,7 @@
 
 
         <div slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="closeDialog">关 闭</el-button>
+            <el-button type="primary" size="small" @click="closeDialog">关 闭</el-button>
         </div>
     </el-dialog>
 
@@ -231,7 +231,7 @@
               flag.msg = '帐号格式填写不正确!'
               return
             } else {
-            // _self.$message('主帐号与协作者帐号不对应!')
+              // _self.$message('主帐号与协作者帐号不对应!')
             }
           } else {
             let reg = /^[1-9][0-9]{4,12}$/gim

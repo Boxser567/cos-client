@@ -47,6 +47,7 @@
                          :key="props.item.Key">
                         <div class="name">
                             <img :src="props.item | getFileImg" alt="">
+                            <span></span>
                             <p>{{ props.item.Name }}</p>
                         </div>
                         <div class="time">{{ props.item.LastModified | getDate }}</div>

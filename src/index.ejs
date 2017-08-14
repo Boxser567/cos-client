@@ -14,15 +14,29 @@
 
 <body>
 <div class="full-button" id="fullbtn">
-    <span onclick="closewin()"><i>x</i></span>
-    <span onclick="minimize()"><i>-</i></span>
-    <span onclick="maximize()"><i>0</i></span>
+    <span class="btn-p1"><i></i></span>
+    <span class="btn-p2"><i></i></span>
+    <span class="btn-p3"><i></i></span>
 </div>
 <script>
 
   const electron = require('electron')
   let win = electron.remote.getCurrentWindow()
-
+  let sp1 = document.querySelector('.btn-p1')
+  let sp2 = document.querySelector('.btn-p2')
+  let sp3 = document.querySelector('.btn-p3')
+  if (process.platform === 'darwin') {
+    sp1.addEventListener('click', () => closewin())
+    sp2.addEventListener('click', () => minimize())
+    sp3.addEventListener('click', () => maximize())
+  } else {
+    let dom = document.getElementById('fullbtn')
+    dom.removeAttribute('class', 'full-button')
+    dom.setAttribute('class', 'full-win-btn')
+    sp1.addEventListener('click', () => minimize())
+    sp2.addEventListener('click', () => maximize())
+    sp3.addEventListener('click', () => closewin())
+  }
 
   function closewin () {
     win.close()
@@ -42,7 +56,6 @@
       else
         win.maximize()
     }
-
   }
 
 

@@ -1,6 +1,9 @@
 <template>
     <div class="index">
+        <!--<div class="body-move"></div>-->
+
         <div class="slide-left">
+            <div class="body-move"></div>
             <div class="bucket-tl">
                 <i></i>
                 <span>COS控制台</span>

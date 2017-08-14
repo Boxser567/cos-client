@@ -30,11 +30,56 @@ body, html {
 .body-move {
   position: absolute;
   top: 0;
-  left: 225px;
+  left: 0px;
   right: 0;
-  height: 24px;
-  z-index: 999;
+  height: 60px;
+  z-index: 6;
   -webkit-app-region: drag
+}
+
+.full-win-btn {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  z-index: 9;
+  span {
+    display: inline-block;
+    width: 32px;
+    height: 22px;
+    cursor: pointer;
+    text-align: center;
+    &:nth-child(1) {
+      i {
+        background: url("../../static/images/win101.png") no-repeat center center;
+      }
+    }
+    &:nth-child(2) {
+      i {
+        background: url("../../static/images/win104.png") no-repeat center center;
+      }
+    }
+    &:nth-child(3) {
+      i {
+        background: url("../../static/images/win103.png") no-repeat center center;
+      }
+    }
+    i {
+      display: inline-block;
+      width: 31px;
+      height: 24px;
+    }
+
+    &:hover {
+      background: $borderColor;
+    }
+    &:last-child:hover {
+      color: $borderColor;
+      background: #ff6363;
+      i {
+        background: url("../../static/images/win103.1.png") no-repeat center center;
+      }
+    }
+  }
 }
 
 .full-button {
@@ -43,29 +88,39 @@ body, html {
   left: 7px;
   z-index: 9;
   span {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
     display: inline-block;
     border-radius: 7px;
     line-height: 12px;
     margin-left: 1px;
     &:nth-child(1) {
       background: rgb(221, 102, 93);
+      i {
+        background: url("../../static/images/mac101.png") no-repeat center center;
+      }
     }
     &:nth-child(2) {
       background: rgb(240, 193, 81);
+      i {
+        background: url("../../static/images/mac102.png") no-repeat center center;
+      }
     }
     &:nth-child(3) {
       background: rgb(100, 202, 87);
+      i {
+        background: url("../../static/images/mac103.png") no-repeat center center;
+      }
+    }
+    i {
+      display: none;
+      width: 11px;
+      height: 11px;
     }
   }
-  .win-btn {
-    background: #fff;
-    z-index: 99999;
-    span {
-      width: 24px;
-      height: 24px;
-      background: #fff;
+  &:hover {
+    span i {
+      display: block;
     }
   }
 }

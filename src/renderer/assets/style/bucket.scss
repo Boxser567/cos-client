@@ -290,9 +290,13 @@
 
 .dialog-file-limit {
   width: 700px;
-  top: 5%;
+  top: 8% !important;
   h2 {
     margin-bottom: 12px;
+  }
+  .el-dialog__body{
+    padding: 10px 16px;
+    padding-bottom: 0;
   }
   .user-limit {
     margin-top: 20px;
