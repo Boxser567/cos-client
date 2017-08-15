@@ -182,7 +182,6 @@
           Region: this.options.Region,
           Key: this.options.Prefix + this.folderName + '/'
         }
-        console.log(132222332, parms)
 
         this.$store.dispatch('menulist/mkDir', parms).then(() => {
           this.$store.dispatch('menulist/getFileList')

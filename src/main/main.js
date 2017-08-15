@@ -212,24 +212,6 @@ Main.prototype.init = async function () {
     db.clear()
   })
 
-  ipcMain.on('GetFileTypes', (event, fileArray) => {
-    debugger
-    log.debug('GetFileTypes',event, fileArray)
-    // fileArray.forEach(n => {
-    //   let name = n.path
-    //   name = path.normalize(name)
-    //   let p = path.parse(name)
-    //   if (!fs.statSync(name).isDirectory()) {
-    //     n.isDir = false
-    //   }
-    //   if (p.base) {
-    //     n.isDir = true
-    //   } else {
-    //     n.isDir = false
-    //   }
-    // })
-  })
-
   ipcMain.on('NewUploadTasks', async (event, arg) => {
     /**
      * @param  {object}   arg

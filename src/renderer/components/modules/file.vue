@@ -99,11 +99,13 @@
       })
       this.$store.dispatch('menulist/getFileList', to.query.keyWord)
       this.keyWord = to.query.keyWord
+      if (this.newFolder)
+        this.$store.commit('menulist/newFolder', false)
       next()
     },
     created () {},
     computed: {
-      ...mapState('menulist', ['fileloading', 'selectFile', 'dialogGetHttp', 'fileHeaderInfo', 'options', 'search']),
+      ...mapState('menulist', ['fileloading', 'selectFile', 'newFolder', 'dialogGetHttp', 'fileHeaderInfo', 'options', 'search']),
       navList () {
         let list = [{name: this.options.Bucket, Prefix: ''}]
         this.currentFolder = {name: this.options.Bucket, Prefix: ''}
