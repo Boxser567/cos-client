@@ -11,7 +11,7 @@ import Cos from 'cos-nodejs-sdk-v5'
 import { DownloadTask, Tasks, UploadTask } from './task'
 import DB from './db'
 
-log.transports.console.level = false
+// log.transports.console.level = true
 log.transports.file.level = 'warn'
 log.transports.rendererConsole.level = 'silly'
 
@@ -210,6 +210,24 @@ Main.prototype.init = async function () {
     downloadListen(downloads)
 
     db.clear()
+  })
+
+  ipcMain.on('GetFileTypes', (event, fileArray) => {
+    debugger
+    log.debug('GetFileTypes',event, fileArray)
+    // fileArray.forEach(n => {
+    //   let name = n.path
+    //   name = path.normalize(name)
+    //   let p = path.parse(name)
+    //   if (!fs.statSync(name).isDirectory()) {
+    //     n.isDir = false
+    //   }
+    //   if (p.base) {
+    //     n.isDir = true
+    //   } else {
+    //     n.isDir = false
+    //   }
+    // })
   })
 
   ipcMain.on('NewUploadTasks', async (event, arg) => {

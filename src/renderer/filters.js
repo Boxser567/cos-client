@@ -10,7 +10,7 @@ function bitSize (num) {
   if (!num) {
     return ''
   }
-  num -=0
+  num -= 0
   let type = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
   let j = 0
   while (num >= 1024) {
@@ -85,7 +85,7 @@ function getFileImg (file) {
   if (file.dir) {
     suffix = 'folder'
   } else {
-    let name = file.Name || file.Key
+    let name = file.Name || file.Key || file.name
     if (!name) return
     let bucket = name.slice(name.lastIndexOf('.') + 1).toLowerCase()
     for (let key in FILE_SORTS) {
