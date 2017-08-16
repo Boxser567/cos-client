@@ -43,11 +43,10 @@ body, html {
   right: 0px;
   z-index: 11;
   -webkit-app-region: no-drag;
-  * {
+  & > * {
     -webkit-app-region: no-drag;
   }
-  span, button {
-    -webkit-app-region: no-drag;
+  span {
     display: inline-block;
     width: 32px;
     height: 22px;
@@ -57,13 +56,11 @@ body, html {
       display: inline-block;
       width: 31px;
       height: 22px;
-      -webkit-app-region: no-drag;
     }
     &:hover {
       background: rgb(226, 227, 229);
     }
     &.btn-p1 {
-      -webkit-app-region: no-drag;
       i {
         background: url("../../static/images/win101.png") no-repeat center center;
       }
