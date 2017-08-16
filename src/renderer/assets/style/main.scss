@@ -121,6 +121,9 @@
       border-bottom: 1px solid #aacdf6;
       padding-bottom: 3px;
       padding-top: 4px;
+      * {
+        -webkit-app-region: no-drag;
+      }
       input {
         position: relative;
         top: -5px;

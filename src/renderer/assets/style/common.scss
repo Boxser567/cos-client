@@ -41,44 +41,48 @@ body, html {
   position: absolute;
   top: 0px;
   right: 0px;
-  z-index: 9;
+  z-index: 11;
+  -webkit-app-region: no-drag;
+  * {
+    -webkit-app-region: no-drag;
+  }
   span {
     display: inline-block;
     width: 32px;
     height: 22px;
     cursor: pointer;
     text-align: center;
-    &:nth-child(1) {
-      i {
-        background: url("../../static/images/win101.png") no-repeat center center;
-      }
-    }
-    &:nth-child(2) {
-      i {
-        background: url("../../static/images/win104.png") no-repeat center center;
-      }
-    }
-    &:nth-child(3) {
-      i {
-        background: url("../../static/images/win103.png") no-repeat center center;
-      }
-    }
     i {
       display: inline-block;
       width: 31px;
       height: 24px;
     }
-
     &:hover {
       background: $borderColor;
     }
-    &:last-child:hover {
-      color: $borderColor;
-      background: #ff6363;
+    &.sp1 {
       i {
-        background: url("../../static/images/win103.1.png") no-repeat center center;
+        background: url("../../static/images/win101.png") no-repeat center center;
       }
     }
+    &.sp2 {
+      i {
+        background: url("../../static/images/win104.png") no-repeat center center;
+      }
+    }
+    &.sp3{
+      i {
+        background: url("../../static/images/win103.png") no-repeat center center;
+      }
+      &:hover {
+        background: #ff6363;
+        i {
+          background: url("../../static/images/win103.1.png") no-repeat center center;
+        }
+      }
+    }
+
+
   }
 }
 
