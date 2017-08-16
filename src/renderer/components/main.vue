@@ -24,12 +24,6 @@
           message: `无法${error.src}，因为${error.message}`
         })
       })
-      window.onbeforeunload = (e) => {
-        if (process.env.NODE_ENV !== 'development') {
-          if (confirm('确定要关闭吗？')) return
-          e.returnValue = false
-        }
-      }
       this.$router.replace('/login')
     },
     mounted () {

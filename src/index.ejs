@@ -39,7 +39,9 @@
   }
 
   function closewin () {
-    win.close()
+    if (win.id > 1) win.close()
+    if (confirm('确定要关闭吗？'))
+      win.close()
   }
   function minimize () {
     win.minimize()
