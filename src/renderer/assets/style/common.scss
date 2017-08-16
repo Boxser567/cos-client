@@ -46,7 +46,8 @@ body, html {
   * {
     -webkit-app-region: no-drag;
   }
-  span {
+  span, button {
+    -webkit-app-region: no-drag;
     display: inline-block;
     width: 32px;
     height: 22px;
@@ -55,12 +56,14 @@ body, html {
     i {
       display: inline-block;
       width: 31px;
-      height: 24px;
+      height: 22px;
+      -webkit-app-region: no-drag;
     }
     &:hover {
-      background: rgb(226,227,229);
+      background: rgb(226, 227, 229);
     }
     &.btn-p1 {
+      -webkit-app-region: no-drag;
       i {
         background: url("../../static/images/win101.png") no-repeat center center;
       }

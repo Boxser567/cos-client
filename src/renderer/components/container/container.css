@@ -4,8 +4,7 @@
   top: 0;
   right: 0;
   left: 0;
-  bottom: 0;
-}
+  bottom: 0; }
 
 .welcometo {
   color: #333;
@@ -14,20 +13,17 @@
   position: absolute;
   top: 50%;
   margin-top: -195px;
-  text-align: center;
-  * {
-    -webkit-app-region: no-drag;
-  }
-  .tl {
+  text-align: center; }
+  .welcometo * {
+    -webkit-app-region: no-drag; }
+  .welcometo .tl {
     margin-top: 18px;
-    font-size: 24px;
-  }
-  .sub {
+    font-size: 24px; }
+  .welcometo .sub {
     font-size: 14px;
     margin-top: 14px;
-    color: #666;
-    a {
-      color: #3183df;
-    }
-  }
-}
+    color: #666; }
+    .welcometo .sub a {
+      color: #3183df; }
+
+/*# sourceMappingURL=container.css.map */

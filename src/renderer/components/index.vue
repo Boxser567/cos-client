@@ -43,7 +43,7 @@
         </div>
 
         <div>
-            <router-view></router-view>
+            <router-view @createBucket=" dialogAddVisible = true "></router-view>
         </div>
 
         <add-bucket :dialogAddVisible="dialogAddVisible" @closeBucket="dialogAddVisible = false"
@@ -127,6 +127,9 @@
       bucketMenu.append(new MenuItem({label: '基本信息', click: this.getProperty}))
       bucketMenu.append(new MenuItem({label: '跨域访问CORS设置', click: this.setCors}))
       bucketMenu.append(new MenuItem({label: '权限管理', click: this.setLimit}))
+
+      if(this.bucketList.length)
+        this.selectBucket(this.bucketList[0])
     },
 
     methods: {
