@@ -58,19 +58,19 @@ body, html {
       height: 24px;
     }
     &:hover {
-      background: #e2e3e5;
+      background: rgb(226,227,229);
     }
     &.btn-p1 {
       i {
         background: url("../../static/images/win101.png") no-repeat center center;
       }
     }
-    &.btn-p1 {
+    &.btn-p2 {
       i {
         background: url("../../static/images/win104.png") no-repeat center center;
       }
     }
-    &.btn-p1 {
+    &.btn-p3 {
       i {
         background: url("../../static/images/win103.png") no-repeat center center;
       }
