@@ -58,19 +58,19 @@ body, html {
       height: 24px;
     }
     &:hover {
-      background: $borderColor;
+      background: #e2e3e5;
     }
-    &.sp1 {
+    &.btn-p1 {
       i {
         background: url("../../static/images/win101.png") no-repeat center center;
       }
     }
-    &.sp2 {
+    &.btn-p1 {
       i {
         background: url("../../static/images/win104.png") no-repeat center center;
       }
     }
-    &.sp3{
+    &.btn-p1 {
       i {
         background: url("../../static/images/win103.png") no-repeat center center;
       }
@@ -81,7 +81,6 @@ body, html {
         }
       }
     }
-
 
   }
 }
