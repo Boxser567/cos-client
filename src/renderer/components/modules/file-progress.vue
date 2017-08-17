@@ -28,6 +28,11 @@
                 </div>
                 <div class="third" v-show=" tabList[2].iscur ">
                     <div class="title-bar">
+                        <div v-if="platform === 'other'" class="full-win-btn right">
+                            <span @click="windCtrl('mini')" class="btn-p1"><i></i></span>
+                            <span @click="windCtrl('maxi')" class="btn-p2"><i></i></span>
+                            <span @click="windCtrl('close')" class="btn-p3"><i></i></span>
+                        </div>
                         <div class="el-button-group">
                             <el-button size="small" @click="openLog" :plain="true">打开日志列表</el-button>
                         </div>
@@ -45,7 +50,7 @@
 
 <script>
   import progressList from './progress-list.vue'
-  import { ipcRenderer, shell } from 'electron'
+  import { ipcRenderer, shell ,remote } from 'electron'
 
   export default {
     name: 'fileProgress-page',
@@ -74,6 +79,11 @@
         // console.log('GetDownloadTasks-data', data.length)
         this.downloadList = data
       })
+      if (process.platform === 'darwin') {
+        this.$store.commit('setPlatform', 'darwin')
+      }
+      let elem = document.getElementById('fullbtn')
+      if (elem && this.platform === 'other') elem.remove()
     },
     mounted () {
       ipcRenderer.on('__ELECTRON_LOG_RENDERER__', (event, level, text) => {
@@ -91,6 +101,9 @@
     },
     components: {progressList},
     computed: {
+      platform(){
+        return this.$store.state.platform
+      },
       config () {
         return this.$store.state.config
       },
@@ -118,6 +131,23 @@
       },
       openLog () {
         shell.showItemInFolder(ipcRenderer.sendSync('GetLogPath'))
+      },
+      windCtrl(type){
+        let win = remote.getCurrentWindow()
+        switch (type) {
+          case 'close':
+            win.close()
+            break
+          case 'mini':
+            win.minimize()
+            break
+          case 'maxi':
+            if (win.isMaximized())
+              win.unmaximize()
+            else
+              win.maximize()
+            break
+        }
       }
     }
   }

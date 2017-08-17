@@ -4,7 +4,7 @@
 
             <div class="top-row">
 
-                <div v-if="platform === 'other'" class="full-win-btn">
+                <div v-if="platform === 'other'" class="full-win-btn right">
                     <span @click="windCtrl('mini')" class="btn-p1"><i></i></span>
                     <span @click="windCtrl('maxi')" class="btn-p2"><i></i></span>
                     <span @click="windCtrl('close')" class="btn-p3"><i></i></span>
@@ -111,7 +111,10 @@
         this.$store.commit('menulist/newFolder', false)
       next()
     },
-    created () {},
+    created () {
+      let elem = document.getElementById('fullbtn')
+      if (elem && this.platform === 'other') elem.remove()
+    },
     computed: {
       ...mapState('menulist', ['fileloading', 'selectFile', 'newFolder', 'dialogGetHttp', 'fileHeaderInfo', 'options', 'search']),
       platform(){
