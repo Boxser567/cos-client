@@ -2,13 +2,14 @@
     <div class="slide-right">
         <div class="head">
 
-            <div v-if="platform === 'other'" class="full-win-btn">
-                <span @click="thiswin.minimize()" class="btn-p1"><i></i></span>
-                <span @click="thiswin.minimize()" class="btn-p2"><i></i></span>
-                <span @click="thiswin.close()" class="btn-p3"><i></i></span>
-            </div>
-
             <div class="top-row">
+
+                <div v-if="platform === 'other'" class="full-win-btn">
+                    <span @click="windCtrl('mini')" class="btn-p1"><i></i></span>
+                    <span @click="windCtrl('maxi')" class="btn-p2"><i></i></span>
+                    <span @click="windCtrl('close')" class="btn-p3"><i></i></span>
+                </div>
+
                 <div class="nav" v-show="!search.active">
                     <ul>
                         <li v-for="n in navList" @click="goFilePath(n.Prefix)">{{ n.name }}</li>
@@ -84,7 +85,6 @@
   import { mapState } from 'vuex'
 
   let webContents = remote.getCurrentWebContents()
-  let thiswin = remote.getCurrentWindow()
   export default {
     name: 'filepage',
     components: {fileList, fileAdress, fileLimit, setHttpHead, fileUpload},
@@ -111,9 +111,7 @@
         this.$store.commit('menulist/newFolder', false)
       next()
     },
-    created () {
-
-    },
+    created () {},
     computed: {
       ...mapState('menulist', ['fileloading', 'selectFile', 'newFolder', 'dialogGetHttp', 'fileHeaderInfo', 'options', 'search']),
       platform(){
@@ -306,15 +304,23 @@
       canGoBack () {
         return this.parentFolder
       },
-
-      canGoForward () {
-        return webContents.canGoForward()
+      windCtrl(type){
+        let win = remote.getCurrentWindow()
+        switch (type) {
+          case 'close':
+            win.close()
+            break
+          case 'mini':
+            win.minimize()
+            break
+          case 'maxi':
+            if (win.isMaximized())
+              win.unmaximize()
+            else
+              win.maximize()
+            break
+        }
       }
     }
-//    directives: {
-//      focus (el, binding) {
-//        binding.value ? el.focus() : el.blur()
-//      }
-//    }
   }
 </script>
