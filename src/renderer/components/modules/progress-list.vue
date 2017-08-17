@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="title-bar">
-            <div v-if="platform === 'other'" class="full-win-btn right">
+            <div v-if="platform === 'other'" class="full-win-btn">
                 <span @click="windCtrl('mini')" class="btn-p1"><i></i></span>
                 <span @click="windCtrl('maxi')" class="btn-p2"><i></i></span>
                 <span @click="windCtrl('close')" class="btn-p3"><i></i></span>
