@@ -552,18 +552,18 @@ DownloadTask.prototype.start = async function () {
 
   let time0 = Date.now()
   let loaded0 = 0
-  this.params.Output.on('drain', () => {
-    this.progress.loaded = this.params.Output.bytesWritten
-    let time1 = Date.now()
-    let loaded1 = this.progress.loaded
-    if (time1 > time0 + 100) {
-      this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
-    }
-    if (this.cancel) {
-      this.params.Output.close()
-      this.params.Output.emit('error', new Error('cancel'))
-    }
-  })
+  // this.params.Output.on('drain', () => {
+  //   this.progress.loaded = this.params.Output.bytesWritten
+  //   let time1 = Date.now()
+  //   let loaded1 = this.progress.loaded
+  //   if (time1 > time0 + 100) {
+  //     this.progress.speed = parseInt((loaded1 - loaded0) * 1000 / (time1 - time0))
+  //   }
+  //   if (this.cancel) {
+  //     this.params.Output.close()
+  //     this.params.Output.emit('error', new Error('cancel'))
+  //   }
+  // })
 
   try {
     await promisify(::this.cos.getObject)(this.params)
@@ -572,6 +572,7 @@ DownloadTask.prototype.start = async function () {
     if (fs.existsSync(tmp)) fs.unlinkSync(tmp)
 
     let e = normalizeError(err)
+    console.debug('12120', this.params)
     e.params = this.params
     throw e
   }

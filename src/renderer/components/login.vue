@@ -41,6 +41,10 @@
     },
     methods: {
       save () {
+        if (!this.AppId || !this.SecretId || !this.SecretKey) {
+          this.$message.error('请将表单填写完整！')
+          return
+        }
         this.$store.dispatch('setConfig', {
           cos: {
             AppId: this.AppId,

@@ -156,6 +156,7 @@
           width: 794,
           maxWidth: 794,
           title: '传输队列',
+          transparent: true,
           frame: false
         })
         mainWindow.loadURL(url)
