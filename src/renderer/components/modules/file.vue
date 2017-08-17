@@ -1,6 +1,13 @@
 <template>
     <div class="slide-right">
         <div class="head">
+
+            <div v-if="platform === 'other'" class="full-win-btn">
+                <span @click="thiswin.minimize()" class="btn-p1"><i></i></span>
+                <span @click="thiswin.minimize()" class="btn-p2"><i></i></span>
+                <span @click="thiswin.close()" class="btn-p3"><i></i></span>
+            </div>
+
             <div class="top-row">
                 <div class="nav" v-show="!search.active">
                     <ul>
@@ -77,6 +84,7 @@
   import { mapState } from 'vuex'
 
   let webContents = remote.getCurrentWebContents()
+  let thiswin = remote.getCurrentWindow()
   export default {
     name: 'filepage',
     components: {fileList, fileAdress, fileLimit, setHttpHead, fileUpload},
@@ -103,9 +111,14 @@
         this.$store.commit('menulist/newFolder', false)
       next()
     },
-    created () {},
+    created () {
+
+    },
     computed: {
       ...mapState('menulist', ['fileloading', 'selectFile', 'newFolder', 'dialogGetHttp', 'fileHeaderInfo', 'options', 'search']),
+      platform(){
+        return this.$store.state.platform
+      },
       navList () {
         let list = [{name: this.options.Bucket, Prefix: ''}]
         this.currentFolder = {name: this.options.Bucket, Prefix: ''}

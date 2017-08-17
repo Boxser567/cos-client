@@ -214,7 +214,7 @@ const actions = {
           parms.Keys.push(n.Key)
         }
       })
-      // console.log(state.selectFile, '下载canshu', parms)
+      console.log(state.selectFile, '下载canshu', parms)
       ipcRenderer.send('NewDownloadTasks', parms)
     })
   },

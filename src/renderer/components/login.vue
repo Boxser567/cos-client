@@ -35,6 +35,9 @@
     },
     created () {
       document.getElementsByTagName('title')[0].innerHTML = 'COS'
+      if (process.platform === 'darwin') {
+        this.$store.commit('setPlatform', 'darwin')
+      }
     },
     methods: {
       save () {

@@ -13,7 +13,8 @@ let bus = new Vue()
 export const state = {
   config: {
     cos: null
-  }
+  },
+  platform: 'other'
 }
 
 export const getters = {
@@ -33,6 +34,10 @@ export const mutations = {
       cos.options.SecretId = cfg.cos.SecretId
       cos.options.SecretKey = cfg.cos.SecretKey
     }
+  },
+  setPlatform(state, val){
+    if (!val) return
+    state.platform = val
   }
 }
 
