@@ -539,19 +539,19 @@ function DownloadTask (cos, name, params, option = {}) {
 
 DownloadTask.prototype.start = async function () {
   this.cancel = false
-  let {dir, root} = path.parse(this.file.fileName)
-  dir.split(path.sep).reduce((parentDir, childDir) => {
-    const curDir = path.resolve(parentDir, childDir)
-    if (!fs.existsSync(curDir)) {
-      fs.mkdirSync(curDir)
-    }
-    return curDir
-  }, root)
+  // let {dir, root} = path.parse(this.file.fileName)
+  // dir.split(path.sep).reduce((parentDir, childDir) => {
+  //   const curDir = path.resolve(parentDir, childDir)
+  //   if (!fs.existsSync(curDir)) {
+  //     fs.mkdirSync(curDir)
+  //   }
+  //   return curDir
+  // }, root)
 
   this.params.Output = fs.createWriteStream(this.file.fileName + '.tmp')
 
-  let time0 = Date.now()
-  let loaded0 = 0
+  // let time0 = Date.now()
+  // let loaded0 = 0
   // this.params.Output.on('drain', () => {
   //   this.progress.loaded = this.params.Output.bytesWritten
   //   let time1 = Date.now()
@@ -564,6 +564,7 @@ DownloadTask.prototype.start = async function () {
   //     this.params.Output.emit('error', new Error('cancel'))
   //   }
   // })
+  console.log('12120fa', this.params)
 
   try {
     await promisify(::this.cos.getObject)(this.params)
@@ -572,7 +573,6 @@ DownloadTask.prototype.start = async function () {
     if (fs.existsSync(tmp)) fs.unlinkSync(tmp)
 
     let e = normalizeError(err)
-    console.debug('12120', this.params)
     e.params = this.params
     throw e
   }
